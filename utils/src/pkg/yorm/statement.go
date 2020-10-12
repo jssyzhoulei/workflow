@@ -3,9 +3,9 @@ package yorm
 import (
 	"database/sql"
 	"fmt"
-	"github.com/timchine/pole/pkg/yorm/parse"
-	"github.com/timchine/pole/pkg/yorm/parse/util"
-	"github.com/timchine/pole/pkg/yorm/schema"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/parse"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/parse/util"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/schema"
 	"math"
 	"reflect"
 	"strings"

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"database/sql/driver"
-	"github.com/timchine/pole/pkg/yorm/schema"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/schema"
 	"reflect"
 	"time"
 )

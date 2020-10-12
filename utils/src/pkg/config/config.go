@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/timchine/pole/pkg/log"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"gopkg.in/yaml.v2"
 	"os"
 	"reflect"

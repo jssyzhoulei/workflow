@@ -1,8 +1,8 @@
 package parse
 
 import (
-	"github.com/timchine/pole/pkg/yorm/parse/util"
-	parse_v1 "github.com/timchine/pole/pkg/yorm/parse/v1"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/parse/util"
+	parse_v1 "gitee.com/grandeep/org-svc/utils/src/pkg/yorm/parse/v1"
 	"strings"
 )
 

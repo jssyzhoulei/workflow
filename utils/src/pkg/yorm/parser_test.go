@@ -2,7 +2,7 @@ package yorm
 
 import (
 	"fmt"
-	"github.com/timchine/pole/pkg/yorm/mysql"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/mysql"
 	"testing"
 	"time"
 )

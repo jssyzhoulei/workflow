@@ -2,8 +2,8 @@ package yorm
 
 import (
 	"fmt"
-	"github.com/timchine/pole/pkg/yorm/parse"
-	"github.com/timchine/pole/pkg/yorm/parse/util"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/parse"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/parse/util"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"

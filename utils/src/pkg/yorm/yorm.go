@@ -2,7 +2,7 @@ package yorm
 
 import (
 	"database/sql"
-	"github.com/timchine/pole/pkg/yorm/parse/util"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/parse/util"
 	"strings"
 )
 
