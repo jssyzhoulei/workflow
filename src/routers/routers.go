@@ -2,6 +2,7 @@ package routers
 
 import (
 	"gitee.com/grandeep/org-svc/client"
+	"gitee.com/grandeep/org-svc/src/apis"
 	"sync"
 	"github.com/gin-gonic/gin"
 	"time"
@@ -21,6 +22,7 @@ func Gin() *gin.Engine {
 
 func Routers(e *gin.Engine) {
 	o := client.NewOrgServiceClient([]string{"127.0.0.1:2379"}, 3, time.Second)
+	api := apis.NewApis(o)
 	g := e.Group("/apis/v1")
-	userApiRouters(g, o)
+	userApiRouters(g, api)
 }

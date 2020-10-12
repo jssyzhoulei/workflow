@@ -1,6 +1,8 @@
 package apis
 
-import "gitee.com/grandeep/org-svc/src/services"
+import (
+	"gitee.com/grandeep/org-svc/client"
+)
 
 type IApis interface {
 	GetUserApis() userApiI
@@ -11,9 +13,9 @@ type apis struct {
 }
 
 
-func NewApis(userService services.UserServiceI) IApis {
+func NewApis(o *client.OrgServiceClient) IApis {
 	return &apis{
-		userApiI: NewUserApi(userService),
+		userApiI: NewUserApi(o.GetUserService()),
 	}
 }
 
