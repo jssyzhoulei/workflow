@@ -1,0 +1,31 @@
+header:
+  version: v1.0
+  lang: YORM
+models:
+  addUser:
+    insert into "user" values (${user.userName}, ${user.userAge})
+  getUserById:
+    - select * from "user" where 1 =1
+    - if: 1 = 1
+      then: and a= 1
+    - if: a == nil
+      then: and a = 1
+  updateUser:
+    update user set a = 1, b =2
+  tes:
+    - select * from user where 1 =1
+    - if: 1 == 1
+      then: a
+    - if: a == nil
+      then: and a = 1
+    - where id in
+    - (
+    - for: id,user => users
+      sep: ","
+      then:
+    - )
+    - group by u.userId
+  test:
+    - select * from user
+    - where id = ${id}
+
