@@ -3,17 +3,19 @@ package yorm
 import (
 	"database/sql"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/parse/util"
+	"gorm.io/gorm"
 	"strings"
 )
 
 type Dialect interface {
 	Device() string
-	Initialize() (db *sql.DB, err error)
+	Initialize() (db *gorm.DB, err error)
 	util.Binder
 }
 
 type DB struct {
 	mp *util.ModelPathMap
+	*gorm.DB
 	conn *sql.DB
 	dialect Dialect
 }
@@ -99,7 +101,8 @@ func Open(dialect Dialect) (*DB, error) {
 	)
 	db.dialect = dialect
 	db.mp = &util.ModelPathMap{}
-	db.conn, err = dialect.Initialize()
+	db.DB, err = dialect.Initialize()
+	db.conn, err = db.DB.DB()
 	if err != nil {
 		return nil, err
 	}

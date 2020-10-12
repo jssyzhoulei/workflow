@@ -1,10 +1,11 @@
 package mysql
 
 import (
-	"database/sql"
 	"fmt"
-	"io"
 	_ "github.com/go-sql-driver/mysql"
+	mysql2 "gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"io"
 )
 
 type Mysql struct {
@@ -20,8 +21,8 @@ func (p Mysql) Device() string {
 	return "mysql"
 }
 
-func (p *Mysql) Initialize() (db *sql.DB, err error) {
-	return sql.Open(p.Device(), p.Dsn())
+func (p *Mysql) Initialize() (db *gorm.DB, err error) {
+	return gorm.Open(mysql2.Open(p.Dsn()), &gorm.Config{})
 }
 
 func (p *Mysql) BindVarTo(w io.Writer, i int) {

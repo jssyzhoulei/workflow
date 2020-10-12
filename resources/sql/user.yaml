@@ -1,0 +1,6 @@
+header:
+  version: v1.0
+  lang: YORM
+models:
+  addUser:
+    insert into user (user_name) values (${user.UserName})

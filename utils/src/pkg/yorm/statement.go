@@ -251,3 +251,7 @@ func (s *Statement) RowsAffected() int64 {
 func (s *Statement) AddError(err error) {
 	s.err = err
 }
+
+func (s *Statement) Err() error {
+	return s.err
+}

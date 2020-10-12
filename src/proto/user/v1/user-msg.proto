@@ -1,0 +1,9 @@
+//protoc --go_out=plugins=grpc:.
+syntax = "proto3";
+package pb_user_v1;
+
+message UserProto {
+  int64 user_id = 1;
+  string user_name = 2;
+}
+
