@@ -19,8 +19,8 @@ func Gin() *gin.Engine {
 	return engine
 }
 
-func Routers() {
+func Routers(e *gin.Engine) {
 	o := client.NewOrgServiceClient([]string{"127.0.0.1:2379"}, 3, time.Second)
-	g := Gin().Group("/apis/v1")
+	g := e.Group("/apis/v1")
 	userApiRouters(g, o)
 }
