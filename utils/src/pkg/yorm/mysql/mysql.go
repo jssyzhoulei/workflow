@@ -40,5 +40,5 @@ func NewMysql(host string, port int, userName string, pwd string, db string) *My
 }
 
 func (p *Mysql) Dsn() string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&loc=%s", p.UserName, p.Password, p.Host, p.Port, p.DbName, p.TimeZone)
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&loc=%s&parseTime=true", p.UserName, p.Password, p.Host, p.Port, p.DbName, p.TimeZone)
 }
