@@ -3,7 +3,7 @@ package models
 //权限
 type Permission struct {
 	BaseModel
-	UriName    string        `json:"back_end_name" gorm:"column:back_end_name;comment:'后端接口名称';type:varchar(128)"`
+	UriName    string        `json:"uri_name" gorm:"column:uri_name;comment:'后端接口名称';type:varchar(128)"`
 	Method     RequestMethod `json:"method" gorm:"column:method;comment:'后端请求method';type:int(2)"`
 	Uri        string        `json:"uri" gorm:"column:uri;comment:'后端接口';type:varchar(600)"`
 	Relation   int           `json:"relation" gorm:"column:relation;comment:'是否关联前段button 1 是 2 否';type:int(2);default '2'"`
@@ -44,6 +44,6 @@ type RoleMenuPermission struct {
 	BaseModel
 	Version      int `gorm:"column:version;type:int(10);comment:'版本号'" json:"version"`
 	RoleID       int `gorm:"column:role_id;type:int(10);comment:'角色id'" json:"role_id"`
-	MenuID       int `gorm:"column:component_id;type:int(10);comment:'组件id'" json:"component_id"`
+	MenuID       int `gorm:"column:menu_id;type:int(10);comment:'组件id'" json:"menu_id"`
 	PermissionID int
 }
