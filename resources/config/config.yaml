@@ -1,8 +1,8 @@
 mysql:
-  host: 127.0.0.1
+  host: 106.14.122.162
   port: 3306
   userName: root
-  password: 123456
-  dbName: pole
+  password: +6jtHUesSSU#
+  dbName: gdp
   sqlPath: ./resources/sql
 etcdHost: 127.0.0.1:2379
