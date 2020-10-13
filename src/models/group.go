@@ -11,11 +11,19 @@ type Quota struct {
 	Used       int          `json:"used" gorm:"column:used;type:int(10);comment:'已经使用'"`
 }
 
+func (q Quota) TableName() string {
+	return "quota"
+}
+
 type Group struct {
 	BaseModel
 	Name      string `gorm:"column:name;type:varchar(50);comment:'组织名称'" json:"name"`
 	ParentID  int    `gorm:"column:parent_id;type:int(10);comment:'父级组织ID'" json:"parent_id"`
 	LevelPath string `gorm:"column:level_path;type:varchar(255);comment:'组织等级路径'" json:"level_path"`
+}
+
+func (g Group) TableName() string {
+	return "group"
 }
 
 //资源类型

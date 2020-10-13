@@ -34,6 +34,7 @@ func NewEngine(path string) *Engine {
 	if err != nil {
 		panic(err)
 	}
+	//e.DB.AutoMigrate(&models.User{}, &models.Group{}, &models.Menu{}, &models.Permission{}, &models.Quota{}, &models.Role{}, &models.RoleMenuPermission{}, &models.UserRole{})
 	sqlPath, err = e.Config.GetString("mysql.sqlPath")
 	err = e.DB.LoadSqlYaml(sqlPath)
 	if err != nil {

@@ -15,10 +15,18 @@ type User struct {
 	UserType  int    `gorm:"column:user_type;type:int(10);comment:'用户类型0 普通用户 1 管理员 2超级管理员'" json:"user_type"`
 }
 
+func (u User) TableName() string {
+	return "uer"
+}
+
 type UserRole struct {
 	BaseModel
 	UserID int `gorm:"column:user_id;type:int(10);comment:'关联用户'" json:"user_id"`
 	RoleID int `gorm:"column:role_id;type:int(10);comment:'关联角色'" json:"role_id"`
+}
+
+func (u UserRole) TableName() string {
+	return "user_role"
 }
 
 // CREATE TABLE `user` (
