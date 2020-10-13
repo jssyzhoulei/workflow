@@ -75,8 +75,8 @@ type User struct {
 
 type UserRole struct {
 	BaseModel
-	UserID   int    `gorm:"column:user_id;type:int(10);comment:'所属组织'" json:"user_id"`
-	RoleID   int    `gorm:"column:role_id;type:int(10);comment:'所属组织'" json:"role_id"`
+	UserID   int    `gorm:"column:user_id;type:int(10);comment:'关联用户'" json:"user_id"`
+	RoleID   int    `gorm:"column:role_id;type:int(10);comment:'关联角色'" json:"role_id"`
 }
 
 // 配额表
