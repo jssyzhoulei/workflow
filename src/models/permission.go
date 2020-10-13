@@ -51,3 +51,8 @@ type RoleMenuPermission struct {
 func (RoleMenuPermission) TableName() string {
 	return "role_menu_permission"
 }
+
+type CreateMenuPermRequest struct {
+	Role
+	MenuPerms []RoleMenuPermission
+}
