@@ -12,4 +12,4 @@
 *.out
 .DS_Store
 .idea/
-*.sum
+go.sum
