@@ -5,4 +5,4 @@ mysql:
   password: +6jtHUesSSU#
   dbName: gdp
   sqlPath: ./resources/sql
-etcdHost: 127.0.0.1:2379
+etcdHost: 192.168.2.107:2379

@@ -12,7 +12,6 @@ type apis struct {
 	userApiI
 }
 
-
 func NewApis(o *client.OrgServiceClient) IApis {
 	return &apis{
 		userApiI: NewUserApi(o.GetUserService()),

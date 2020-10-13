@@ -5,9 +5,6 @@ type User2 struct {
 	UserName string `json:"user_name"`
 }
 
-
-
-
 type User struct {
 	BaseModel
 	UserName  string `gorm:"column:user_name;type:varchar(50);comment:'用户名'" json:"user_name"`
@@ -20,11 +17,9 @@ type User struct {
 
 type UserRole struct {
 	BaseModel
-	UserID   int    `gorm:"column:user_id;type:int(10);comment:'关联用户'" json:"user_id"`
-	RoleID   int    `gorm:"column:role_id;type:int(10);comment:'关联角色'" json:"role_id"`
+	UserID int `gorm:"column:user_id;type:int(10);comment:'关联用户'" json:"user_id"`
+	RoleID int `gorm:"column:role_id;type:int(10);comment:'关联角色'" json:"role_id"`
 }
-
-
 
 // CREATE TABLE `user` (
 //  `id` int NOT NULL AUTO_INCREMENT COMMENT '用户ID',
