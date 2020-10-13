@@ -7,7 +7,7 @@ import (
 )
 
 func EncodeUserModel(ctx context.Context, req interface{}) (interface{}, error) {
-	user := req.(models.User)
+	user := req.(models.User2)
 	return &pb_user_v1.UserProto{
 		UserId:                   int64(user.UserId),
 		UserName:                 user.UserName,
@@ -16,7 +16,7 @@ func EncodeUserModel(ctx context.Context, req interface{}) (interface{}, error) 
 
 func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) {
 	user := res.(*pb_user_v1.UserProto)
-	return models.User{
+	return models.User2{
 		UserId:                   user.UserId,
 		UserName:                 user.UserName,
 	}, nil

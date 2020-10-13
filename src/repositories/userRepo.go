@@ -8,7 +8,7 @@ import (
 )
 
 type UserRepoI interface {
-	AddUserRepo(user models.User) error
+	AddUserRepo(user models.User2) error
 }
 
 type userRepo struct {
@@ -23,7 +23,7 @@ func NewUserRepo(db *yorm.DB) UserRepoI {
 	}
 }
 
-func (u *userRepo) AddUserRepo(user models.User) error {
+func (u *userRepo) AddUserRepo(user models.User2) error {
 	fmt.Println("我到了")
 	fmt.Println(user)
 	return u.repo.AddQuery("user", user).Exec("addUser").Err()
