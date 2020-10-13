@@ -8,14 +8,14 @@ import (
 
 func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) {
 	r := req.(*pb_user_v1.UserProto)
-	return models.User{
+	return models.User2{
 		UserId: r.UserId,
 		UserName: r.UserName,
 	}, nil
 }
 
 func EncodeUserProto(ctx context.Context, req interface{}) (interface{}, error) {
-	r := req.(models.User)
+	r := req.(models.User2)
 	return &pb_user_v1.UserProto{
 		UserId:   r.UserId,
 		UserName: r.UserName,

@@ -7,7 +7,7 @@ import (
 )
 
 type UserServiceI interface {
-	AddUserSvc(ctx context.Context, user models.User) (models.User, error)
+	AddUserSvc(ctx context.Context, user models.User2) (models.User2, error)
 }
 
 type userService struct {
@@ -20,6 +20,6 @@ func NewUserService(repos repositories.RepoI) UserServiceI {
 	}
 }
 
-func (u *userService) AddUserSvc(ctx context.Context, user models.User) (models.User, error) {
+func (u *userService) AddUserSvc(ctx context.Context, user models.User2) (models.User2, error) {
 	return user, u.userRepo.AddUserRepo(user)
 }
