@@ -5,6 +5,10 @@ type User2 struct {
 	UserName string `json:"user_name"`
 }
 
+func (u User2) TableName() string {
+	return "user2"
+}
+
 type User struct {
 	BaseModel
 	UserName  string `gorm:"column:user_name;type:varchar(50);comment:'用户名'" json:"user_name"`
@@ -16,7 +20,7 @@ type User struct {
 }
 
 func (u User) TableName() string {
-	return "uer"
+	return "user"
 }
 
 type UserRole struct {

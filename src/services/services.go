@@ -9,19 +9,22 @@ import (
 type ServiceI interface {
 	GetUserService() UserServiceI
 	GetGroupService() GroupServiceI
+	GetRoleService() RoleServiceI
 }
 
 type service struct {
-	config *config.Config
-	userService UserServiceI
+	config       *config.Config
+	userService  UserServiceI
 	groupService GroupServiceI
+	roleService  RoleServiceI
 }
 
 func NewService(repo repositories.RepoI, e *engine.Engine) ServiceI {
 	return &service{
-		userService: NewUserService(repo),
+		userService:  NewUserService(repo),
 		groupService: NewGroupService(repo),
-		config: e.Config,
+		roleService:  NewRoleService(repo),
+		config:       e.Config,
 	}
 }
 
@@ -33,4 +36,6 @@ func (s service) GetGroupService() GroupServiceI {
 	return s.groupService
 }
 
-
+func (s service) GetRoleService() RoleServiceI {
+	return s.roleService
+}
