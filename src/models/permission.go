@@ -47,3 +47,7 @@ type RoleMenuPermission struct {
 	MenuID       int `gorm:"column:menu_id;type:int(10);comment:'组件id'" json:"menu_id"`
 	PermissionID int
 }
+
+func (RoleMenuPermission) TableName() string {
+	return "role_menu_permission"
+}
