@@ -15,6 +15,7 @@ type UserServiceEndpoint struct {
 func NewUserEndpoint(service services.ServiceI) *UserServiceEndpoint {
 	var userServiceEndpoint = &UserServiceEndpoint{}
 	userServiceEndpoint.AddUserEndpoint = MakeAddUserEndpoint(service.GetUserService())
+
 	return userServiceEndpoint
 }
 
