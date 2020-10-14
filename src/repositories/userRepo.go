@@ -10,9 +10,9 @@ import (
 // UserRepoI ...
 type UserRepoInterface interface {
 	AddUserRepo(user *models.User, tx *gorm.DB) error
-	GetUserByIDRepo(id int) (user models.User, err error)
-	UpdateUserByIDRepo(user models.User) error
-	DeleteUserByIDRepo(id int) error
+	GetUserByIDRepo(id int, tx *gorm.DB) (*models.User, error)
+	UpdateUserByIDRepo(user *models.User, tx *gorm.DB) error
+	DeleteUserByIDRepo(id int, tx *gorm.DB) error
 	GetTx() *gorm.DB
 }
 
@@ -68,24 +68,54 @@ func (u *userRepo) AddUserRepo(user *models.User, tx *gorm.DB) error {
 }
 
 // GetUserByIDRepo 获取用户详情
-func (u *userRepo) GetUserByIDRepo(id int) (user models.User, err error) {
-	err = u.First(&user, id).Error
-	return
+func (u *userRepo) GetUserByIDRepo(id int, tx *gorm.DB) (*models.User, error) {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = u.DB
+	} else {
+		db = tx
+	}
+	var userInfo = new(models.User)
+	err = db.Model(&models.User{}).Where("id=?", id).Find(&userInfo).Error
+	if err != nil {
+		return nil, err
+	}
+	return userInfo, nil
 }
 
 // UpdateUserByIDRepo 根据ID编辑用户
-func (u *userRepo) UpdateUserByIDRepo(user models.User) error {
-	return u.Model(&user).Updates(user).Error
+func (u *userRepo) UpdateUserByIDRepo(user *models.User, tx *gorm.DB) error {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = u.DB
+	} else {
+		db = tx
+	}
+	if err = db.Model(&user).Where("id=?", user.ID).Save(&user).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 // DeleteUserByIDRepo 根据ID删除用户
-func (u *userRepo) DeleteUserByIDRepo(id int) error {
+func (u *userRepo) DeleteUserByIDRepo(id int, tx *gorm.DB) error {
 	var (
 		user models.User
 	)
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = u.DB
+	} else {
+		db = tx
+	}
 	if id != 0 {
 		user.ID = id
-		return u.Delete(&user).Error
+		if err = db.Delete(&user).Error; err != nil{
+			return err
+		}
 	}
 	return nil
 }

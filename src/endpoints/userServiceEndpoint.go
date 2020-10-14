@@ -43,7 +43,7 @@ func MakeAddUserEndpoint(userService services.UserServiceInterface) endpoint.End
 // MakeGetUserByIDEndpoint ...
 func MakeGetUserByIDEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		user, ok := request.(pb_user_v1.UserProto)
+		user, ok := request.(pb_user_v1.Index)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
