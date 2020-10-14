@@ -1,0 +1,10 @@
+syntax = "proto3";
+package pb_user_v1;
+
+message Index {
+  int64 id = 1;
+}
+
+message NullResponse {
+  int32 code = 1;
+}

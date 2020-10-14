@@ -2,28 +2,56 @@ package apis
 
 import (
 	"context"
-	"fmt"
-	"gitee.com/grandeep/org-svc/src/models"
+	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
-type userApiI interface {
+type userApiInterface interface {
 	AddUserApi(ctx *gin.Context)
 }
 
 type userApi struct {
-	userService services.UserServiceI
+	userService services.UserServiceInterface
 }
 
-func NewUserApi(userService services.UserServiceI) userApiI {
+func NewUserApi(userService services.UserServiceInterface) userApiInterface {
 	return &userApi{
 		userService: userService,
 	}
 }
 
+func responses(ctx *gin.Context, status int, message string, data interface{}){
+	if data == nil {
+		data = ""
+	}
+	ctx.Request.Header.Set("Content-Type", "application/json")
+	ctx.JSON(status, map[string]interface{} {
+		"code" : status,
+		"message" : message,
+		"data" : data,
+	})
+	ctx.Abort()
+	return
+}
+
+// AddUserApi 添加用户API
 func (u *userApi) AddUserApi(ctx *gin.Context) {
-	fmt.Println(u.userService.AddUser(context.Background(), models.User{}))
+	var data = new(pb_user_v1.UserProto)
+	if err := ctx.BindJSON(data); err != nil{
+		responses(ctx, http.StatusBadRequest, "参数错误", nil)
+		return
+	}
+
+	_, err := u.userService.AddUserSvc(context.Background(), data)
+	if err != nil{
+		log.Logger().Error("创建用户失败:" + err.Error())
+		responses(ctx, http.StatusBadRequest, "创建用户失败", nil)
+		return
+	}
+	responses(ctx, http.StatusOK, "创建用户成功", nil)
 }
 
 

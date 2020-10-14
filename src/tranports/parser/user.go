@@ -14,13 +14,17 @@ func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 		},
 		UserName: r.UserName,
 		LoginName: r.LoginName,
+		Password: r.Password,
+		Mobile: int(r.Mobile),
 	}, nil
 }
 
 func EncodeUserProto(ctx context.Context, req interface{}) (interface{}, error) {
 	r := req.(models.User)
 	return &pb_user_v1.UserProto{
-		Id:   &pb_user_v1.Index{Id: int64(r.ID)},
 		UserName: r.UserName,
+		LoginName: r.LoginName,
+		Password: r.Password,
+		Mobile: int64(r.Mobile),
 	}, nil
 }

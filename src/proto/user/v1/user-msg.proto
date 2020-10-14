@@ -1,6 +1,6 @@
-//protoc --go_out=plugins=grpc:.
+//protoc --go_out=plugins=grpc:. *.proto
 syntax = "proto3";
-option go_package = ".;pb_user_v1";
+package pb_user_v1;
 
 // AddUserRequest 添加用户请求
 message UserProto {
@@ -20,4 +20,26 @@ message Index {
 // UserResponse 用户响应
 message NullResponse {
   int64 Code = 1;
+}
+// GroupResponse 用户组响应
+message GroupResponse {
+  int64 code = 1;
+}
+
+// quota 配额信息
+message Quota {
+  int64  is_share = 1;
+  string resources_group_id = 2;
+  int64  gpu = 3;
+  int64  cpu = 4;
+  int64  memory = 5;
+}
+
+// GroupAddRequest 用户组添加请求
+message GroupAddRequest {
+  string name = 1;
+  int64  parent_id = 2;
+  int64  disk_quota_size = 3;
+  repeated Quota quotas = 4;
+
 }

@@ -20,9 +20,13 @@ type OrgServiceClient struct {
 	retryTimeout time.Duration
 }
 
-type GrpcUserConnFunc func(conn *grpc.ClientConn) services.UserServiceI
+type GrpcUserConnFunc func(conn *grpc.ClientConn) services.UserServiceInterface
 
-type MakeUserEndpointFunc func(userService services.UserServiceI) endpoint.Endpoint
+type MakeUserEndpointFunc func(userService services.UserServiceInterface) endpoint.Endpoint
+
+type MakeGroupEndpointFunc func(userService services.GroupServiceI) endpoint.Endpoint
+
+type GrpcGroupConnFunc func(conn *grpc.ClientConn) services.GroupServiceI
 
 func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgServiceClient {
 	var (
@@ -51,7 +55,7 @@ func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgSe
 	return o
 }
 
-func (o *OrgServiceClient) GetUserService() services.UserServiceI {
+func (o *OrgServiceClient) GetUserService() services.UserServiceInterface {
 	endpoints := &org_endpoints.UserServiceEndpoint{}
 	endpoints.AddUserEndpoint = o.getRetryEndpoint(org_endpoints.MakeAddUserEndpoint, addUserGrpcConn)
 	return endpoints
@@ -74,4 +78,32 @@ func (o *OrgServiceClient) getRetryEndpoint(ept MakeUserEndpointFunc, conn GrpcU
 	endpointer := sd.NewEndpointer(o.instance, factory, log.NewNopLogger())
 	balance := lb.NewRandom(endpointer, time.Now().UnixNano())
 	return lb.Retry(o.retryMax, o.retryTimeout, balance)
+}
+
+
+//  Group
+func (o *OrgServiceClient) GetGroupService() services.GroupServiceI {
+	endpoints := &org_endpoints.GroupServiceEndpoint{}
+	endpoints.GroupAddEndpoint = o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupAddGrpcConn)
+	return endpoints
+}
+
+
+func (o *OrgServiceClient) getGroupRetryEndpoint(ept MakeGroupEndpointFunc, conn GrpcGroupConnFunc) endpoint.Endpoint {
+	factory := o.factoryGroupFor(ept, conn)
+	endpointer := sd.NewEndpointer(o.instance, factory, log.NewNopLogger())
+	balance := lb.NewRandom(endpointer, time.Now().UnixNano())
+	return lb.Retry(o.retryMax, o.retryTimeout, balance)
+}
+
+func (o *OrgServiceClient) factoryGroupFor(makeEndpoint MakeGroupEndpointFunc, conn GrpcGroupConnFunc) sd.Factory {
+	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
+		con, err := grpc.Dial(instance, grpc.WithInsecure())
+		if err != nil {
+			return nil, nil, err
+		}
+
+		endpoints := makeEndpoint(conn(con))
+		return endpoints, con, err
+	}
 }
