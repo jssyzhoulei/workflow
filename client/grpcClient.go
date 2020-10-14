@@ -22,14 +22,14 @@ func addUserGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 	}
 }
 
-func groupAddGrpcConn(conn *grpc.ClientConn) services.GroupServiceI {
+func groupAddGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 	return &endpoints.GroupServiceEndpoint{
 		GroupAddEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RPCGroupAdd",
-			parser.EncodeUserModel,
-			parser.DecodeUserModel,
+			parser.EncodeGroupAddProto,
+			parser.DecodeGroupProto,
 			pb_user_v1.GroupResponse{},
 			).Endpoint(),
 	}

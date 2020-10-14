@@ -9,15 +9,15 @@ import (
 	"net/http"
 )
 
-type groupApiI interface {
+type groupApiInterface interface {
 	GroupAddApi(ctx *gin.Context)
 }
 
 type groupApi struct {
-	groupService services.GroupServiceI
+	groupService services.GroupServiceInterface
 }
 
-func NewGroupApi(groupService services.GroupServiceI) groupApiI {
+func NewGroupApi(groupService services.GroupServiceInterface) groupApiInterface {
 	return &groupApi{
 		groupService: groupService,
 	}
@@ -39,22 +39,30 @@ func response(c *gin.Context, status int, message string, data interface{}) {
 }
 
 // GroupAddApi 添加组API
-func (u *groupApi) GroupAddApi(c *gin.Context) {
+func (g *groupApi) GroupAddApi(c *gin.Context) {
 
 	var data = new(pb_user_v1.GroupAddRequest)
 
 	err := c.BindJSON(data)
 	if err != nil {
-		response(c, http.StatusBadRequest, "错误", nil)
+		response(c, http.StatusBadRequest, "参数解析错误", nil)
 		return
 	}
-	err = u.groupService.GroupAdd(context.Background(),data)
+
+	if data.Name == "" || len(data.Quotas) == 0 {
+		response(c, http.StatusBadRequest, "参数不合法", nil)
+		return
+	}
+
+	res , err := g.groupService.GroupAddSvc(context.Background(), data)
 	if err != nil {
-		log.Logger().Error("添加组错误: " + err.Error())
-		response(c, http.StatusBadRequest, "错误", nil)
+		log.Logger().Info("添加组错误: " + err.Error())
+		response(c, http.StatusBadRequest, "操作失败", nil)
 		return
 	}
-	response(c, http.StatusOK, "成功", nil)
+
+	response(c, http.StatusOK, "成功", res)
+	return
 }
 
 

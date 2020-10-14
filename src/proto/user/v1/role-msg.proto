@@ -1,6 +1,6 @@
 //protoc --go_out=plugins=grpc:.
 syntax = "proto3";
-package pb_user_v1;
+option go_package="src/proto/user/v1;pb_user_v1";
 
 message RoleProto {
   string name = 1;
