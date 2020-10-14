@@ -10,6 +10,7 @@ import (
 type OrgTransport struct {
 	*userGrpcTransport
 	*groupGrpcTransport
+	*roleGrpcTransport
 }
 
 func (o *OrgTransport) RpcAddRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.RoleProto, error) {
@@ -20,5 +21,6 @@ func NewTransport(ept *endpoints.OrgEndpoint) pb_user_v1.RpcOrgServiceServer {
 	return &OrgTransport{
 		userGrpcTransport: NewUserGrpcTransport(ept.UserServiceEndpoint),
 		groupGrpcTransport: NewGroupGrpcTransport(ept.GroupServiceEndpoint),
+		roleGrpcTransport: NewRoleGrpcTransport(ept.RoleServiceEndpoint),
 	}
 }

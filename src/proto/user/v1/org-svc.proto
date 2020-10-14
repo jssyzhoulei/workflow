@@ -9,5 +9,6 @@ service RpcOrgService {
   rpc RpcUpdateUser(UserProto) returns (NullResponse);
   rpc RpcGetUserById(Index) returns (UserProto);
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
+  rpc RPCGroupQueryByCondition(GroupQueryByConditionRequest) returns (GroupQueryByConditionResponse);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (RoleProto);
 }

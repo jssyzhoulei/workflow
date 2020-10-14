@@ -28,5 +28,3 @@ func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) 
 		Mobile:    int(user.Mobile),
 	}, nil
 }
-
-

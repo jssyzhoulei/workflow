@@ -12,12 +12,14 @@ import (
 type GroupServiceEndpoint struct {
 	// GroupAddEndpoint 添加组
 	GroupAddEndpoint endpoint.Endpoint
+	GroupQueryByConditionEndpoint endpoint.Endpoint
 }
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
 func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 	return &GroupServiceEndpoint{
 		GroupAddEndpoint: MakeGroupAddEndpoint(service.GetGroupService()),
+		GroupQueryByConditionEndpoint: MakeGroupQueryByConditionEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -33,11 +35,33 @@ func MakeGroupAddEndpoint(groupServiceInterface services.GroupServiceInterface) 
 	}
 }
 
-// GroupAdd ...
+// GroupAddSvc ...
 func (g *GroupServiceEndpoint) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAddRequest) (*pb_user_v1.GroupResponse, error) {
 	resp, err := g.GroupAddEndpoint(ctx, data)
 	if err != nil {
 		return nil, err
 	}
 	return resp.(*pb_user_v1.GroupResponse), nil
+}
+
+// MakeGroupQueryByConditionEndpoint ...
+func MakeGroupQueryByConditionEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.GroupQueryByConditionRequest)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = groupServiceInterface.GroupQueryByConditionSvc(ctx, data)
+		return
+	}
+}
+
+// GroupQueryByConditionSvc ...
+func (g *GroupServiceEndpoint) GroupQueryByConditionSvc(ctx context.Context, data *pb_user_v1.GroupQueryByConditionRequest) (*pb_user_v1.GroupQueryByConditionResponse, error) {
+
+	resp , err := g.GroupQueryByConditionEndpoint(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupQueryByConditionResponse), nil
 }
