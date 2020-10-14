@@ -24,9 +24,9 @@ type GrpcUserConnFunc func(conn *grpc.ClientConn) services.UserServiceI
 
 type MakeUserEndpointFunc func(userService services.UserServiceI) endpoint.Endpoint
 
-type MakeGroupEndpointFunc func(userService services.GroupServiceI) endpoint.Endpoint
+type MakeGroupEndpointFunc func(userService services.GroupServiceInterface) endpoint.Endpoint
 
-type GrpcGroupConnFunc func(conn *grpc.ClientConn) services.GroupServiceI
+type GrpcGroupConnFunc func(conn *grpc.ClientConn) services.GroupServiceInterface
 
 func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgServiceClient {
 	var (
@@ -82,10 +82,10 @@ func (o *OrgServiceClient) getRetryEndpoint(ept MakeUserEndpointFunc, conn GrpcU
 
 
 //  Group
-func (o *OrgServiceClient) GetGroupService() services.GroupServiceI {
-	endpoints := &org_endpoints.GroupServiceEndpoint{}
-	endpoints.GroupAddEndpoint = o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupAddGrpcConn)
-	return endpoints
+func (o *OrgServiceClient) GetGroupService() services.GroupServiceInterface {
+	return &org_endpoints.GroupServiceEndpoint{
+		GroupAddEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupAddGrpcConn),
+	}
 }
 
 

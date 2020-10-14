@@ -8,14 +8,14 @@ import (
 
 type ServiceI interface {
 	GetUserService() UserServiceI
-	GetGroupService() GroupServiceI
+	GetGroupService() GroupServiceInterface
 	GetRoleService() RoleServiceI
 }
 
 type service struct {
 	config       *config.Config
 	userService  UserServiceI
-	groupService GroupServiceI
+	groupService GroupServiceInterface
 	roleService  RoleServiceI
 }
 
@@ -32,7 +32,7 @@ func (s service) GetUserService() UserServiceI {
 	return s.userService
 }
 
-func (s service) GetGroupService() GroupServiceI {
+func (s service) GetGroupService() GroupServiceInterface {
 	return s.groupService
 }
 

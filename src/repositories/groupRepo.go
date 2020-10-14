@@ -9,11 +9,11 @@ import (
 )
 
 // GroupRepoI ...
-type GroupRepoI interface {
-	GroupAdd(data *models.Group, tx *gorm.DB) error
+type GroupRepoInterface interface {
+	GroupAddRepo(data *models.Group, tx *gorm.DB) error
 	GetTx() *gorm.DB
-	GroupQueryByName(name string, tx *gorm.DB) (*models.Group,error)
-	QuotaAdd(data []*models.Quota, tx *gorm.DB) error
+	GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Group,error)
+	QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error
 }
 
 type groupRepo struct {
@@ -25,14 +25,14 @@ func (u *groupRepo) GetTx() *gorm.DB {
 }
 
 // NewGroupRepo ...
-func NewGroupRepo(db *yorm.DB) GroupRepoI {
+func NewGroupRepo(db *yorm.DB) GroupRepoInterface {
 	return &groupRepo{
 		DB: db.DB,
 	}
 }
 
 // GroupAdd 添加组
-func (u *groupRepo) GroupAdd(data *models.Group, tx *gorm.DB) error {
+func (u *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 	var err error
 	var db *gorm.DB
 	if tx == nil {
@@ -76,7 +76,7 @@ func (u *groupRepo) GroupAdd(data *models.Group, tx *gorm.DB) error {
 }
 
 // GroupQueryByName 通过组名查询组信息
-func (u *groupRepo) GroupQueryByName(name string, tx *gorm.DB) (*models.Group, error) {
+func (u *groupRepo) GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Group, error) {
 	var err error
 	var db *gorm.DB
 	if tx == nil {
@@ -94,7 +94,7 @@ func (u *groupRepo) GroupQueryByName(name string, tx *gorm.DB) (*models.Group, e
 }
 
 // QuotaAdd 批量创建配额
-func (u *groupRepo) QuotaAdd(data []*models.Quota, tx *gorm.DB) error {
+func (u *groupRepo) QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error {
 	var err error
 	err = tx.Create(data).Error
 	if err != nil {

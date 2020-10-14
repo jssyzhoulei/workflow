@@ -6,18 +6,19 @@ import (
 
 type IApis interface {
 	GetUserApis() userApiI
+	GetGroupApis() groupApiInterface
 
 }
 
 type apis struct {
 	userApiI
-	groupApiI
+	groupApiInterface
 }
 
 func NewApis(o *client.OrgServiceClient) IApis {
 	return &apis{
 		userApiI: NewUserApi(o.GetUserService()),
-		//groupApiI,NewGroupApi(o.),
+		groupApiInterface: NewGroupApi(o.GetGroupService()),
 	}
 }
 
@@ -25,6 +26,6 @@ func (a *apis) GetUserApis() userApiI {
 	return a.userApiI
 }
 
-func (a *apis) GetGroupApis() groupApiI {
-	return a.groupApiI
+func (a *apis) GetGroupApis() groupApiInterface {
+	return a.groupApiInterface
 }
