@@ -1,6 +1,8 @@
 package tranports
 
-import "gitee.com/grandeep/org-svc/src/endpoints"
+import (
+	"gitee.com/grandeep/org-svc/src/endpoints"
+)
 
 type OrgTransport struct {
 	*userGrpcTransport

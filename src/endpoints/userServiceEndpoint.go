@@ -24,19 +24,19 @@ var (
 
 func MakeAddUserEndpoint(userService services.UserServiceI) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		user, ok := request.(models.User2)
+		user, ok := request.(models.User)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		response, err = userService.AddUserSvc(ctx, user)
+		response, err = userService.AddUser(ctx, user)
 		return
 	}
 }
 
-func (u *UserServiceEndpoint) AddUserSvc(ctx context.Context, user models.User2) (models.User2, error) {
+func (u *UserServiceEndpoint) AddUserSvc(ctx context.Context, user models.User) (models.User, error) {
 	res, err := u.AddUserEndpoint(ctx, user)
 	if err != nil {
 		return user, err
 	}
-	return res.(models.User2), nil
+	return res.(models.User), nil
 }

@@ -23,14 +23,18 @@ func NewUserGrpcTransport(endpoint *endpoints.UserServiceEndpoint) *userGrpcTran
 }
 
 
-func (u *userGrpcTransport) RpcAddUser(ctx context.Context, proto *pb_user_v1.UserProto) (*pb_user_v1.UserProto, error) {
-	_, user, err := u.addUser.ServeGRPC(ctx, proto)
+func (u *userGrpcTransport) RpcAddUser(ctx context.Context, proto *pb_user_v1.UserProto) (*pb_user_v1.NullResponse, error) {
+	_, _, err := u.addUser.ServeGRPC(ctx, proto)
 	if err != nil {
 		return nil, err
 	}
-	return user.(*pb_user_v1.UserProto), err
+	return &pb_user_v1.NullResponse{Code: 0}, err
 }
 
-func (u *userGrpcTransport) RpcGetUserById(ctx context.Context, proto *pb_user_v1.UserProto) (*pb_user_v1.UserProto, error) {
+func (o *userGrpcTransport) RpcUpdateUser(ctx context.Context, proto *pb_user_v1.UserProto) (*pb_user_v1.NullResponse, error) {
+	panic("implement me")
+}
+
+func (u *userGrpcTransport) RpcGetUserById(ctx context.Context, index *pb_user_v1.Index) (*pb_user_v1.UserProto, error) {
 	panic("implement me")
 }

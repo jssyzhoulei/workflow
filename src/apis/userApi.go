@@ -23,7 +23,7 @@ func NewUserApi(userService services.UserServiceI) userApiI {
 }
 
 func (u *userApi) AddUserApi(ctx *gin.Context) {
-	fmt.Println(u.userService.AddUserSvc(context.Background(), models.User2{UserName: "fhj", UserId: 1}))
+	fmt.Println(u.userService.AddUser(context.Background(), models.User{}))
 }
 
 

@@ -5,6 +5,7 @@ type User2 struct {
 	UserName string `json:"user_name"`
 }
 
+// User 用户表
 type User struct {
 	BaseModel
 	UserName  string `gorm:"column:user_name;type:varchar(50);comment:'用户名'" json:"user_name"`
@@ -15,16 +16,19 @@ type User struct {
 	UserType  int    `gorm:"column:user_type;type:int(10);comment:'用户类型0 普通用户 1 管理员 2超级管理员'" json:"user_type"`
 }
 
+// TableName ...
 func (u User) TableName() string {
 	return "uer"
 }
 
+// UserRole 用户角色关联表
 type UserRole struct {
 	BaseModel
 	UserID int `gorm:"column:user_id;type:int(10);comment:'关联用户'" json:"user_id"`
 	RoleID int `gorm:"column:role_id;type:int(10);comment:'关联角色'" json:"role_id"`
 }
 
+// TableName ...
 func (u UserRole) TableName() string {
 	return "user_role"
 }
