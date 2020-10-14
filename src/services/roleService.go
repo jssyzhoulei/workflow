@@ -7,7 +7,9 @@ import (
 )
 
 type RoleServiceI interface {
-	AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (models.Role, error)
+	AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error
+	UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error
+	DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error
 }
 
 type roleService struct {
@@ -20,13 +22,32 @@ func NewRoleService(repos repositories.RepoI) RoleServiceI {
 	}
 }
 
-func (r *roleService) AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (models.Role, error) {
+func (r *roleService) AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error {
 	err := r.roleRepo.AddRoleRepo(&role)
 	if err != nil{
-		return role.Role, err
+		return err
 	}
 	for _, mp := range role.MenuPerms{
 		mp.RoleID = role.ID
 	}
-	return role.Role, r.roleRepo.BatchCreateMenuPermRepo(&role.MenuPerms)
+	return r.roleRepo.BatchCreateMenuPermRepo(&role.MenuPerms)
+}
+
+func (r *roleService) UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error {
+	err := r.roleRepo.UpdateRoleRepo(&role.Role)
+	err = r.roleRepo.DeleteMenuPermissionByRoleIDRepo(role.ID)
+	if err != nil{
+		return err
+	}
+	for _, mp := range role.MenuPerms{
+		mp.ID = 0
+		mp.RoleID = role.ID
+	}
+	return r.roleRepo.BatchCreateMenuPermRepo(&role.MenuPerms)
+}
+
+func (r *roleService) DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error{
+	err := r.roleRepo.DeleteMenuPermissionByRoleIDRepo(role.ID)
+	err = r.roleRepo.DeleteRoleRepo(&role.Role)
+	return err
 }
