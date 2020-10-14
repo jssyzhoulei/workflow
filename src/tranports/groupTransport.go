@@ -2,7 +2,6 @@ package tranports
 
 import (
 	"context"
-	"fmt"
 	"gitee.com/grandeep/org-svc/src/endpoints"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/tranports/parser"
@@ -20,7 +19,6 @@ func NewGroupGrpcTransport(endpoint *endpoints.GroupServiceEndpoint) *groupGrpcT
 }
 
 func (g *groupGrpcTransport) RPCGroupAdd(ctx context.Context, proto *pb_user_v1.GroupAddRequest) (*pb_user_v1.GroupResponse, error) {
-	fmt.Println(1234456)
 	_, resp, err := g.groupAdd.ServeGRPC(ctx, proto)
 	if err != nil {
 		return nil, err

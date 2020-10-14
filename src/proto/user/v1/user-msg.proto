@@ -1,7 +1,7 @@
 // protoc --go_out=plugins=grpc:. *.proto
 // protoc -I src/proto/user/v1/ --go_out=plugins=grpc:. src/proto/user/v1/*.proto
 syntax = "proto3";
-option go_package="src/proto/user/v1;pb_user_v1";
+package pb_user_v1;
 
 message UserProto {
   int64 user_id = 1;
