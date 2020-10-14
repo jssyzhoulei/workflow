@@ -10,6 +10,7 @@ type Permission struct {
 	ButtonName string        `json:"button_name" gorm:"column:button_name;comment:'button name';type:varchar(40);"`
 	ButtonKey  string        `json:"button_key" gorm:"column:button_key;comment:'前段button key 需要前段全局唯一';type:varchar(40);"`
 	MenuID     int64         `json:"menu_id" gorm:"column:menu_id;comment:'菜单id';type:int(11);"`
+	Module     MenuModule 	`json:"module" gorm:"column:module; comment:'所属模块平台';type:int(2)" json:"module"`
 }
 
 func (p Permission) TableName() string {
