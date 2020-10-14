@@ -21,5 +21,3 @@ func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) 
 		UserName:                 user.UserName,
 	}, nil
 }
-
-

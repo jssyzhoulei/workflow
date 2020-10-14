@@ -11,7 +11,7 @@ import (
 
 func addUserGrpcConn(conn *grpc.ClientConn) services.UserServiceI {
 	return &endpoints.UserServiceEndpoint{
-		AddUserEndpoint:     grpctransport.NewClient(
+		AddUserEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcAddUser",
@@ -31,6 +31,35 @@ func groupAddGrpcConn(conn *grpc.ClientConn) services.GroupServiceI {
 			parser.EncodeUserModel,
 			parser.DecodeUserModel,
 			pb_user_v1.GroupResponse{},
-			).Endpoint(),
+		).Endpoint(),
+	}
+}
+
+func addRoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
+	return &endpoints.RoleServiceEndpoint{
+		AddRoleEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcAddRole",
+			parser.DecodeUserModel,
+			parser.DecodeUserModel,
+			pb_user_v1.RoleProto{},
+		).Endpoint(),
+		UpdateRoleEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcUpdateRole",
+			parser.DecodeUserModel,
+			parser.DecodeUserModel,
+			pb_user_v1.RoleProto{},
+		).Endpoint(),
+		DeleteRoleEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcDeleteRole",
+			parser.DecodeUserModel,
+			parser.DecodeUserModel,
+			pb_user_v1.RoleProto{},
+		).Endpoint(),
 	}
 }
