@@ -4,5 +4,6 @@ mysql:
   userName: root
   password: +6jtHUesSSU#
   dbName: gdp
+  timeZone: Local
   sqlPath: ./resources/sql
 etcdHost: 127.0.0.1:2379

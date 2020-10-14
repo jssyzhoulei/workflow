@@ -19,7 +19,7 @@ func NewEngine(path string) *Engine {
 		e Engine
 		err error
 		mysqlConfig mysql.Mysql
-		sqlPath string
+		//sqlPath string
 	)
 	e.Config,err = config.NewConfig(path)
 	e.Logger = log.Logger()
@@ -35,11 +35,11 @@ func NewEngine(path string) *Engine {
 		panic(err)
 	}
 	//e.DB.AutoMigrate(&models.User{}, &models.Group{}, &models.Menu{}, &models.Permission{}, &models.Quota{}, &models.Role{}, &models.RoleMenuPermission{}, &models.UserRole{})
-	sqlPath, err = e.Config.GetString("mysql.sqlPath")
-	err = e.DB.LoadSqlYaml(sqlPath)
-	if err != nil {
-		panic(err)
-	}
+	//sqlPath, err = e.Config.GetString("mysql.sqlPath")
+	//err = e.DB.LoadSqlYaml(sqlPath)
+	//if err != nil {
+	//	panic(err)
+	//}
 	e.Logger.Info("engine success")
 	return &e
 }
