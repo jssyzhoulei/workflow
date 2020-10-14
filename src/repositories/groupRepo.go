@@ -14,14 +14,16 @@ type GroupRepoInterface interface {
 	GetTx() *gorm.DB
 	GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Group,error)
 	QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error
+	GroupQueryByConditionRepo(condition string, tx *gorm.DB, val ...interface{}) ([]*models.Group, error)
+	QuotaQueryByConditionRepo(condition string, tx *gorm.DB, val ...interface{}) ([]*models.Quota, error)
 }
 
 type groupRepo struct {
 	*gorm.DB
 }
 
-func (u *groupRepo) GetTx() *gorm.DB {
-	return u.Begin()
+func (g *groupRepo) GetTx() *gorm.DB {
+	return g.Begin()
 }
 
 // NewGroupRepo ...
@@ -32,11 +34,11 @@ func NewGroupRepo(db *yorm.DB) GroupRepoInterface {
 }
 
 // GroupAdd 添加组
-func (u *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
+func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 	var err error
 	var db *gorm.DB
 	if tx == nil {
-		db = u.DB
+		db = g.DB
 	} else {
 		db = tx
 	}
@@ -76,11 +78,11 @@ func (u *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 }
 
 // GroupQueryByName 通过组名查询组信息
-func (u *groupRepo) GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Group, error) {
+func (g *groupRepo) GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Group, error) {
 	var err error
 	var db *gorm.DB
 	if tx == nil {
-		db = u.DB
+		db = g.DB
 	} else {
 		db = tx
 	}
@@ -94,15 +96,56 @@ func (u *groupRepo) GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Grou
 }
 
 // QuotaAdd 批量创建配额
-func (u *groupRepo) QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error {
+func (g *groupRepo) QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error {
 	var err error
-	err = tx.Create(data).Error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+	err = db.Create(data).Error
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// GroupQueryByCondition 通过条件查询组信息
+func (g *groupRepo) GroupQueryByConditionRepo(condition string, tx *gorm.DB, val ...interface{}) ([]*models.Group, error) {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
 
+	var result = make([]*models.Group, 0)
+	err = db.Model(&models.Group{}).Where(condition, val).Find(result).Error
+	if err != nil {
+		return nil, err
+	}
 
+	return result, nil
+}
 
+// QuotaQueryByConditionRepo 通过条件查询配额信息
+func (g *groupRepo) QuotaQueryByConditionRepo(condition string, tx *gorm.DB, val ...interface{}) ([]*models.Quota, error) {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	var result = make([]*models.Quota, 0)
+	var a = &models.Group{}
+	err = db.Model(a).Where(condition, val).Find(result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

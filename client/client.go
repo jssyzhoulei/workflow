@@ -81,10 +81,13 @@ func (o *OrgServiceClient) getRetryEndpoint(ept MakeUserEndpointFunc, conn GrpcU
 }
 
 
-//  Group
+// #####################  Group #################################3
+
+// GetGroupService  ...
 func (o *OrgServiceClient) GetGroupService() services.GroupServiceInterface {
 	return &org_endpoints.GroupServiceEndpoint{
 		GroupAddEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupAddGrpcConn),
+		GroupQueryByConditionEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupQueryByConditionEndpoint, groupQueryByConditionGrpcConn),
 	}
 }
 
@@ -107,3 +110,5 @@ func (o *OrgServiceClient) factoryGroupFor(makeEndpoint MakeGroupEndpointFunc, c
 		return endpoints, con, err
 	}
 }
+
+// ############################################################
