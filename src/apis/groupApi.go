@@ -2,7 +2,6 @@ package apis
 
 import (
 	"context"
-	"fmt"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
@@ -46,14 +45,19 @@ func (g *groupApi) GroupAddApi(c *gin.Context) {
 
 	err := c.BindJSON(data)
 	if err != nil {
-		response(c, http.StatusBadRequest, "错误", nil)
+		response(c, http.StatusBadRequest, "参数解析错误", nil)
 		return
 	}
-	fmt.Println(g.groupService)
+
+	if data.Name == "" || len(data.Quotas) == 0 {
+		response(c, http.StatusBadRequest, "参数不合法", nil)
+		return
+	}
+
 	res , err := g.groupService.GroupAddSvc(context.Background(), data)
 	if err != nil {
 		log.Logger().Info("添加组错误: " + err.Error())
-		response(c, http.StatusBadRequest, "错误", nil)
+		response(c, http.StatusBadRequest, "操作失败", nil)
 		return
 	}
 

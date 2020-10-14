@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// GroupRepoI ...
+// GroupRepoInterface ...
 type GroupRepoInterface interface {
 	GroupAddRepo(data *models.Group, tx *gorm.DB) error
 	GetTx() *gorm.DB
