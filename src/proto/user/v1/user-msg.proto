@@ -1,4 +1,5 @@
-//protoc --go_out=plugins=grpc:. *.proto
+// protoc --go_out=plugins=grpc:. *.proto
+// protoc -I src/proto/user/v1/ --go_out=plugins=grpc:. src/proto/user/v1/*.proto
 syntax = "proto3";
 package pb_user_v1;
 
@@ -7,26 +8,4 @@ message UserProto {
   string user_name = 2;
 }
 
-// GroupResponse 用户组响应
-message GroupResponse {
-  int64 code = 1;
-}
-
-// quota 配额信息
-message Quota {
-  int64  is_share = 1;
-  string resources_group_id = 2;
-  int64  gpu = 3;
-  int64  cpu = 4;
-  int64  memory = 5;
-}
-
-// GroupAddRequest 用户组添加请求
-message GroupAddRequest {
-  string name = 1;
-  int64  parent_id = 2;
-  int64  disk_quota_size = 3;
-  repeated Quota quotas = 4;
-
-}
 

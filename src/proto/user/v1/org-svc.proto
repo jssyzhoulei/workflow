@@ -1,13 +1,17 @@
 syntax = "proto3";
 package pb_user_v1;
+
 import "permission-msg.proto";
 import "user-msg.proto";
 import "role-msg.proto";
 import "base.proto";
+import "group-msg.proto";
+
 service RpcOrgService {
   rpc RpcAddUser(UserProto) returns (UserProto);
   rpc RpcGetUserById(UserProto) returns (UserProto);
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
+  rpc RPCGroupQueryByCondition(GroupQueryByConditionRequest) returns (GroupQueryByConditionResponse);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (RoleProto);
   rpc RpcAddPermission(PermissionProto) returns (NullResponse);
   rpc RpcGetPermissionByID(Index) returns (PermissionProto);

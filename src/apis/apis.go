@@ -7,13 +7,14 @@ import (
 type IApis interface {
 	GetUserApis() userApiI
 	GetPermission() permissionApiInterface
+	GetGroupApis() groupApiInterface
 
 }
 
 type apis struct {
 	userApiI
-	groupApiI
 	permissionApiInterface permissionApiInterface
+	groupApiInterface
 }
 
 func NewApis(o *client.OrgServiceClient) IApis {
@@ -21,6 +22,7 @@ func NewApis(o *client.OrgServiceClient) IApis {
 		userApiI: NewUserApi(o.GetUserService()),
 		//groupApiI,NewGroupApi(o.),
 		permissionApiInterface: NewPermissionApi(o.GetPermissionService()),
+		groupApiInterface: NewGroupApi(o.GetGroupService()),
 	}
 }
 
@@ -28,8 +30,8 @@ func (a *apis) GetUserApis() userApiI {
 	return a.userApiI
 }
 
-func (a *apis) GetGroupApis() groupApiI {
-	return a.groupApiI
+func (a *apis) GetGroupApis() groupApiInterface {
+	return a.groupApiInterface
 }
 
 func (a *apis) GetPermission() permissionApiInterface {

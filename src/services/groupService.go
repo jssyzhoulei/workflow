@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
@@ -8,24 +9,25 @@ import (
 )
 
 // GroupServiceInterface 组服务接口
-type GroupServiceI interface {
-	GroupAdd(ctx context.Context, data *pb_user_v1.GroupAddRequest) (*pb_user_v1.GroupResponse, error)
+type GroupServiceInterface interface {
+	GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAddRequest) (*pb_user_v1.GroupResponse, error)
+	GroupQueryByConditionSvc(ctx context.Context, data *pb_user_v1.GroupQueryByConditionRequest) (*pb_user_v1.GroupQueryByConditionResponse, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
 type GroupService struct {
-	groupRepo repositories.GroupRepoI
+	groupRepo repositories.GroupRepoInterface
 }
 
 // NewGroupService GroupService 构造函数
-func NewGroupService(repos repositories.RepoI) GroupServiceI {
+func NewGroupService(repos repositories.RepoI) GroupServiceInterface {
 	return &GroupService{
 		groupRepo: repos.GetGroupRepo(),
 	}
 }
 
-// GroupAdd 添加组
-func (g GroupService) GroupAdd(ctx context.Context, data *pb_user_v1.GroupAddRequest) (*pb_user_v1.GroupResponse, error) {
+// GroupAddSvc 添加组
+func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAddRequest) (*pb_user_v1.GroupResponse, error) {
 	var err error
 	tx := g.groupRepo.GetTx()
 	defer func() {
@@ -39,12 +41,12 @@ func (g GroupService) GroupAdd(ctx context.Context, data *pb_user_v1.GroupAddReq
 		ParentID: int(data.ParentId),
 	}
 
-	err = g.groupRepo.GroupAdd(newGroup, tx)
+	err = g.groupRepo.GroupAddRepo(newGroup, tx)
 	if err != nil {
 		return &pb_user_v1.GroupResponse{Code: 1}, err
 	}
 
-	group, err := g.groupRepo.GroupQueryByName(data.Name, tx)
+	group, err := g.groupRepo.GroupQueryByNameRepo(data.Name, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -80,10 +82,52 @@ func (g GroupService) GroupAdd(ctx context.Context, data *pb_user_v1.GroupAddReq
 		}
 	}
 
-	err = g.groupRepo.QuotaAdd(result, tx)
+	err = g.groupRepo.QuotaAddRepo(result, tx)
 	if err != nil {
 		return nil, err
 	}
 	tx.Commit()
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
+}
+
+// GroupQueryByConditionSvc ...
+func (g *GroupService) GroupQueryByConditionSvc(ctx context.Context, data *pb_user_v1.GroupQueryByConditionRequest) (*pb_user_v1.GroupQueryByConditionResponse, error) {
+
+	var condition string
+	var value []interface{}
+
+	// TODO: 等待实现数据处理逻辑,生成条件
+
+	params := map[string]interface{}{
+		"id":         data.Id,
+		"name":       data.Name,
+		"parent_id":  data.ParentId,
+		"created_at": data.CreateTime,
+	}
+
+	//for column, val := range params {
+	//
+	//	switch val.(type) {
+	//	case []int64:
+	//		fmt.Println("[]int64")
+	//	case []string:
+	//		fmt.Println("[]string")
+	//	case string:
+	//		fmt.Println("string")
+	//	}
+	//}
+
+	fmt.Println(params)
+
+
+	resp, err := g.groupRepo.GroupQueryByConditionRepo(condition, nil, value...)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(resp)
+
+	// TODO: 等实现查询结果组装
+
+	return nil, nil
 }

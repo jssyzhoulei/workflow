@@ -11,7 +11,7 @@ import (
 
 func addUserGrpcConn(conn *grpc.ClientConn) services.UserServiceI {
 	return &endpoints.UserServiceEndpoint{
-		AddUserEndpoint:     grpctransport.NewClient(
+		AddUserEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcAddUser",
@@ -22,19 +22,50 @@ func addUserGrpcConn(conn *grpc.ClientConn) services.UserServiceI {
 	}
 }
 
-func groupAddGrpcConn(conn *grpc.ClientConn) services.GroupServiceI {
+// groupAddGrpcConn 添加组
+func groupAddGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 	return &endpoints.GroupServiceEndpoint{
 		GroupAddEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RPCGroupAdd",
-			parser.EncodeUserModel,
-			parser.DecodeUserModel,
+			parser.EncodeGroupAddProto,
+			parser.DecodeGroupProto,
 			pb_user_v1.GroupResponse{},
-			).Endpoint(),
+		).Endpoint(),
 	}
 }
 
+func addRoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
+	return &endpoints.RoleServiceEndpoint{
+		AddRoleEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcAddRole",
+			parser.DecodeUserModel,
+			parser.DecodeUserModel,
+			pb_user_v1.RoleProto{},
+		).Endpoint(),
+		UpdateRoleEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcUpdateRole",
+			parser.DecodeUserModel,
+			parser.DecodeUserModel,
+			pb_user_v1.RoleProto{},
+		).Endpoint(),
+		DeleteRoleEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcDeleteRole",
+			parser.DecodeUserModel,
+			parser.DecodeUserModel,
+			pb_user_v1.RoleProto{},
+		).Endpoint(),
+	}
+}
+
+<<<<<<< HEAD
 func permissionGrpcConn(conn *grpc.ClientConn) services.PermissionServiceInterface {
 	return &endpoints.PermissionServiceEndpoint{
 		AddPermissionEndpoint:          grpctransport.NewClient(
@@ -47,3 +78,19 @@ func permissionGrpcConn(conn *grpc.ClientConn) services.PermissionServiceInterfa
 			).Endpoint(),
 	}
 }
+=======
+// groupQueryByConditionGrpcConn 按条件查询组
+func groupQueryByConditionGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
+	return &endpoints.GroupServiceEndpoint{
+		GroupAddEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RPCGroupQueryByCondition",
+			parser.EncodeGroupQueryByConditionProto,
+			parser.DecodeGroupQueryByConditionProto,
+			pb_user_v1.GroupQueryByConditionResponse{},
+		).Endpoint(),
+	}
+}
+
+>>>>>>> 29a330ff7df45c2bbe1e41422d004e584f57275d

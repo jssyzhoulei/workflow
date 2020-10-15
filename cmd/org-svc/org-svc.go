@@ -45,8 +45,8 @@ func main() {
 		Value: grpcAddr,
 	}, log.NewNopLogger())
 	repos := repositories.NewRepoI(e.DB)
-	services := services.NewService(repos, e)
-	ept := endpoints.NewEndpoint(services)
+	svc := services.NewService(repos, e)
+	ept := endpoints.NewEndpoint(svc)
 	tpt := tranports.NewTransport(ept)
 	go func() {
 		grpcListener, err := net.Listen("tcp", grpcAddr)

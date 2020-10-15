@@ -24,9 +24,13 @@ type GrpcUserConnFunc func(conn *grpc.ClientConn) services.UserServiceI
 
 type MakeUserEndpointFunc func(userService services.UserServiceI) endpoint.Endpoint
 
-type MakeGroupEndpointFunc func(userService services.GroupServiceI) endpoint.Endpoint
+type MakeGroupEndpointFunc func(userService services.GroupServiceInterface) endpoint.Endpoint
 
-type GrpcGroupConnFunc func(conn *grpc.ClientConn) services.GroupServiceI
+type GrpcGroupConnFunc func(conn *grpc.ClientConn) services.GroupServiceInterface
+
+type GrpcRoleConnFunc func(conn *grpc.ClientConn) services.RoleServiceI
+
+type MakeRoleEndpointFunc func(roleService services.RoleServiceI) endpoint.Endpoint
 
 type MakePermissionEndpointFunc func(services.PermissionServiceInterface) endpoint.Endpoint
 
@@ -84,12 +88,41 @@ func (o *OrgServiceClient) getRetryEndpoint(ept MakeUserEndpointFunc, conn GrpcU
 	return lb.Retry(o.retryMax, o.retryTimeout, balance)
 }
 
-
-//  Group
-func (o *OrgServiceClient) GetGroupService() services.GroupServiceI {
-	endpoints := &org_endpoints.GroupServiceEndpoint{}
-	endpoints.GroupAddEndpoint = o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupAddGrpcConn)
+func (o *OrgServiceClient) GetRoleService() services.RoleServiceI {
+	endpoints := &org_endpoints.RoleServiceEndpoint{}
+	endpoints.AddRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeAddRoleEndpoint, addRoleGrpcConn)
+	endpoints.UpdateRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeUpdateRoleEndpoint, addRoleGrpcConn)
+	endpoints.DeleteRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeDeleteRoleEndpoint, addRoleGrpcConn)
 	return endpoints
+}
+
+func (o *OrgServiceClient) factoryForRole(makeEndpoint MakeRoleEndpointFunc, conn GrpcRoleConnFunc) sd.Factory {
+	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
+		con, err := grpc.Dial(instance, grpc.WithInsecure())
+		if err != nil {
+			return nil, nil, err
+		}
+
+		endpoints := makeEndpoint(conn(con))
+		return endpoints, con, err
+	}
+}
+
+func (o *OrgServiceClient) getRetryRoleEndpoint(ept MakeRoleEndpointFunc, conn GrpcRoleConnFunc) endpoint.Endpoint {
+	factory := o.factoryForRole(ept, conn)
+	endpointer := sd.NewEndpointer(o.instance, factory, log.NewNopLogger())
+	balance := lb.NewRandom(endpointer, time.Now().UnixNano())
+	return lb.Retry(o.retryMax, o.retryTimeout, balance)
+}
+
+// #####################  Group #################################3
+
+// GetGroupService  ...
+func (o *OrgServiceClient) GetGroupService() services.GroupServiceInterface {
+	return &org_endpoints.GroupServiceEndpoint{
+		GroupAddEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupAddGrpcConn),
+		GroupQueryByConditionEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupQueryByConditionEndpoint, groupQueryByConditionGrpcConn),
+	}
 }
 
 
@@ -111,6 +144,7 @@ func (o *OrgServiceClient) factoryGroupFor(makeEndpoint MakeGroupEndpointFunc, c
 		return endpoints, con, err
 	}
 }
+
 
 func (o *OrgServiceClient) GetPermissionService() services.PermissionServiceInterface {
 	endpoints := &org_endpoints.PermissionServiceEndpoint{}
