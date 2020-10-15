@@ -16,9 +16,9 @@ type roleGrpcTransport struct {
 
 func NewRoleGrpcTransport(endpoint *endpoints.RoleServiceEndpoint) *roleGrpcTransport {
 	var (
-		addRoleServer    = transport.NewServer(endpoint.AddRoleEndpoint, parser.DecodeCreateMenuPermRequestProto, parser.EncodeRoleProto)
-		updateRoleServer = transport.NewServer(endpoint.UpdateRoleEndpoint, parser.DecodeCreateMenuPermRequestProto, parser.EncodeRoleProto)
-		deleteRoleServer = transport.NewServer(endpoint.DeleteRoleEndpoint, parser.DecodeCreateMenuPermRequestProto, parser.EncodeRoleProto)
+		addRoleServer    = transport.NewServer(endpoint.AddRoleEndpoint, parser.DecodeCreateMenuPermRequestProto, parser.EncodeNullProto)
+		updateRoleServer = transport.NewServer(endpoint.UpdateRoleEndpoint, parser.DecodeCreateMenuPermRequestProto, parser.EncodeNullProto)
+		deleteRoleServer = transport.NewServer(endpoint.DeleteRoleEndpoint, parser.DecodeCreateMenuPermRequestProto, parser.EncodeNullProto)
 	)
 	return &roleGrpcTransport{
 		addRole:    addRoleServer,
@@ -27,26 +27,26 @@ func NewRoleGrpcTransport(endpoint *endpoints.RoleServiceEndpoint) *roleGrpcTran
 	}
 }
 
-func (u *roleGrpcTransport) RpcAddRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.UserProto, error) {
-	_, user, err := u.addRole.ServeGRPC(ctx, proto)
+func (u *roleGrpcTransport) RpcAddRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.NullResponse, error) {
+	_, role, err := u.addRole.ServeGRPC(ctx, proto)
 	if err != nil {
 		return nil, err
 	}
-	return user.(*pb_user_v1.UserProto), err
+	return role.(*pb_user_v1.NullResponse), err
 }
 
-func (u *roleGrpcTransport) RpcUpdateRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.UserProto, error) {
-	_, user, err := u.updateRole.ServeGRPC(ctx, proto)
+func (u *roleGrpcTransport) RpcUpdateRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.NullResponse, error) {
+	_, role, err := u.updateRole.ServeGRPC(ctx, proto)
 	if err != nil {
 		return nil, err
 	}
-	return user.(*pb_user_v1.UserProto), err
+	return role.(*pb_user_v1.NullResponse), err
 }
 
-func (u *roleGrpcTransport) RpcDeleteRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.UserProto, error) {
-	_, user, err := u.deleteRole.ServeGRPC(ctx, proto)
+func (u *roleGrpcTransport) RpcDeleteRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.NullResponse, error) {
+	_, role, err := u.deleteRole.ServeGRPC(ctx, proto)
 	if err != nil {
 		return nil, err
 	}
-	return user.(*pb_user_v1.UserProto), err
+	return role.(*pb_user_v1.NullResponse), err
 }
