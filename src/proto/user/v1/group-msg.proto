@@ -47,3 +47,10 @@ message GroupQueryWithQuotaByConditionRequest {
 message GroupQueryWithQuotaByConditionResponse {
   repeated GroupWithQuota groups= 1;
 }
+
+// GroupUpdateRequest 组信息更新请求
+message GroupUpdateRequest {
+  int64 id = 1;
+  string name = 2;
+  int64 parent_id = 3;
+}

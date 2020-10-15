@@ -85,3 +85,10 @@ type GroupQueryWithQuotaScanRes struct {
 	Total      int    `gorm:"column:total" json:"total"`
 	Used       int    `gorm:"column:used" json:"used"`
 }
+
+// GroupUpdateRequest 组信息更新请求
+type GroupUpdateRequest struct {
+	ID         int64  `json:"id"`
+	Name       string `json:"name"`
+	ParentID   *int64  `json:"parent_id"`
+}

@@ -2,15 +2,19 @@ package services
 
 import (
 	"context"
+	"errors"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
+	"strconv"
+	"strings"
 )
 
 // GroupServiceInterface 组服务接口
 type GroupServiceInterface interface {
 	GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAddRequest) (*pb_user_v1.GroupResponse, error)
 	GroupQueryWithQuotaByConditionSvc(ctx context.Context, data *pb_user_v1.GroupQueryWithQuotaByConditionRequest) (*pb_user_v1.GroupQueryWithQuotaByConditionResponse, error)
+	GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -89,7 +93,7 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
 }
 
-// GroupQueryByConditionSvc 根据条件查询组信息和其配额信息
+// GroupQueryWithQuotaByConditionSvc 根据条件查询组信息和其配额信息
 func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, data *pb_user_v1.GroupQueryWithQuotaByConditionRequest) (*pb_user_v1.GroupQueryWithQuotaByConditionResponse, error) {
 
 	condition := &models.GroupQueryByCondition{
@@ -115,6 +119,12 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 			groupData[r.ID].Id = r.ID
 			groupData[r.ID].Name = r.Name
 			groupData[r.ID].Quotas = make([]*pb_user_v1.Quota, 0)
+			levelPath := strings.Split(r.LevelPath, "-")
+			topParentID, err := strconv.ParseInt(levelPath[0], 10, 64)
+			if err != nil {
+				return nil, errors.New("转换顶级组ID失败:" + err.Error())
+			}
+			groupData[r.ID].TopParentId = topParentID
 		}
 		if models.ResourceType(r.Type) == models.ResourceDisk {
 			groupData[r.ID].DiskQuotaSize = int64(r.Total)
@@ -169,4 +179,17 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 	return &pb_user_v1.GroupQueryWithQuotaByConditionResponse{
 		Groups: result,
 	}, nil
+}
+
+// GroupUpdateSvc 组信息更新
+func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
+
+	//d := &models.GroupUpdateRequest{
+	//	ID:       data.Id,
+	//	Name:     data.Name,
+	//	ParentID: &data.ParentId,
+	//}
+	//g.groupRepo.GroupUpdateRepo()
+
+	return nil, nil
 }
