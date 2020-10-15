@@ -67,16 +67,57 @@ func RoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 
 func permissionGrpcConn(conn *grpc.ClientConn) services.PermissionServiceInterface {
 	return &endpoints.PermissionServiceEndpoint{
-		AddPermissionEndpoint:          grpctransport.NewClient(
+		AddPermissionEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcAddPermission",
 			parser.EncodePermissionModel,
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
-			).Endpoint(),
+		).Endpoint(),
+		AddMenuEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcAddMenu",
+			parser.EncodeMenuModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+		).Endpoint(),
+		GetMenuCascadeByModuleEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcGetMenuCascadeByModule",
+			parser.EncodeMenuModule,
+			parser.DecodeCascadeProto,
+			pb_user_v1.Cascades{},
+		).Endpoint(),
+		GetPermissionByIDEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcGetPermissionByID",
+			parser.EncodeIndexProto,
+			parser.DecodePermissionProto,
+			pb_user_v1.PermissionProto{},
+		).Endpoint(),
+		DeletePermissionByIDEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcDeletePermissionByID",
+			parser.EncodeIndexProto,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+		).Endpoint(),
+		UpdatePermissionByIDEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcUpdatePermissionByID",
+			parser.EncodePermissionModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+		).Endpoint(),
 	}
 }
+
 // groupQueryByConditionGrpcConn 按条件查询组
 func groupQueryByConditionGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 	return &endpoints.GroupServiceEndpoint{
@@ -90,4 +131,3 @@ func groupQueryByConditionGrpcConn(conn *grpc.ClientConn) services.GroupServiceI
 		).Endpoint(),
 	}
 }
-

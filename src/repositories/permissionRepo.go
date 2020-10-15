@@ -66,7 +66,7 @@ func (p *permissionRepo) GetMenuByNameAndModule(name string, module models.MenuM
 }
 
 func (p *permissionRepo) UpdatePermissionByIDRepo(permission models.Permission) error {
-	return p.Model(&permission).Updates(permission).Error
+	return p.Model(&permission).Where("id=?", permission.ID).Updates(permission).Error
 }
 
 func (p *permissionRepo) DeletePermissionByIDRepo(id int) error {
