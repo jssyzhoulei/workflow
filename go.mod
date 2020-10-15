@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-kit/kit v0.10.0
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.4.0
 	github.com/jinzhu/now v1.1.1
 	github.com/lib/pq v1.8.0
