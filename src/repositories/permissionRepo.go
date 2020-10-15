@@ -3,7 +3,9 @@ package repositories
 import (
 	"errors"
 	"gitee.com/grandeep/org-svc/src/models"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gorm.io/gorm"
+	"math"
 )
 
 //PermissionRepoI 权限管理的Repo
@@ -15,16 +17,17 @@ type PermissionRepoInterface interface {
 	UpdatePermissionByIDRepo(permission models.Permission) error
 	DeletePermissionByIDRepo(id int) error
 	GetMenuListRepo(menu models.Menu) ([]models.Menu, error)
-	GetMenuByID(id int64) (models.Menu, error)
+	GetMenuByIDRepo(id int) (models.Menu, error)
+	GetPermissionListRepo(permission models.Permission, page *models.Page) ([]models.Permission, error)
 }
 
 type permissionRepo struct {
 	*gorm.DB
 }
 
-func NewPermissionRepo(db *gorm.DB) PermissionRepoInterface {
+func NewPermissionRepo(db *yorm.DB) PermissionRepoInterface {
 	return &permissionRepo{
-		DB: db,
+		DB: db.DB,
 	}
 }
 
@@ -99,9 +102,47 @@ func (p *permissionRepo) GetMenuListRepo(menu models.Menu) ([]models.Menu, error
 	return menus, err
 }
 
-func (p *permissionRepo) GetMenuByID(id int64) (menu models.Menu, err error) {
+func (p *permissionRepo) GetMenuByIDRepo(id int) (menu models.Menu, err error) {
 	err = p.First(&menu, id).Error
 	return
+}
+
+func (p *permissionRepo) GetPermissionListRepo(permission models.Permission, page *models.Page) ([]models.Permission, error) {
+	var (
+		permissions []models.Permission
+	)
+	dbPage := *p.DB
+	db := p.Table("permission").Select("id, uri_name, method, relation, button_name, button_key, menu_id, module")
+	if permission.Module != 0 {
+		db = db.Where("module=?", permission.Module)
+	}
+	if permission.UriName != "" {
+		db = db.Where("button_name like ?", "%" + permission.UriName +"%")
+	}
+	if page != nil {
+		db.DB()
+		if page.PageNum == 0 {
+			page.PageNum = 1
+		}
+		if page.PageSize == 0 {
+			page.PageNum = 10
+		}
+		err := dbPage.Table("(?) as p", db).Count(&page.Total).Error
+		if err != nil {
+			return nil, err
+		}
+		page.TotalPage = math.Ceil(float64(page.Total) / float64(page.PageSize))
+		err = db.Limit(page.PageSize).Offset(page.PageSize * (page.PageNum - 1)).Find(&permissions).Error
+		if err != nil {
+			return nil, err
+		}
+		return permissions, nil
+	}
+	err := db.Find(&permissions).Error
+	if err != nil {
+		return nil, err
+	}
+	return permissions, nil
 }
 
 

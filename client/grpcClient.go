@@ -34,3 +34,16 @@ func groupAddGrpcConn(conn *grpc.ClientConn) services.GroupServiceI {
 			).Endpoint(),
 	}
 }
+
+func permissionGrpcConn(conn *grpc.ClientConn) services.PermissionServiceInterface {
+	return &endpoints.PermissionServiceEndpoint{
+		AddPermissionEndpoint:          grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcAddPermission",
+			parser.EncodePermissionModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+			).Endpoint(),
+	}
+}

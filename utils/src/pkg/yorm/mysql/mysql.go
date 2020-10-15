@@ -5,7 +5,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	mysql2 "gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"io"
+	log2 "log"
+	"os"
+	"time"
 )
 
 type Mysql struct {
@@ -22,7 +26,17 @@ func (p Mysql) Device() string {
 }
 
 func (p *Mysql) Initialize() (db *gorm.DB, err error) {
-	return gorm.Open(mysql2.Open(p.Dsn()), &gorm.Config{})
+	newLogger := logger.New(
+		log2.New(os.Stdout, "\r\n", log2.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold: time.Second,   // 慢 SQL 阈值
+			LogLevel:      logger.Info, // Log level
+			Colorful:      true,         // 禁用彩色打印
+		},
+	)
+	return gorm.Open(mysql2.Open(p.Dsn()), &gorm.Config{
+		Logger: newLogger,
+	})
 }
 
 func (p *Mysql) BindVarTo(w io.Writer, i int) {

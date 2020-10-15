@@ -48,7 +48,7 @@ func (u *groupApi) GroupAddApi(c *gin.Context) {
 		response(c, http.StatusBadRequest, "错误", nil)
 		return
 	}
-	err = u.groupService.GroupAdd(context.Background(),data)
+	_, err = u.groupService.GroupAdd(context.Background(),data)
 	if err != nil {
 		log.Logger().Error("添加组错误: " + err.Error())
 		response(c, http.StatusBadRequest, "错误", nil)

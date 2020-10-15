@@ -10,6 +10,7 @@ type ServiceI interface {
 	GetUserService() UserServiceI
 	GetGroupService() GroupServiceI
 	GetRoleService() RoleServiceI
+	GetPermissionService() PermissionServiceInterface
 }
 
 type service struct {
@@ -17,6 +18,7 @@ type service struct {
 	userService  UserServiceI
 	groupService GroupServiceI
 	roleService  RoleServiceI
+	permissionService PermissionServiceInterface
 }
 
 func NewService(repo repositories.RepoI, e *engine.Engine) ServiceI {
@@ -24,6 +26,7 @@ func NewService(repo repositories.RepoI, e *engine.Engine) ServiceI {
 		userService:  NewUserService(repo),
 		groupService: NewGroupService(repo),
 		roleService:  NewRoleService(repo),
+		permissionService: NewPermissionService(repo),
 		config:       e.Config,
 	}
 }
@@ -38,4 +41,8 @@ func (s service) GetGroupService() GroupServiceI {
 
 func (s service) GetRoleService() RoleServiceI {
 	return s.roleService
+}
+
+func (s service) GetPermissionService() PermissionServiceInterface {
+	return s.permissionService
 }

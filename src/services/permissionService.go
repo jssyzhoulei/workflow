@@ -6,7 +6,6 @@ import (
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/engine"
 )
 
 // PermissionServiceI 权限管理服务
@@ -25,16 +24,15 @@ type PermissionServiceInterface interface {
 	DeletePermissionByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
 	//GetMenuCascade: 获取菜单级联数据
 	GetMenuCascadeByModuleSvc(ctx context.Context, module models.MenuModule) ([]models.Cascade, error)
-
 }
 
 type permissionService struct {
 	permissionRepo repositories.PermissionRepoInterface
 }
 
-func NewPermissionService(e *engine.Engine) PermissionServiceInterface {
+func NewPermissionService(repo repositories.RepoI) PermissionServiceInterface {
 	return &permissionService{
-		permissionRepo: repositories.NewPermissionRepo(e.DB.DB),
+		permissionRepo: repo.GetPermissionRepo(),
 	}
 }
 
@@ -45,7 +43,7 @@ func (p *permissionService) AddPermissionSvc(ctx context.Context, permission mod
 		menu models.Menu
 	)
 	if permission.MenuID != 0 {
-		menu, err = p.permissionRepo.GetMenuByID(permission.MenuID)
+		menu, err = p.permissionRepo.GetMenuByIDRepo(permission.MenuID)
 		permission.Module = menu.Module
 	} else {
 		return pb_user_v1.NullResponse{}, errors.New("not find menu")
@@ -104,15 +102,17 @@ func (p *permissionService) GetMenuCascadeByModuleSvc(ctx context.Context, modul
 		return
 	}
 	menu.Module = module
-	permission.Module = module
-	//TODO 获取权限
-	permissions = permissions
+	permissions,err = p.permissionRepo.GetPermissionListRepo(permission, &models.Page{})
+	if err != nil {
+		return nil, err
+	}
 	menus,err = p.permissionRepo.GetMenuListRepo(menu)
 	if err != nil {
 		return nil, err
 	}
 
-	cascades = menu.GetMenuPermissionCascade(menus, 0)
+	cascades = menu.GetMenuCascade(menus, 0)
+	cascades = menu.AddPermissionCascade(permissions, cascades)
 	return
 }
 

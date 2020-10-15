@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
+	"gitee.com/grandeep/org-svc/src/repositories"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/engine"
 	"testing"
 )
 var (
 	background = context.Background()
 	configPath = "/Users/fanhaojie/dew/app/Go/Fu/kit-fu/org-svc/resources/config/config.yaml"
+	e = engine.NewEngine(configPath)
+	repo = repositories.NewRepoI(e.DB)
 )
 func Test_permissionService_AddMenu(t *testing.T) {
 	var (
@@ -23,8 +26,8 @@ func Test_permissionService_AddMenu(t *testing.T) {
 			Status:       0,
 		}
 	)
-	e := engine.NewEngine(configPath)
-	fmt.Println(NewPermissionService(e).AddMenuSvc(background, menu))
+
+	fmt.Println(NewPermissionService(repo).AddMenuSvc(background, menu))
 }
 
 func Test_permissionService_UpdateMenuByID(t *testing.T) {
@@ -42,8 +45,7 @@ func Test_permissionService_UpdateMenuByID(t *testing.T) {
 			Status:       0,
 		}
 	)
-	e := engine.NewEngine(configPath)
-	fmt.Println(NewPermissionService(e).UpdateMenuByIDSvc(background, menu))
+	fmt.Println(NewPermissionService(repo).UpdateMenuByIDSvc(background, menu))
 }
 
 func Test_permissionService_AddPermission(t *testing.T) {
@@ -56,13 +58,11 @@ func Test_permissionService_AddPermission(t *testing.T) {
 		ButtonKey:  "index",
 		MenuID:     1,
 	}
-	e := engine.NewEngine(configPath)
-	NewPermissionService(e).AddPermissionSvc(background, permission)
+	NewPermissionService(repo).AddPermissionSvc(background, permission)
 }
 
 func Test_permissionService_GetPermissionByID(t *testing.T) {
-	e := engine.NewEngine(configPath)
-	fmt.Println(NewPermissionService(e).GetPermissionByIDSvc(background, 1))
+	fmt.Println(NewPermissionService(repo).GetPermissionByIDSvc(background, 1))
 }
 
 func Test_permissionService_UpdatePermissionByID(t *testing.T) {
@@ -76,16 +76,13 @@ func Test_permissionService_UpdatePermissionByID(t *testing.T) {
 		ButtonKey:  "index",
 		MenuID:     1,
 	}
-	e := engine.NewEngine(configPath)
-	NewPermissionService(e).UpdatePermissionByIDSvc(background, permission)
+	NewPermissionService(repo).UpdatePermissionByIDSvc(background, permission)
 }
 
 func Test_permissionService_DeletePermissionByID(t *testing.T) {
-	e := engine.NewEngine(configPath)
-	fmt.Println(NewPermissionService(e).DeletePermissionByIDSvc(background, 1))
+	fmt.Println(NewPermissionService(repo).DeletePermissionByIDSvc(background, 1))
 }
 
 func Test_permissionService_GetMenuCascadeByModule(t *testing.T) {
-	e := engine.NewEngine(configPath)
-	fmt.Println(NewPermissionService(e).GetMenuCascadeByModuleSvc(background, 1))
+	fmt.Println(NewPermissionService(repo).GetMenuCascadeByModuleSvc(background, 1))
 }

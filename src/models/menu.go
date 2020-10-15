@@ -1,7 +1,5 @@
 package models
 
-import "fmt"
-
 type Menu struct {
 	BaseModel
 	Name         string     `gorm:"column:name;type:varchar(128);not null;unique_index;comment:'菜单名称'" json:"name"`
@@ -38,7 +36,7 @@ type Cascade struct {
 }
 
 
-func (m Menu) GetMenuPermissionCascade(menus []Menu, parentId int) (cascades []Cascade) {
+func (m Menu) GetMenuCascade(menus []Menu, parentId int) (cascades []Cascade) {
 	for k, menu := range menus {
 		var (
 			cascade Cascade
@@ -49,12 +47,36 @@ func (m Menu) GetMenuPermissionCascade(menus []Menu, parentId int) (cascades []C
 			)
 			copy(menusNew[:k], menus[:k])
 			copy(menusNew[k:], menus[k+1:])
-			fmt.Println(parentId)
-			fmt.Println(k)
 			cascade.Value = menu.ID
 			cascade.Label = menu.Name
-			cascade.Children = m.GetMenuPermissionCascade(menusNew, menu.ID)
+			cascade.Children = m.GetMenuCascade(menusNew, menu.ID)
 			cascades = append(cascades, cascade)
+		}
+	}
+	return cascades
+}
+
+func (m Menu) AddPermissionCascade(permissions []Permission, cascades []Cascade) []Cascade {
+	for k, cascade := range cascades {
+		if len(cascade.Children) > 0 {
+			cs := m.AddPermissionCascade(permissions, cascade.Children)
+			cascades[k].Children = cs
+			continue
+		} else {
+			for index, permission := range permissions {
+				if cascade.Value == permission.MenuID {
+					var (
+						c Cascade
+						permissionsNew = make([]Permission, len(permissions) -1)
+					)
+					copy(permissionsNew[:index], permissions[:index])
+					copy(permissionsNew[index:], permissions[index+1:])
+					c.Value = permission.ID
+					c.Label = permission.UriName
+					cascade.Children = append(cascade.Children, c)
+				}
+			}
+			cascades[k] = cascade
 		}
 	}
 	return cascades
