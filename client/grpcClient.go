@@ -109,17 +109,3 @@ func permissionGrpcConn(conn *grpc.ClientConn) services.PermissionServiceInterfa
 			).Endpoint(),
 	}
 }
-
-// groupQueryByConditionGrpcConn 按条件查询组
-func groupQueryByConditionGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
-	return &endpoints.GroupServiceEndpoint{
-		GroupAddEndpoint: grpctransport.NewClient(
-			conn,
-			"pb_user_v1.RpcOrgService",
-			"RPCGroupQueryByCondition",
-			parser.EncodeGroupQueryByConditionProto,
-			parser.DecodeGroupQueryByConditionProto,
-			pb_user_v1.GroupQueryByConditionResponse{},
-		).Endpoint(),
-	}
-}
