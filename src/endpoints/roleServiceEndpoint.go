@@ -3,6 +3,7 @@ package endpoints
 import (
 	"context"
 	"gitee.com/grandeep/org-svc/src/models"
+	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
 	"github.com/go-kit/kit/endpoint"
 )
@@ -27,7 +28,7 @@ func MakeAddRoleEndpoint(roleService services.RoleServiceI) endpoint.Endpoint {
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		err = roleService.AddRoleSvc(ctx, role)
+		response, err = roleService.AddRoleSvc(ctx, role)
 		return
 	}
 }
@@ -38,7 +39,7 @@ func MakeUpdateRoleEndpoint(roleService services.RoleServiceI) endpoint.Endpoint
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		err = roleService.UpdateRoleSvc(ctx, role)
+		response, err = roleService.UpdateRoleSvc(ctx, role)
 		return
 	}
 }
@@ -49,22 +50,32 @@ func MakeDeleteRoleEndpoint(roleService services.RoleServiceI) endpoint.Endpoint
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		err = roleService.DeleteRoleSvc(ctx, role)
+		response, err = roleService.DeleteRoleSvc(ctx, role)
 		return
 	}
 }
 
-func (r *RoleServiceEndpoint) AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error {
-	_, err := r.AddRoleEndpoint(ctx, role)
-	return err
+func (r *RoleServiceEndpoint) AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
+	res, err :=  r.AddRoleEndpoint(ctx, role)
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
+	}
+	return res.(pb_user_v1.NullResponse), nil
+
 }
 
-func (r *RoleServiceEndpoint) UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error {
-	_, err := r.UpdateRoleEndpoint(ctx, role)
-	return err
+func (r *RoleServiceEndpoint) UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
+	res, err :=  r.UpdateRoleEndpoint(ctx, role)
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
+	}
+	return res.(pb_user_v1.NullResponse), nil
 }
 
-func (r *RoleServiceEndpoint) DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error {
-	_, err := r.DeleteRoleEndpoint(ctx, role)
-	return err
+func (r *RoleServiceEndpoint) DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
+	res, err :=  r.DeleteRoleEndpoint(ctx, role)
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
+	}
+	return res.(pb_user_v1.NullResponse), nil
 }
