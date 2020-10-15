@@ -6,12 +6,18 @@ type RepoI interface {
 	GetUserRepo() UserRepoInterface
 	GetGroupRepo() GroupRepoInterface
 	GetRoleRepo() RoleRepoI
+	GetPermissionRepo() PermissionRepoInterface
 }
 
 type repo struct {
 	UserRepoInterface
 	GroupRepoInterface
 	RoleRepoI
+	PermissionRepoInterface
+}
+
+func (r *repo) GetPermissionRepo() PermissionRepoInterface {
+	return r.PermissionRepoInterface
 }
 
 func NewRepoI(db *yorm.DB) RepoI {
@@ -19,6 +25,7 @@ func NewRepoI(db *yorm.DB) RepoI {
 		UserRepoInterface:  NewUserRepo(db),
 		GroupRepoInterface: NewGroupRepo(db),
 		RoleRepoI:  NewRoleRepo(db),
+		PermissionRepoInterface: NewPermissionRepo(db),
 	}
 }
 

@@ -65,6 +65,20 @@ func addRoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 	}
 }
 
+<<<<<<< HEAD
+func permissionGrpcConn(conn *grpc.ClientConn) services.PermissionServiceInterface {
+	return &endpoints.PermissionServiceEndpoint{
+		AddPermissionEndpoint:          grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcAddPermission",
+			parser.EncodePermissionModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+			).Endpoint(),
+	}
+}
+=======
 // groupQueryByConditionGrpcConn 按条件查询组
 func groupQueryByConditionGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 	return &endpoints.GroupServiceEndpoint{
@@ -79,3 +93,4 @@ func groupQueryByConditionGrpcConn(conn *grpc.ClientConn) services.GroupServiceI
 	}
 }
 
+>>>>>>> 29a330ff7df45c2bbe1e41422d004e584f57275d

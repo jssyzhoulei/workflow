@@ -48,5 +48,7 @@ func Routers(e *gin.Engine) {
 	api := apis.NewApis(o)
 	g := e.Group("/apis/v1")
 	userApiRouters(g, api)
+	permissionApiRouters(g, api)
 	groupApiRouters(g, api)
 }
+

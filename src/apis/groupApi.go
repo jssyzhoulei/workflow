@@ -51,31 +51,36 @@ func (g *groupApi) GroupAddApi(c *gin.Context) {
 		response(c, http.StatusBadRequest, "参数解析错误", nil)
 		return
 	}
+	_, err = g.groupService.GroupAddSvc(context.Background(), data)
+	if err != nil {
+		log.Logger().Error("添加组错误: " + err.Error())
+		response(c, http.StatusBadRequest, "错误", nil)
 
-	if data.Name == "" || len(data.Quotas) == 0 {
-		log.Logger().Warn(fmt.Sprintf("GroupAdd 必传参数缺失: name: %d quotas: %v", data.Name, data.Quotas))
-		response(c, http.StatusBadRequest, "参数不合法", nil)
-		return
-	}
-
-	l := len(data.Quotas)
-	for i := 0; i < l; i++ {
-		t := data.Quotas[i]
-		if t.IsShare == 0 || strings.Trim(t.ResourcesGroupId, " ") == "" {
-			log.Logger().Warn(fmt.Sprintf("GroupAdd 必传参数缺失: is_share: %d resources_group_id: %s", t.IsShare,
-				t.ResourcesGroupId))
+		if data.Name == "" || len(data.Quotas) == 0 {
+			log.Logger().Warn(fmt.Sprintf("GroupAdd 必传参数缺失: name: %d quotas: %v", data.Name, data.Quotas))
 			response(c, http.StatusBadRequest, "参数不合法", nil)
 			return
 		}
-	}
 
-	res, err := g.groupService.GroupAddSvc(context.Background(), data)
-	if err != nil {
-		log.Logger().Warn("添加组错误: " + err.Error())
-		response(c, http.StatusBadRequest, "操作失败", nil)
+		l := len(data.Quotas)
+		for i := 0; i < l; i++ {
+			t := data.Quotas[i]
+			if t.IsShare == 0 || strings.Trim(t.ResourcesGroupId, " ") == "" {
+				log.Logger().Warn(fmt.Sprintf("GroupAdd 必传参数缺失: is_share: %d resources_group_id: %s", t.IsShare,
+					t.ResourcesGroupId))
+				response(c, http.StatusBadRequest, "参数不合法", nil)
+				return
+			}
+		}
+
+		res, err := g.groupService.GroupAddSvc(context.Background(), data)
+		if err != nil {
+			log.Logger().Warn("添加组错误: " + err.Error())
+			response(c, http.StatusBadRequest, "操作失败", nil)
+			return
+		}
+
+		response(c, http.StatusOK, "成功", res)
 		return
 	}
-
-	response(c, http.StatusOK, "成功", res)
-	return
 }

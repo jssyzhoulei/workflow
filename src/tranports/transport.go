@@ -10,6 +10,7 @@ import (
 type OrgTransport struct {
 	*userGrpcTransport
 	*groupGrpcTransport
+	*permissionGrpcTransport
 	*roleGrpcTransport
 }
 
@@ -21,6 +22,7 @@ func NewTransport(ept *endpoints.OrgEndpoint) pb_user_v1.RpcOrgServiceServer {
 	return &OrgTransport{
 		userGrpcTransport: NewUserGrpcTransport(ept.UserServiceEndpoint),
 		groupGrpcTransport: NewGroupGrpcTransport(ept.GroupServiceEndpoint),
+		permissionGrpcTransport: NewPermissionGrpcTransport(ept.PermissionServiceEndpoint),
 		roleGrpcTransport: NewRoleGrpcTransport(ept.RoleServiceEndpoint),
 	}
 }

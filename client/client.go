@@ -32,6 +32,10 @@ type GrpcRoleConnFunc func(conn *grpc.ClientConn) services.RoleServiceI
 
 type MakeRoleEndpointFunc func(roleService services.RoleServiceI) endpoint.Endpoint
 
+type MakePermissionEndpointFunc func(services.PermissionServiceInterface) endpoint.Endpoint
+
+type GrpcPermissionConnFunc func(conn *grpc.ClientConn) services.PermissionServiceInterface
+
 func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgServiceClient {
 	var (
 		etcdAddrs = addr
@@ -141,4 +145,29 @@ func (o *OrgServiceClient) factoryGroupFor(makeEndpoint MakeGroupEndpointFunc, c
 	}
 }
 
-// ############################################################
+
+func (o *OrgServiceClient) GetPermissionService() services.PermissionServiceInterface {
+	endpoints := &org_endpoints.PermissionServiceEndpoint{}
+	endpoints.AddPermissionEndpoint = o.getPermissionRetryEndpoint(org_endpoints.MakeAddPermissionEndpoint, permissionGrpcConn)
+	return endpoints
+}
+
+
+func (o *OrgServiceClient) getPermissionRetryEndpoint(ept MakePermissionEndpointFunc, conn GrpcPermissionConnFunc) endpoint.Endpoint {
+	factory := o.factoryPermissionFor(ept, conn)
+	endpointer := sd.NewEndpointer(o.instance, factory, log.NewNopLogger())
+	balance := lb.NewRandom(endpointer, time.Now().UnixNano())
+	return lb.Retry(o.retryMax, o.retryTimeout, balance)
+}
+
+func (o *OrgServiceClient) factoryPermissionFor(makeEndpoint MakePermissionEndpointFunc, conn GrpcPermissionConnFunc) sd.Factory {
+	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
+		con, err := grpc.Dial(instance, grpc.WithInsecure())
+		if err != nil {
+			return nil, nil, err
+		}
+
+		endpoints := makeEndpoint(conn(con))
+		return endpoints, con, err
+	}
+}
