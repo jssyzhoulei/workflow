@@ -2,13 +2,19 @@ package apis
 
 import (
 	"context"
+	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	"gitee.com/grandeep/org-svc/src/services"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 type userApiInterface interface {
 	AddUserApi(ctx *gin.Context)
+	GetUserByIDApi(ctx *gin.Context)
+	UpdateUserByIDApi(ctx *gin.Context)
+	DeleteUserByIDApi(ctx *gin.Context)
 }
 
 type userApi struct {
@@ -28,42 +34,78 @@ func (u *userApi) AddUserApi(ctx *gin.Context) {
 	)
 	err := ctx.BindJSON(&user)
 	if err != nil {
-		errord_(ctx, 201, err)
+		log.Logger().Error(fmt.Sprintf("add user request param error : %s", err.Error()))
+		response(ctx, http.StatusBadRequest, "param error", nil)
 		return
 	}
 	_, err = u.userService.AddUserSvc(context.Background(), user)
 	if err != nil {
-		error_(ctx, 201, err)
+		log.Logger().Error("add user error: " + err.Error())
+		response(ctx, http.StatusBadRequest, "server error", nil)
 		return
 	}
-	successd_(ctx, nil)
+	response(ctx, http.StatusOK, "success", nil)
 	return
 }
 
-func successd_(c *gin.Context, data interface{}) {
-	if data == nil {
-		data = ""
+// GetUserByIDApi 获取用户详请
+func (u *userApi) GetUserByIDApi(ctx *gin.Context){
+	var data = new(models.User)
+	err := ctx.BindJSON(data)
+	if err != nil {
+		log.Logger().Error(fmt.Sprintf("get user request param error: %s", err.Error()))
+		response(ctx, http.StatusBadRequest, "param error", nil)
+		return
 	}
-	c.Request.Header.Set("Content-Type", "application/json")
-	c.JSON(200, map[string]interface{} {
-		"code" : 200,
-		"message" : "",
-		"data" : data,
-	})
-	c.Abort()
+	_, err = u.userService.GetUserByIDSvc(context.Background(), data.ID)
+	if err != nil {
+		log.Logger().Error("get user error: " + err.Error())
+		response(ctx, http.StatusBadRequest, "server error", nil)
+		return
+	}
+	response(ctx, http.StatusOK, "success", data)
 	return
 }
 
-func errord_(c *gin.Context, status int, err error) {
-	c.Request.Header.Set("Content-Type", "application/json")
-	c.JSON(200, map[string]interface{} {
-		"code" : status,
-		"message" : err.Error(),
-		"data" : nil,
-	})
-	c.Abort()
+// UpdateUserByIDApi 修改用户API
+func (u *userApi) UpdateUserByIDApi(ctx *gin.Context) {
+
+	var data = new(models.User)
+
+	err := ctx.BindJSON(data)
+	if err != nil {
+		log.Logger().Error(fmt.Sprintf("update user request param error : %s", err.Error()))
+		response(ctx, http.StatusBadRequest, "param error", nil)
+		return
+	}
+	_, err = u.userService.UpdateUserByIDSvc(context.Background(), *data)
+	if err != nil {
+		log.Logger().Error("update user error: " + err.Error())
+		response(ctx, http.StatusBadRequest, "server error", nil)
+		return
+	}
+	response(ctx, http.StatusOK, "success", nil)
 	return
 }
 
+// DeleteUserByIDApi 删除用户API
+func (u *userApi) DeleteUserByIDApi(ctx *gin.Context){
+	var data = new(models.User)
+
+	err := ctx.BindJSON(data)
+	if err != nil {
+		log.Logger().Error(fmt.Sprintf("delete user request param error : %s", err.Error()))
+		response(ctx, http.StatusBadRequest, "param error", nil)
+		return
+	}
+	_, err = u.userService.DeleteUserByIDSvc(context.Background(), data.ID)
+	if err != nil {
+		log.Logger().Error("delete user error: " + err.Error())
+		response(ctx, http.StatusBadRequest, "server error", nil)
+		return
+	}
+	response(ctx, http.StatusOK, "success", nil)
+	return
+}
 
 

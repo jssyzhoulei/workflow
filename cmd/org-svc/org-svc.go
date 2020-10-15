@@ -26,7 +26,7 @@ func main() {
 		ttl       = 5 * time.Second
 		quitChan = make(chan error, 1)
 		baseServer *grpc.Server
-		grpcAddr = ":866"
+		grpcAddr = "192.168.2.169:866"
 	)
 
 	e := engine.NewEngine("./resources/config/config.yaml")

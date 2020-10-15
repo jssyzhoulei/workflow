@@ -7,7 +7,7 @@ import (
 )
 
 type ServiceI interface {
-	GetUserService() UserServiceI
+	GetUserService() UserServiceInterface
 	GetGroupService() GroupServiceInterface
 	GetRoleService() RoleServiceI
 	GetPermissionService() PermissionServiceInterface
@@ -15,7 +15,7 @@ type ServiceI interface {
 
 type service struct {
 	config       *config.Config
-	userService  UserServiceI
+	userService  UserServiceInterface
 	groupService GroupServiceInterface
 	roleService  RoleServiceI
 	permissionService PermissionServiceInterface
@@ -31,7 +31,7 @@ func NewService(repo repositories.RepoI, e *engine.Engine) ServiceI {
 	}
 }
 
-func (s service) GetUserService() UserServiceI {
+func (s service) GetUserService() UserServiceInterface {
 	return s.userService
 }
 

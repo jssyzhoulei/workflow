@@ -7,4 +7,7 @@ import (
 
 func userApiRouters(g *gin.RouterGroup, api apis.IApis) {
 	g.POST("/user", api.GetUserApis().AddUserApi)
+	g.PUT("/user", api.GetUserApis().UpdateUserByIDApi)
+	g.GET("/user/id", api.GetUserApis().GetUserByIDApi)
+	g.DELETE("/user/del", api.GetUserApis().DeleteUserByIDApi)
 }

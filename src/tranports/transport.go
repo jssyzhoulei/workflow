@@ -14,6 +14,14 @@ type OrgTransport struct {
 	*roleGrpcTransport
 }
 
+func (o *OrgTransport) RpcUpdateUser(c context.Context, proto *pb_user_v1.UserProto) (*pb_user_v1.NullResponse, error) {
+	panic("implement me")
+}
+
+func (o *OrgTransport) RpcGetUserById(c context.Context, index *pb_user_v1.Index) (*pb_user_v1.UserProto, error) {
+	panic("implement me")
+}
+
 func (o *OrgTransport) RpcAddRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.RoleProto, error) {
 	panic("implement me")
 }
