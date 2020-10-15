@@ -65,10 +65,10 @@ func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgSe
 
 func (o *OrgServiceClient) GetUserService() services.UserServiceInterface {
 	endpoints := &org_endpoints.UserServiceEndpoint{}
-	endpoints.AddUserEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeAddUserEndpoint, addUserGrpcConn)
-	endpoints.GetUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeGetUserByIDEndpoint, addUserGrpcConn)
-	endpoints.UpdateUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeUpdataUserByIDEndpoint, addUserGrpcConn)
-	endpoints.DeleteUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeDeleteUserByIDEndpoint, addUserGrpcConn)
+	endpoints.AddUserEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeAddUserEndpoint, userGrpcConn)
+	endpoints.GetUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeGetUserByIDEndpoint, userGrpcConn)
+	endpoints.UpdateUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeUpdataUserByIDEndpoint, userGrpcConn)
+	endpoints.DeleteUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeDeleteUserByIDEndpoint, userGrpcConn)
 	return endpoints
 }
 

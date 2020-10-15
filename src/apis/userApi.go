@@ -51,22 +51,20 @@ func (u *userApi) AddUserApi(ctx *gin.Context) {
 
 // GetUserByIDApi 获取用户详请
 func (u *userApi) GetUserByIDApi(ctx *gin.Context){
-	fmt.Println(123)
-	var data = new(models.User)
 	id := ctx.Param("id")
 	ID,err := strconv.Atoi(id)
 	if err != nil {
 		log.Logger().Error(fmt.Sprintf("get user request param error: %s", err.Error()))
-		response(ctx, http.StatusBadRequest, "param error", nil)
+		error_(ctx, 201, err)
 		return
 	}
 	_, err = u.userService.GetUserByIDSvc(context.Background(), ID)
 	if err != nil {
 		log.Logger().Error("get user error: " + err.Error())
-		response(ctx, http.StatusBadRequest, "server error", nil)
+		error_(ctx, 201, err)
 		return
 	}
-	response(ctx, http.StatusOK, "success", data)
+	success_(ctx, nil)
 	return
 }
 

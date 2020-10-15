@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func addUserGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
+func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 	return &endpoints.UserServiceEndpoint{
 		AddUserEndpoint: grpctransport.NewClient(
 			conn,
