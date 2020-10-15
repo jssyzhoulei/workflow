@@ -10,13 +10,13 @@ import (
 
 type groupGrpcTransport struct {
 	groupAdd   transport.Handler
-	groupQueryByCondition transport.Handler
+	groupQueryWithQuotaByCondition transport.Handler
 }
 
 func NewGroupGrpcTransport(endpoint *endpoints.GroupServiceEndpoint) *groupGrpcTransport {
 	return &groupGrpcTransport{
 		groupAdd: transport.NewServer(endpoint.GroupAddEndpoint, parser.DecodeGroupAddProto, parser.EncodeGroupProto),
-		groupQueryByCondition: transport.NewServer(endpoint.GroupQueryByConditionEndpoint, parser.DecodeGroupQueryByConditionProto, parser.EncodeGroupQueryByConditionProto),
+		groupQueryWithQuotaByCondition: transport.NewServer(endpoint.GroupQueryWithQuotaByConditionEndpoint, parser.DecodeGroupQueryByConditionProto, parser.EncodeGroupQueryByConditionProto),
 	}
 }
 
@@ -29,10 +29,10 @@ func (g *groupGrpcTransport) RPCGroupAdd(ctx context.Context, proto *pb_user_v1.
 }
 
 
-func (g *groupGrpcTransport) RPCGroupQueryByCondition(ctx context.Context, proto *pb_user_v1.GroupQueryByConditionRequest) (*pb_user_v1.GroupQueryByConditionResponse, error) {
-	_, resp, err := g.groupQueryByCondition.ServeGRPC(ctx, proto)
+func (g *groupGrpcTransport) RPCGroupQueryWithQuotaByCondition(ctx context.Context, proto *pb_user_v1.GroupQueryWithQuotaByConditionRequest) (*pb_user_v1.GroupQueryWithQuotaByConditionResponse, error) {
+	_, resp, err := g.groupQueryWithQuotaByCondition.ServeGRPC(ctx, proto)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*pb_user_v1.GroupQueryByConditionResponse), err
+	return resp.(*pb_user_v1.GroupQueryWithQuotaByConditionResponse), err
 }

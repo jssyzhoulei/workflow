@@ -12,10 +12,11 @@ import (
 type GroupRepoInterface interface {
 	GroupAddRepo(data *models.Group, tx *gorm.DB) error
 	GetTx() *gorm.DB
-	GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Group,error)
+	GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Group, error)
 	QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error
-	GroupQueryByConditionRepo(condition string, tx *gorm.DB, val ...interface{}) ([]*models.Group, error)
-	QuotaQueryByConditionRepo(condition string, tx *gorm.DB, val ...interface{}) ([]*models.Quota, error)
+	GroupQueryByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.Group, error)
+	QuotaQueryByConditionRepo(condition *models.QuotaQueryByCondition, tx *gorm.DB) ([]*models.Quota, error)
+	GroupQueryWithQuotaByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.GroupQueryWithQuotaScanRes, error)
 }
 
 type groupRepo struct {
@@ -66,8 +67,8 @@ func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 
 	// 创建新的组
 	newGroupRecord := &models.Group{
-		Name: data.Name,
-		ParentID: data.ParentID,
+		Name:      data.Name,
+		ParentID:  data.ParentID,
 		LevelPath: parentGroup.LevelPath,
 	}
 	if err = db.Create(newGroupRecord).Error; err != nil {
@@ -112,7 +113,7 @@ func (g *groupRepo) QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error {
 }
 
 // GroupQueryByCondition 通过条件查询组信息
-func (g *groupRepo) GroupQueryByConditionRepo(condition string, tx *gorm.DB, val ...interface{}) ([]*models.Group, error) {
+func (g *groupRepo) GroupQueryByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.Group, error) {
 	var err error
 	var db *gorm.DB
 	if tx == nil {
@@ -121,8 +122,19 @@ func (g *groupRepo) GroupQueryByConditionRepo(condition string, tx *gorm.DB, val
 		db = tx
 	}
 
-	var result = make([]*models.Group, 0)
-	err = db.Model(&models.Group{}).Where(condition, val).Find(result).Error
+	db = db.Model(&models.Group{})
+
+	if len(condition.ID) != 0 {
+		db = db.Where("id in ?", condition.ID)
+	} else if len(condition.Name) != 0 {
+		db = db.Where("name in ?", condition.Name)
+	}
+	if len(condition.ParentID) != 0 {
+		db = db.Where("parent_id in ?", condition.ParentID)
+	}
+
+	var result []*models.Group
+	err = db.Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +143,7 @@ func (g *groupRepo) GroupQueryByConditionRepo(condition string, tx *gorm.DB, val
 }
 
 // QuotaQueryByConditionRepo 通过条件查询配额信息
-func (g *groupRepo) QuotaQueryByConditionRepo(condition string, tx *gorm.DB, val ...interface{}) ([]*models.Quota, error) {
+func (g *groupRepo) QuotaQueryByConditionRepo(condition *models.QuotaQueryByCondition, tx *gorm.DB) ([]*models.Quota, error) {
 	var err error
 	var db *gorm.DB
 	if tx == nil {
@@ -140,9 +152,80 @@ func (g *groupRepo) QuotaQueryByConditionRepo(condition string, tx *gorm.DB, val
 		db = tx
 	}
 
+	db = db.Model(&models.Quota{})
+
+	if condition.IsShare != 0 {
+		db = db.Where("is_share=?", condition.IsShare)
+	}
+	if condition.Type != 0 {
+		db = db.Where("type=?", condition.Type)
+	}
+	if condition.GroupID != 0 {
+		db = db.Where("group_id=?", condition.GroupID)
+	}
+	if condition.ResourceID != "" {
+		db = db.Where("resources_id like ?", "%"+condition.ResourceID+"%")
+	}
+
 	var result = make([]*models.Quota, 0)
-	var a = &models.Group{}
-	err = db.Model(a).Where(condition, val).Find(result).Error
+	err = db.Find(result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// GroupQueryWithQuotaByConditionRepo
+func (g *groupRepo) GroupQueryWithQuotaByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.GroupQueryWithQuotaScanRes, error) {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	whereCondition := " where 1=1 "
+	var conditionVal = make(map[string]interface{})
+
+	if len(condition.ID) != 0 {
+		whereCondition += " and id in @ids "
+		conditionVal["ids"] = condition.ID
+	} else if len(condition.Name) != 0 {
+		whereCondition += " and name in @names "
+		conditionVal["names"] = condition.Name
+	}
+	if len(condition.ParentID) != 0 {
+		whereCondition += " and parent_id in @parent_ids "
+		conditionVal["parent_ids"] = condition.ParentID
+	}
+
+	sqlStr := `
+SELECT
+	a.id,
+	a.name,
+	a.parent_id,
+	a.level_path,
+	a.created_at,
+	b.is_share,
+	b.resources_id,
+	b.` + "`type`," + `
+	b.total,
+	b.used
+FROM (
+	SELECT
+		id,
+		name,
+		parent_id,
+		level_path,
+		created_at
+	FROM ` + "`group`" + fmt.Sprintf(`%s) a
+	LEFT JOIN quota b ON a.id = b.group_id;
+`, whereCondition)
+
+	var result = make([]*models.GroupQueryWithQuotaScanRes, 0)
+	err = db.Raw(sqlStr, conditionVal).Scan(&result).Error
 	if err != nil {
 		return nil, err
 	}

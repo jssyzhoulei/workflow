@@ -1,6 +1,8 @@
 package repositories
 
-import "gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
+import (
+	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
+)
 
 type RepoI interface {
 	GetUserRepo() UserRepoI
@@ -29,6 +31,7 @@ func (r *repo) GetUserRepo() UserRepoI {
 func (r *repo) GetGroupRepo() GroupRepoInterface {
 	return r.GroupRepoInterface
 }
+
 func (r *repo) GetRoleRepo() RoleRepoI {
 	return r.RoleRepoI
 }

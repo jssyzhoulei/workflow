@@ -12,14 +12,14 @@ import (
 type GroupServiceEndpoint struct {
 	// GroupAddEndpoint 添加组
 	GroupAddEndpoint endpoint.Endpoint
-	GroupQueryByConditionEndpoint endpoint.Endpoint
+	GroupQueryWithQuotaByConditionEndpoint endpoint.Endpoint
 }
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
 func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 	return &GroupServiceEndpoint{
 		GroupAddEndpoint: MakeGroupAddEndpoint(service.GetGroupService()),
-		GroupQueryByConditionEndpoint: MakeGroupQueryByConditionEndpoint(service.GetGroupService()),
+		GroupQueryWithQuotaByConditionEndpoint: MakeGroupQueryWithQuotaByConditionEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -44,24 +44,24 @@ func (g *GroupServiceEndpoint) GroupAddSvc(ctx context.Context, data *pb_user_v1
 	return resp.(*pb_user_v1.GroupResponse), nil
 }
 
-// MakeGroupQueryByConditionEndpoint ...
-func MakeGroupQueryByConditionEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+// MakeGroupQueryWithQuotaByConditionEndpoint ...
+func MakeGroupQueryWithQuotaByConditionEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		data, ok := request.(*pb_user_v1.GroupQueryByConditionRequest)
+		data, ok := request.(*pb_user_v1.GroupQueryWithQuotaByConditionRequest)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		response, err = groupServiceInterface.GroupQueryByConditionSvc(ctx, data)
+		response, err = groupServiceInterface.GroupQueryWithQuotaByConditionSvc(ctx, data)
 		return
 	}
 }
 
-// GroupQueryByConditionSvc ...
-func (g *GroupServiceEndpoint) GroupQueryByConditionSvc(ctx context.Context, data *pb_user_v1.GroupQueryByConditionRequest) (*pb_user_v1.GroupQueryByConditionResponse, error) {
+// GroupQueryWithQuotaByConditionSvc ...
+func (g *GroupServiceEndpoint) GroupQueryWithQuotaByConditionSvc(ctx context.Context, data *pb_user_v1.GroupQueryWithQuotaByConditionRequest) (*pb_user_v1.GroupQueryWithQuotaByConditionResponse, error) {
 
-	resp , err := g.GroupQueryByConditionEndpoint(ctx, data)
+	resp , err := g.GroupQueryWithQuotaByConditionEndpoint(ctx, data)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*pb_user_v1.GroupQueryByConditionResponse), nil
+	return resp.(*pb_user_v1.GroupQueryWithQuotaByConditionResponse), nil
 }

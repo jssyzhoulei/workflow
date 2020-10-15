@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func groupApiRouters(g *gin.RouterGroup, api apis.IApis) {
-	g.POST("/group", api.GetGroupApis().GroupAddApi)
+func groupAPIRouters(g *gin.RouterGroup, api apis.IApis) {
+	g.POST("/group", api.GetGroupApis().GroupAddAPI)
+	g.GET("/group/quota", api.GetGroupApis().GroupQueryWithQuota)
 }
