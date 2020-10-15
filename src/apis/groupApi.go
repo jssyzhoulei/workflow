@@ -135,10 +135,12 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		ParentId:             parentID,
 	}
 
-	res, err := g.groupService.GroupUpdateSvc(context.Background(), d)
+	_, err = g.groupService.GroupUpdateSvc(context.Background(), d)
 	if err != nil {
 		log.Logger().Info("添加组错误: " + err.Error())
 		response(c, http.StatusBadRequest, "操作失败", nil, false)
 		return
 	}
+	response(c, http.StatusBadRequest, "成功", nil, false)
+	return
 }
