@@ -48,3 +48,12 @@ func EncodeGroupQueryByConditionProto(ctx context.Context, response interface{})
 	}
 	return r, nil
 }
+
+// DecodeGroupUpdateProto ...
+func DecodeGroupUpdateProto(ctx context.Context, request interface{}) (interface{}, error) {
+	r, ok := request.(*pb_user_v1.GroupUpdateRequest)
+	if !ok {
+		return nil, errors.New("解码 添加组 请求失败")
+	}
+	return r, nil
+}

@@ -7,5 +7,5 @@ import (
 
 func groupAPIRouters(g *gin.RouterGroup, api apis.IApis) {
 	g.POST("/group", api.GetGroupApis().GroupAddAPI)
-	g.GET("/group/quota", api.GetGroupApis().GroupQueryWithQuota)
+	g.GET("/group/quota", api.GetGroupApis().GroupQueryWithQuotaAPI)
 }
