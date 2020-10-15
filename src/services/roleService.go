@@ -3,13 +3,14 @@ package services
 import (
 	"context"
 	"gitee.com/grandeep/org-svc/src/models"
+	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
 )
 
 type RoleServiceI interface {
-	AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error
-	UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error
-	DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error
+	AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
+	UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
+	DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
 }
 
 type roleService struct {
@@ -22,32 +23,32 @@ func NewRoleService(repos repositories.RepoI) RoleServiceI {
 	}
 }
 
-func (r *roleService) AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error {
+func (r *roleService) AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
 	err := r.roleRepo.AddRoleRepo(&role)
-	if err != nil{
-		return err
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
 	}
-	for _, mp := range role.MenuPerms{
+	for _, mp := range role.MenuPerms {
 		mp.RoleID = role.ID
 	}
-	return r.roleRepo.BatchCreateMenuPermRepo(&role.MenuPerms)
+	return pb_user_v1.NullResponse{}, r.roleRepo.BatchCreateMenuPermRepo(&role.MenuPerms)
 }
 
-func (r *roleService) UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error {
+func (r *roleService) UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
 	err := r.roleRepo.UpdateRoleRepo(&role.Role)
 	err = r.roleRepo.DeleteMenuPermissionByRoleIDRepo(role.ID)
-	if err != nil{
-		return err
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
 	}
-	for _, mp := range role.MenuPerms{
+	for _, mp := range role.MenuPerms {
 		mp.ID = 0
 		mp.RoleID = role.ID
 	}
-	return r.roleRepo.BatchCreateMenuPermRepo(&role.MenuPerms)
+	return pb_user_v1.NullResponse{}, r.roleRepo.BatchCreateMenuPermRepo(&role.MenuPerms)
 }
 
-func (r *roleService) DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) error{
+func (r *roleService) DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
 	err := r.roleRepo.DeleteMenuPermissionByRoleIDRepo(role.ID)
 	err = r.roleRepo.DeleteRoleRepo(&role.Role)
-	return err
+	return pb_user_v1.NullResponse{}, err
 }
