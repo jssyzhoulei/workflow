@@ -20,7 +20,67 @@ type PermissionServiceEndpoint struct {
 
 func NewPermissionEndpoint(service services.ServiceI) *PermissionServiceEndpoint {
 	return &PermissionServiceEndpoint{
-		AddPermissionEndpoint: MakeAddPermissionEndpoint(service.GetPermissionService()),
+		AddPermissionEndpoint:          MakeAddPermissionEndpoint(service.GetPermissionService()),
+		AddMenuEndpoint:                MakeAddMenuEndpoint(service.GetPermissionService()),
+		GetMenuCascadeByModuleEndpoint: MakeGetMenuCascadeByModuleEndpoint(service.GetPermissionService()),
+		GetPermissionByIDEndpoint:      MakeGetPermissionByID(service.GetPermissionService()),
+		DeletePermissionByIDEndpoint:   MakeDeletePermissionByID(service.GetPermissionService()),
+		UpdatePermissionByIDEndpoint: MakeUpdatePermissionByIDEndpoint(service.GetPermissionService()),
+	}
+}
+
+func MakeUpdatePermissionByIDEndpoint(service services.PermissionServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		permission, ok := request.(models.Permission)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = service.UpdatePermissionByIDSvc(ctx, permission)
+		return
+	}
+}
+
+func MakeDeletePermissionByID(service services.PermissionServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		id, ok := request.(int)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = service.DeletePermissionByIDSvc(ctx, id)
+		return
+	}
+}
+
+func MakeGetPermissionByID(service services.PermissionServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		id, ok := request.(int)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = service.GetPermissionByIDSvc(ctx, id)
+		return
+	}
+}
+
+func MakeGetMenuCascadeByModuleEndpoint(service services.PermissionServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		module, ok := request.(models.MenuModule)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = service.GetMenuCascadeByModuleSvc(ctx, module)
+		return
+	}
+}
+
+func MakeAddMenuEndpoint(permissionService services.PermissionServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		menu, ok := request.(models.Menu)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = permissionService.AddMenuSvc(ctx, menu)
+		return
 	}
 }
 
@@ -83,10 +143,10 @@ func (p *PermissionServiceEndpoint) DeletePermissionByIDSvc(ctx context.Context,
 	return res.(pb_user_v1.NullResponse), nil
 }
 
-func (p *PermissionServiceEndpoint) GetMenuCascadeByModuleSvc(ctx context.Context, module models.MenuModule) ([]models.Cascade, error) {
+func (p *PermissionServiceEndpoint) GetMenuCascadeByModuleSvc(ctx context.Context, module models.MenuModule) (*pb_user_v1.Cascades, error) {
 	res, err := p.GetMenuCascadeByModuleEndpoint(ctx, module)
 	if err != nil {
 		return nil, err
 	}
-	return res.([]models.Cascade), nil
+	return res.(*pb_user_v1.Cascades), nil
 }

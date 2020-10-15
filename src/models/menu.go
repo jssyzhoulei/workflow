@@ -27,57 +27,5 @@ const (
 	MODULE_TRAINING
 	MODULE_DEVELOP
 	MODULE_SERVICE
+
 )
-
-type Cascade struct {
-	Value int `json:"value"`
-	Label string `json:"label"`
-	Children []Cascade `json:"children"`
-}
-
-
-func (m Menu) GetMenuCascade(menus []Menu, parentId int) (cascades []Cascade) {
-	for k, menu := range menus {
-		var (
-			cascade Cascade
-		)
-		if parentId == menu.ParentID {
-			var (
-				menusNew = make([]Menu, len(menus)-1)
-			)
-			copy(menusNew[:k], menus[:k])
-			copy(menusNew[k:], menus[k+1:])
-			cascade.Value = menu.ID
-			cascade.Label = menu.Name
-			cascade.Children = m.GetMenuCascade(menusNew, menu.ID)
-			cascades = append(cascades, cascade)
-		}
-	}
-	return cascades
-}
-
-func (m Menu) AddPermissionCascade(permissions []Permission, cascades []Cascade) []Cascade {
-	for k, cascade := range cascades {
-		if len(cascade.Children) > 0 {
-			cs := m.AddPermissionCascade(permissions, cascade.Children)
-			cascades[k].Children = cs
-			continue
-		} else {
-			for index, permission := range permissions {
-				if cascade.Value == permission.MenuID {
-					var (
-						c Cascade
-						permissionsNew = make([]Permission, len(permissions) -1)
-					)
-					copy(permissionsNew[:index], permissions[:index])
-					copy(permissionsNew[index:], permissions[index+1:])
-					c.Value = permission.ID
-					c.Label = permission.UriName
-					cascade.Children = append(cascade.Children, c)
-				}
-			}
-			cascades[k] = cascade
-		}
-	}
-	return cascades
-}
