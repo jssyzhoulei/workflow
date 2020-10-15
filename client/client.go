@@ -123,8 +123,8 @@ func (o *OrgServiceClient) getRetryRoleEndpoint(ept MakeRoleEndpointFunc, conn G
 // GetGroupService  ...
 func (o *OrgServiceClient) GetGroupService() services.GroupServiceInterface {
 	return &org_endpoints.GroupServiceEndpoint{
-		GroupAddEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupAddGrpcConn),
-		GroupQueryByConditionEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupQueryByConditionEndpoint, groupQueryByConditionGrpcConn),
+		GroupAddEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupGrpcConn),
+		GroupQueryWithQuotaByConditionEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupQueryWithQuotaByConditionEndpoint, groupGrpcConn),
 	}
 }
 

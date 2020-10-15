@@ -31,20 +31,20 @@ func DecodeGroupProto(ctx context.Context, request interface{}) (interface{}, er
 	return r, nil
 }
 
-// EncodeGroupQueryByConditionProto ...
-func EncodeGroupQueryByConditionProto(ctx context.Context, request interface{}) (interface{}, error) {
-	r, ok := request.(*pb_user_v1.GroupQueryByConditionRequest)
+// EncodeGroupQueryWithQuotaByConditionProto ...
+func EncodeGroupQueryWithQuotaByConditionProto(ctx context.Context, request interface{}) (interface{}, error) {
+	r, ok := request.(*pb_user_v1.GroupQueryWithQuotaByConditionRequest)
 	if !ok {
-		return nil, errors.New("DecodeGroupQueryByConditionProto 失败")
+		return nil, errors.New("EncodeGroupQueryWithQuotaByConditionProto 失败")
 	}
 	return r, nil
 }
 
-// DecodeGroupQueryByConditionProto ...
-func DecodeGroupQueryByConditionProto(ctx context.Context, response interface{}) (interface{}, error) {
-	r, ok := response.([]*pb_user_v1.GroupQueryByConditionResponse)
+// DecodeGroupQueryWithQuotaByConditionProto ...
+func DecodeGroupQueryWithQuotaByConditionProto(ctx context.Context, response interface{}) (interface{}, error) {
+	r, ok := response.(*pb_user_v1.GroupQueryWithQuotaByConditionResponse)
 	if !ok {
-		return nil, errors.New("EncodeGroupQueryByConditionProto 失败")
+		return nil, errors.New("DecodeGroupQueryWithQuotaByConditionProto 失败")
 	}
 	return r, nil
 }
