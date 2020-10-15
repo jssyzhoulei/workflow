@@ -36,7 +36,7 @@ func groupAddGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 	}
 }
 
-func addRoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
+func RoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 	return &endpoints.RoleServiceEndpoint{
 		AddRoleEndpoint: grpctransport.NewClient(
 			conn,

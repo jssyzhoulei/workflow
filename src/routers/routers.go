@@ -44,11 +44,12 @@ func Gin() *gin.Engine {
 }
 
 func Routers(e *gin.Engine) {
-	o := client.NewOrgServiceClient([]string{"127.0.0.1:2379"}, 3, time.Second)
+	o := client.NewOrgServiceClient([]string{"192.168.2.191:2379"}, 3, time.Second)
 	api := apis.NewApis(o)
 	g := e.Group("/apis/v1")
 	userApiRouters(g, api)
 	permissionApiRouters(g, api)
+	roleApiRouters(g, api)
 	groupApiRouters(g, api)
 }
 

@@ -58,6 +58,11 @@ type CreateMenuPermRequest struct {
 	MenuPerms []*RoleMenuPermission
 }
 
+func (c CreateMenuPermRequest) Check() bool {
+
+	return len(c.MenuPerms) != 0 && c.Name != "" && (c.DataPermit == 1 || c.DataPermit == 2 || c.DataPermit == 3)
+}
+
 type MenuPermResponse struct {
 	Role
 	RoleMenuPermission

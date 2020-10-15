@@ -12,7 +12,7 @@ service RpcOrgService {
   rpc RpcGetUserById(UserProto) returns (UserProto);
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
   rpc RPCGroupQueryByCondition(GroupQueryByConditionRequest) returns (GroupQueryByConditionResponse);
-  rpc RpcAddRole(CreateMenuPermRequestProto) returns (RoleProto);
+  rpc RpcAddRole(CreateMenuPermRequestProto) returns (NullResponse);
   rpc RpcAddPermission(PermissionProto) returns (NullResponse);
   rpc RpcGetPermissionByID(Index) returns (PermissionProto);
   rpc RpcUpdatePermissionByID(PermissionProto) returns (NullResponse);
