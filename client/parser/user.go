@@ -2,12 +2,16 @@ package parser
 
 import (
 	"context"
+	"errors"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 )
 
 func EncodeUserModel(ctx context.Context, req interface{}) (interface{}, error) {
-	user := req.(models.User)
+	user, ok := req.(models.User)
+	if !ok {
+		return nil, errors.New("error type")
+	}
 	return &pb_user_v1.UserProto{
 		UserName:  user.UserName,
 		LoginName: user.LoginName,
@@ -17,7 +21,10 @@ func EncodeUserModel(ctx context.Context, req interface{}) (interface{}, error) 
 }
 
 func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) {
-	user := res.(*pb_user_v1.UserProto)
+	user, ok := res.(*pb_user_v1.UserProto)
+	if !ok {
+		return nil, errors.New("error type")
+	}
 	return models.User{
 		BaseModel: models.BaseModel{
 			ID:     int(user.Id.Id),

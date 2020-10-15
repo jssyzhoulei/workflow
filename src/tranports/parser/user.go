@@ -8,7 +8,7 @@ import (
 
 func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) {
 	r := req.(*pb_user_v1.UserProto)
-	return models.User{
+	user := models.User{
 		BaseModel: models.BaseModel{
 			ID:            int(r.Id.Id),
 		},
@@ -16,7 +16,8 @@ func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 		LoginName: r.LoginName,
 		Password: r.Password,
 		Mobile: int(r.Mobile),
-	}, nil
+	}
+	return user, nil
 }
 
 func EncodeUserProto(ctx context.Context, req interface{}) (interface{}, error) {

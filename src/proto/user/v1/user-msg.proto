@@ -2,6 +2,7 @@
 // protoc -I src/proto/user/v1/ --go_out=plugins=grpc:. src/proto/user/v1/*.proto
 syntax = "proto3";
 package pb_user_v1;
+import "base.proto";
 
 // AddUserRequest 添加用户请求
 message UserProto {
@@ -11,17 +12,10 @@ message UserProto {
   string password = 3;
   int64  mobile = 4;
   int64  group_id = 7;
+  int64  user_type = 8;
   repeated Index role_ids = 5;
 }
 
-message Index {
-    int64 id = 1;
-}
-
-// UserResponse 用户响应
-message NullResponse {
-  int64 Code = 1;
-}
 // GroupResponse 用户组响应
 message GroupResponse {
   int64 code = 1;
@@ -43,4 +37,8 @@ message GroupAddRequest {
   int64  disk_quota_size = 3;
   repeated Quota quotas = 4;
 
+}
+
+message Users {
+  repeated Users users = 1;
 }

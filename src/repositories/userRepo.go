@@ -1,18 +1,20 @@
 package repositories
 
 import (
-	"fmt"
+	"errors"
 	"gitee.com/grandeep/org-svc/src/models"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gorm.io/gorm"
+	"math"
 )
 
 // UserRepoI ...
 type UserRepoInterface interface {
-	AddUserRepo(user *models.User, tx *gorm.DB) error
-	GetUserByIDRepo(id int, tx *gorm.DB) (*models.User, error)
-	UpdateUserByIDRepo(user *models.User, tx *gorm.DB) error
-	DeleteUserByIDRepo(id int, tx *gorm.DB) error
+	AddUserRepo(user models.User) error
+	GetUserByIDRepo(id int) (user models.User, err error)
+	UpdateUserByIDRepo(user models.User) error
+	DeleteUserByIDRepo(id int) error
+	GetUserListRepo(user models.User, page *models.Page) ([]models.User, error)
 	GetTx() *gorm.DB
 }
 
@@ -33,89 +35,89 @@ func NewUserRepo(db *yorm.DB) UserRepoInterface {
 
 
 // AddUserRepo 添加用户
-func (u *userRepo) AddUserRepo(user *models.User, tx *gorm.DB) error {
-	var err error
-	var db *gorm.DB
-	if tx == nil {
-		db = u.DB
-	} else {
-		db = tx
+func (u *userRepo) AddUserRepo(user models.User) error {
+	userRecord, err := u.GetUserByName(user.UserName)
+	if err != nil && userRecord.ID == 0 {
+		return u.Create(&user).Error
 	}
-
-	//判断该用户是否存在
-	var count int64
-	err = db.Model(&models.User{}).Where("user_name=?", user.UserName).Count(&count).Error
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		return fmt.Errorf("创建用户：%s 失败，已经存在", user.UserName)
-	}
-
-	//创建新的用户
-	newUserInfo := &models.User{
-		UserName: user.UserName,
-		Password: user.Password,
-		LoginName: user.LoginName,
-		GroupID: user.GroupID,
-		Mobile: user.Mobile,
-		UserType: user.UserType,
-	}
-	if err = db.Create(newUserInfo).Error; err != nil {
-		return err
-	}
-	return nil
+	return errors.New("user is exist")
 }
 
-// GetUserByIDRepo 获取用户详情
-func (u *userRepo) GetUserByIDRepo(id int, tx *gorm.DB) (*models.User, error) {
-	var err error
-	var db *gorm.DB
-	if tx == nil {
-		db = u.DB
-	} else {
-		db = tx
-	}
-	var userInfo = new(models.User)
-	err = db.Model(&models.User{}).Where("id=?", id).Find(&userInfo).Error
-	if err != nil {
-		return nil, err
-	}
-	return userInfo, nil
+// GetUserByIDRepo 通过ID获取用户详情
+func (u *userRepo) GetUserByIDRepo(id int) (user models.User, err error) {
+	err = u.First(&user, id).Error
+	return
 }
 
 // UpdateUserByIDRepo 根据ID编辑用户
-func (u *userRepo) UpdateUserByIDRepo(user *models.User, tx *gorm.DB) error {
-	var err error
-	var db *gorm.DB
-	if tx == nil {
-		db = u.DB
-	} else {
-		db = tx
+func (u *userRepo) UpdateUserByIDRepo(user models.User) error {
+	userRecord, err := u.GetUserByName(user.UserName)
+	if err != nil || userRecord.ID == user.ID {
+		return u.Model(&user).Updates(user).Error
 	}
-	if err = db.Model(&user).Where("id=?", user.ID).Save(&user).Error; err != nil {
-		return err
+	return errors.New("user is exist")
+}
+
+// DeleteUserByIDRepo 根据ID删除用户
+func (u *userRepo) DeleteUserByIDRepo(id int) error {
+	var(
+		user models.User
+	)
+	if id != 0 {
+		user.ID = id
+		return u.Delete(&user).Error
 	}
 	return nil
 }
 
-// DeleteUserByIDRepo 根据ID删除用户
-func (u *userRepo) DeleteUserByIDRepo(id int, tx *gorm.DB) error {
-	var (
-		user models.User
+// GetUserListRepo 获取用户列表
+func (u *userRepo) GetUserListRepo(user models.User, page *models.Page) ([]models.User, error){
+	var(
+		users []models.User
 	)
-	var err error
-	var db *gorm.DB
-	if tx == nil {
-		db = u.DB
-	} else {
-		db = tx
+	dbPage := *u.DB
+	db := u.Table("user").
+		Select("user_name, group_id, created_at, id, login_name, mobile, user_type")
+
+	if user.UserName != "" {
+		db = db.Where("user_name like ?", "%" + user.UserName + "%")
 	}
-	if id != 0 {
-		user.ID = id
-		if err = db.Delete(&user).Error; err != nil{
-			return err
+
+	if user.ID != 0 {
+		db = db.Where("id=?", user.ID)
+	}
+	if page != nil {
+		db.DB()
+		if page.PageNum == 0 {
+			page.PageNum = 1
 		}
+		if page.PageSize == 0 {
+			page.PageSize = 10
+		}
+		err := dbPage.Table("(?) as p",db).Count(&page.Total).Error
+		if err != nil {
+			return nil, err
+		}
+		page.TotalPage = math.Ceil(float64(page.Total)) / float64(page.PageSize)
+		err = db.Limit(page.PageSize).Offset(page.PageSize * (page.PageNum - 1)).Find(&users).Error
+		if err != nil {
+			return nil, err
+		}
+		return users, nil
 	}
-	return nil
+	err := db.Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, err
+}
+
+// GetUserByName 根据用户名获取用户
+func (u *userRepo) GetUserByName(name string)(models.User, error) {
+	var(
+		user models.User
+		err error
+	)
+	err = u.Where("user_name=?", name).First(&user).Error
+	return user, err
 }

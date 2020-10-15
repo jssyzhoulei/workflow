@@ -65,11 +65,14 @@ func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgSe
 
 func (o *OrgServiceClient) GetUserService() services.UserServiceInterface {
 	endpoints := &org_endpoints.UserServiceEndpoint{}
-	endpoints.AddUserEndpoint = o.getRetryEndpoint(org_endpoints.MakeAddUserEndpoint, addUserGrpcConn)
+	endpoints.AddUserEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeAddUserEndpoint, addUserGrpcConn)
+	endpoints.GetUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeGetUserByIDEndpoint, addUserGrpcConn)
+	endpoints.UpdateUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeUpdataUserByIDEndpoint, addUserGrpcConn)
+	endpoints.DeleteUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeDeleteUserByIDEndpoint, addUserGrpcConn)
 	return endpoints
 }
 
-func (o *OrgServiceClient) factoryFor(makeEndpoint MakeUserEndpointFunc, conn GrpcUserConnFunc) sd.Factory {
+func (o *OrgServiceClient) factoryForUser(makeEndpoint MakeUserEndpointFunc, conn GrpcUserConnFunc) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		con, err := grpc.Dial(instance, grpc.WithInsecure())
 		if err != nil {
@@ -81,8 +84,8 @@ func (o *OrgServiceClient) factoryFor(makeEndpoint MakeUserEndpointFunc, conn Gr
 	}
 }
 
-func (o *OrgServiceClient) getRetryEndpoint(ept MakeUserEndpointFunc, conn GrpcUserConnFunc) endpoint.Endpoint {
-	factory := o.factoryFor(ept, conn)
+func (o *OrgServiceClient) getRetryUserEndpoint(ept MakeUserEndpointFunc, conn GrpcUserConnFunc) endpoint.Endpoint {
+	factory := o.factoryForUser(ept, conn)
 	endpointer := sd.NewEndpointer(o.instance, factory, log.NewNopLogger())
 	balance := lb.NewRandom(endpointer, time.Now().UnixNano())
 	return lb.Retry(o.retryMax, o.retryTimeout, balance)
