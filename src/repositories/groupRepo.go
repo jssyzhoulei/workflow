@@ -6,6 +6,8 @@ import (
 	"gitee.com/grandeep/org-svc/src/models"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gorm.io/gorm"
+	"strconv"
+	"strings"
 )
 
 // GroupRepoInterface ...
@@ -13,10 +15,12 @@ type GroupRepoInterface interface {
 	GroupAddRepo(data *models.Group, tx *gorm.DB) error
 	GetTx() *gorm.DB
 	GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Group, error)
+	GroupQueryByIDRepo(id int64, tx *gorm.DB) (*models.Group, error)
 	QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error
 	GroupQueryByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.Group, error)
 	QuotaQueryByConditionRepo(condition *models.QuotaQueryByCondition, tx *gorm.DB) ([]*models.Quota, error)
 	GroupQueryWithQuotaByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.GroupQueryWithQuotaScanRes, error)
+	GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB) error
 }
 
 type groupRepo struct {
@@ -90,6 +94,24 @@ func (g *groupRepo) GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Grou
 
 	var record = new(models.Group)
 	err = db.Model(&models.Group{}).Where("name=?", name).Find(&record).Error
+	if err != nil {
+		return nil, err
+	}
+	return record, nil
+}
+
+// GroupQueryByIDRepo 通过组名查询组信息
+func (g *groupRepo) GroupQueryByIDRepo(id int64, tx *gorm.DB) (*models.Group, error) {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	var record = new(models.Group)
+	err = db.Model(&models.Group{}).Where("id=?", id).Find(&record).Error
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +198,7 @@ func (g *groupRepo) QuotaQueryByConditionRepo(condition *models.QuotaQueryByCond
 	return result, nil
 }
 
-// GroupQueryWithQuotaByConditionRepo
+// GroupQueryWithQuotaByConditionRepo 通过条件查询组及其配额信息接口
 func (g *groupRepo) GroupQueryWithQuotaByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.GroupQueryWithQuotaScanRes, error) {
 	var err error
 	var db *gorm.DB
@@ -231,4 +253,45 @@ FROM (
 	}
 
 	return result, nil
+}
+
+// GroupUpdateRepo 更新组
+func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB) error {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	if data.ID == 0 {
+		return errors.New("组ID必须传递")
+	}
+
+	updateColumnMap := make(map[string]interface{})
+	if data.Name != "" {
+		updateColumnMap["name"] = data.Name
+	}
+
+	if data.ParentID != nil {
+		updateColumnMap["parent_id"] = data.ParentID
+
+		oldGroup, err := g.GroupQueryByIDRepo(data.ID, nil)
+		if err != nil {
+			return err
+		}
+		oldLevelPath := oldGroup.LevelPath
+		res := strings.Split(oldLevelPath, "-")
+		res[len(res) - 2] = strconv.FormatInt(*data.ParentID, 10)
+		newLevelPath := strings.Join(res, "-")
+		updateColumnMap["level_path"] = newLevelPath
+	}
+
+	err = db.Model(&models.Group{}).Where("id=?", data.ID).Updates(updateColumnMap).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
