@@ -65,6 +65,14 @@ func groupGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 			parser.DecodeGroupQueryWithQuotaByConditionProto,
 			pb_user_v1.GroupQueryWithQuotaByConditionResponse{},
 		).Endpoint(),
+		GroupUpdateEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RPCGroupUpdate",
+			parser.EncodeGroupUpdateProto,
+			parser.DecodeGroupProto,
+			pb_user_v1.GroupResponse{},
+		).Endpoint(),
 	}
 }
 

@@ -48,3 +48,12 @@ func DecodeGroupQueryWithQuotaByConditionProto(ctx context.Context, response int
 	}
 	return r, nil
 }
+
+// EncodeGroupUpdateProto ...
+func EncodeGroupUpdateProto(ctx context.Context, request interface{}) (interface{}, error) {
+	r, ok := request.(*pb_user_v1.GroupUpdateRequest)
+	if !ok {
+		return nil, errors.New("EncodeGroupUpdateProto 失败")
+	}
+	return r, nil
+}
