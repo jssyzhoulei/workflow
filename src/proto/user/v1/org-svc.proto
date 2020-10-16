@@ -13,6 +13,7 @@ service RpcOrgService {
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
   rpc RPCGroupQueryWithQuotaByCondition(GroupQueryWithQuotaByConditionRequest) returns (GroupQueryWithQuotaByConditionResponse);
   rpc RPCGroupUpdate(GroupUpdateRequest) returns (GroupResponse);
+  rpc RPCQuotaUpdate(QuotaUpdateRequest) returns (GroupResponse);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (RoleProto);
   rpc RpcAddPermission(PermissionProto) returns (NullResponse);
   rpc RpcGetPermissionByID(Index) returns (PermissionProto);

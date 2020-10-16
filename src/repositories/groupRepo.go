@@ -21,6 +21,7 @@ type GroupRepoInterface interface {
 	QuotaQueryByConditionRepo(condition *models.QuotaQueryByCondition, tx *gorm.DB) ([]*models.Quota, error)
 	GroupQueryWithQuotaByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.GroupQueryWithQuotaScanRes, error)
 	GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB) error
+	QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB) error
 }
 
 type groupRepo struct {
@@ -100,7 +101,7 @@ func (g *groupRepo) GroupQueryByNameRepo(name string, tx *gorm.DB) (*models.Grou
 	return record, nil
 }
 
-// GroupQueryByIDRepo 通过组名查询组信息
+// GroupQueryByIDRepo 通过组ID查询组信息
 func (g *groupRepo) GroupQueryByIDRepo(id int64, tx *gorm.DB) (*models.Group, error) {
 	var err error
 	var db *gorm.DB
@@ -118,7 +119,7 @@ func (g *groupRepo) GroupQueryByIDRepo(id int64, tx *gorm.DB) (*models.Group, er
 	return record, nil
 }
 
-// QuotaAdd 批量创建配额
+// QuotaAddRepo 批量创建配额
 func (g *groupRepo) QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error {
 	var err error
 	var db *gorm.DB
@@ -134,7 +135,7 @@ func (g *groupRepo) QuotaAddRepo(data []*models.Quota, tx *gorm.DB) error {
 	return nil
 }
 
-// GroupQueryByCondition 通过条件查询组信息
+// GroupQueryByConditionRepo 通过条件查询组信息
 func (g *groupRepo) GroupQueryByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.Group, error) {
 	var err error
 	var db *gorm.DB
@@ -255,7 +256,7 @@ FROM (
 	return result, nil
 }
 
-// GroupUpdateRepo 更新组
+// GroupUpdateRepo 更新组信息
 func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB) error {
 	var err error
 	var db *gorm.DB
@@ -289,6 +290,38 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 	}
 
 	err = db.Model(&models.Group{}).Where("id=?", data.ID).Updates(updateColumnMap).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// QuotaUpdateRepo 配额信息更新
+func (g *groupRepo) QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB) error {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	if data.GroupID == 0 || data.IsShare == 0 || data.ResourcesID == "" {
+		return errors.New("检测到空值: group_id, is_share, resources_id 全部为必传参数")
+	}
+
+	if !models.ResourceType.Auth(models.ResourceType(data.QuotaType)) {
+		return errors.New("资源类型不存在")
+	}
+
+	updateColumnMap := map[string]interface{} {
+		"total": data.Total,
+		"used": data.Used,
+	}
+
+	err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and resources_id=? and type=?", data.GroupID,
+		data.IsShare, data.ResourcesID, data.QuotaType).Updates(updateColumnMap).Error
 	if err != nil {
 		return err
 	}

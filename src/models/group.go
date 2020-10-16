@@ -31,6 +31,13 @@ func (g Group) TableName() string {
 
 type ResourceType int8
 
+func (t ResourceType) Auth() bool {
+	if ResourceCpu <= t && t <= ResourceDisk {
+		return true
+	}
+	return false
+}
+
 // 资源类型枚举
 const (
 	ResourceCpu ResourceType = iota + 1
@@ -88,7 +95,17 @@ type GroupQueryWithQuotaScanRes struct {
 
 // GroupUpdateRequest 组信息更新请求
 type GroupUpdateRequest struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
-	ParentID   *int64  `json:"parent_id"`
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	ParentID *int64 `json:"parent_id"`
+}
+
+// QuotaUpdateRequest 配额更新请求
+type QuotaUpdateRequest struct {
+	GroupID     int64  `json:"group_id"`
+	IsShare     int64  `json:"is_share"`
+	ResourcesID string `json:"resources_id"`
+	QuotaType   int64  `json:"quota_type"`
+	Total       int64  `json:"total"`
+	Used        int64  `json:"used"`
 }
