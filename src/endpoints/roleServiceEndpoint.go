@@ -48,11 +48,11 @@ func MakeUpdateRoleEndpoint(roleService services.RoleServiceI) endpoint.Endpoint
 
 func MakeDeleteRoleEndpoint(roleService services.RoleServiceI) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		role, ok := request.(models.CreateMenuPermRequest)
+		id, ok := request.(int)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		response, err = roleService.DeleteRoleSvc(ctx, role)
+		response, err = roleService.DeleteRoleSvc(ctx, id)
 		return
 	}
 }

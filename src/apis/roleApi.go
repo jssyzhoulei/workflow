@@ -68,15 +68,13 @@ func (r *roleApi) UpdateRoleApi(c *gin.Context) {
 
 func (r *roleApi) DeleteRoleApi(c *gin.Context) {
 
-	var data = new(models.CreateMenuPermRequest)
-
-	err := c.BindJSON(data)
-	if err != nil {
-		log.Logger().Warn(fmt.Sprintf("delete role request param error : %s", err.Error()))
+	var idStr = c.Query("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id == 0 {
 		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
-	_, err = r.roleService.DeleteRoleSvc(context.Background(), *data)
+	_, err = r.roleService.DeleteRoleSvc(context.Background(), id)
 	if err != nil {
 		log.Logger().Error("delete role error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
