@@ -4,8 +4,21 @@ import (
 	"gitee.com/grandeep/org-svc/client"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
+	"github.com/gogo/protobuf/jsonpb"
 	"net/http"
 )
+
+var (
+	jsonpbMarshaler *jsonpb.Marshaler
+)
+
+func init() {
+	jsonpbMarshaler = &jsonpb.Marshaler{
+		EnumsAsInts:  true,
+		EmitDefaults: true,
+		OrigName:     true,
+	}
+}
 
 type IApis interface {
 	GetUserApis() userApiI

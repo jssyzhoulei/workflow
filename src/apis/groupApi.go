@@ -9,22 +9,9 @@ import (
 	"gitee.com/grandeep/org-svc/src/services"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
-	"github.com/gogo/protobuf/jsonpb"
 	"net/http"
 	"strings"
 )
-
-var (
-	jsonpbMarshaler *jsonpb.Marshaler
-)
-
-func init() {
-	jsonpbMarshaler = &jsonpb.Marshaler{
-		EnumsAsInts:  true,
-		EmitDefaults: true,
-		OrigName:     true,
-	}
-}
 
 type groupAPIInterface interface {
 	GroupAddAPI(ctx *gin.Context)
@@ -43,7 +30,7 @@ func NewGroupAPI(groupService services.GroupServiceInterface) groupAPIInterface 
 	}
 }
 
-// GroupAddApi 添加组API
+// GroupAddAPI 添加组API
 func (g *groupAPI) GroupAddAPI(c *gin.Context) {
 
 	var data = new(pb_user_v1.GroupAddRequest)
