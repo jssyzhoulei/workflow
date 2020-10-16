@@ -12,6 +12,7 @@ type roleGrpcTransport struct {
 	addRole    transport.Handler
 	updateRole transport.Handler
 	deleteRole transport.Handler
+	queryRole  transport.Handler
 }
 
 func NewRoleGrpcTransport(endpoint *endpoints.RoleServiceEndpoint) *roleGrpcTransport {
@@ -43,10 +44,18 @@ func (u *roleGrpcTransport) RpcUpdateRole(ctx context.Context, proto *pb_user_v1
 	return role.(*pb_user_v1.NullResponse), err
 }
 
-func (u *roleGrpcTransport) RpcDeleteRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.NullResponse, error) {
-	_, role, err := u.deleteRole.ServeGRPC(ctx, proto)
+func (u *roleGrpcTransport) RpcDeleteRole(ctx context.Context, index *pb_user_v1.Index) (*pb_user_v1.NullResponse, error) {
+	_, role, err := u.deleteRole.ServeGRPC(ctx, index)
 	if err != nil {
 		return nil, err
 	}
 	return role.(*pb_user_v1.NullResponse), err
+}
+
+func (u *roleGrpcTransport) RpcQueryRole(ctx context.Context, index *pb_user_v1.Index) (*pb_user_v1.CreateMenuPermRequestProto, error) {
+	_, role, err := u.queryRole.ServeGRPC(ctx, index)
+	if err != nil {
+		return nil, err
+	}
+	return role.(*pb_user_v1.CreateMenuPermRequestProto), err
 }

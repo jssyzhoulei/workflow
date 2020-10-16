@@ -81,7 +81,7 @@ func DecodeCreateMenuPermRequestProto(ctx context.Context, req interface{}) (int
 }
 
 func EncodeCreateMenuPermRequest(ctx context.Context, req interface{}) (interface{}, error) {
-	r := req.(models.CreateMenuPermRequest)
+	r := req.(*models.CreateMenuPermRequest)
 	return &pb_user_v1.CreateMenuPermRequestProto{
 		Name:                r.Name,
 		DataPermit:          int32(r.DataPermit),

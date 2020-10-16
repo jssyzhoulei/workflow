@@ -13,7 +13,7 @@ type RoleRepoI interface {
 	UpdateRoleRepo(role *models.Role) error
 	DeleteRoleRepo(role *models.Role) error
 	ListRoleRepo(page, perPage, userId int) (*[]models.Role, error)
-	RoleDetailRepo(roleId, userId int) (*[]models.MenuPermResponse, error)
+	RoleDetailRepo(roleId, userId int) (*models.CreateMenuPermRequest, error)
 	DeleteMenuPermissionByRoleIDRepo(roleId int) error
 }
 
@@ -54,12 +54,40 @@ func (u *roleRepo) ListRoleRepo(page, perPage, userId int) (*[]models.Role, erro
 		Scan(&roles).Error
 }
 
-func (u *roleRepo) RoleDetailRepo(roleId, userId int) (*[]models.MenuPermResponse, error) {
+func buildCreateMenuPermRequest(r *[]models.MenuPermResponse) *models.CreateMenuPermRequest {
+	var (
+		MPermMap = make(map[int]*models.CreateMenuPermRequest)
+		resp     models.CreateMenuPermRequest
+	)
+	for i := range *r {
+		ele := (*r)[i]
+		var rmp models.RoleMenuPermission
+		rmp.RoleID = ele.RoleID
+		rmp.MenuID = ele.MenuID
+		rmp.PermissionID = ele.PermissionID
+
+		if resp.ID != 0 {
+			resp.MenuPerms = append(resp.MenuPerms, &rmp)
+		} else {
+			menuPerms := []*models.RoleMenuPermission{&rmp}
+			resp = models.CreateMenuPermRequest{Role: ele.Role, MenuPerms: menuPerms}
+			MPermMap[ele.ID] = &resp
+		}
+	}
+	return &resp
+}
+
+func (u *roleRepo) RoleDetailRepo(roleId, userId int) (*models.CreateMenuPermRequest, error) {
 	var roles []models.MenuPermResponse
-	return &roles, u.DB.Model(models.Role{}).
+	err := u.DB.Model(models.Role{}).
+		Select("role.*, role_menu_permission.menu_id, role_menu_permission.role_id, role_menu_permission.permission_id").
 		Joins("left join role_menu_permission on role_menu_permission.role_id = role.id").
 		Where("role_menu_permission.delete_at is null and role.id = ?", roleId).
 		Scan(&roles).Error
+	if err != nil {
+		return nil, err
+	}
+	return buildCreateMenuPermRequest(&roles), err
 }
 
 func (u *roleRepo) DeleteMenuPermissionByRoleIDRepo(roleId int) error {
