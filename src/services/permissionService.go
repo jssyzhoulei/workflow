@@ -111,7 +111,7 @@ func (p *permissionService) GetMenuCascadeByModuleSvc(ctx context.Context, modul
 		return c, err
 	}
 
-	cascades := GetMenuCascade(menus, 0)
+	cascades := GetMenuCascade(menus, -1)
 	cascades = AddPermissionCascade(permissions, cascades)
 	c = &pb_user_v1.Cascades{
 		Cascades:             cascades,

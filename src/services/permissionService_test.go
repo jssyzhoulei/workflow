@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	"gitee.com/grandeep/org-svc/src/repositories"
@@ -84,5 +85,104 @@ func Test_permissionService_DeletePermissionByID(t *testing.T) {
 }
 
 func Test_permissionService_GetMenuCascadeByModule(t *testing.T) {
-	fmt.Println(NewPermissionService(repo).GetMenuCascadeByModuleSvc(background, 1))
+	//fmt.Println(NewPermissionService(repo).GetMenuCascadeByModuleSvc(background, 1))
+	rs := makePermissionRouteTree([]models.Permission{{
+		Uri:"/apis/v1/user/:id",
+		Method: models.METHOD_GET,
+	},{
+		Uri:"/apis/v1/user/a",
+		Method: models.METHOD_POST,
+	},{
+		Uri:"/apis/v1/user/",
+		Method: models.METHOD_DELETE,
+	}})
+	fmt.Println(rs.AuthRoute("/apis/v1/user/a/POST"))
+	fmt.Println(rs)
+}
+
+type routeTree map[string]routeTree
+
+func (rt routeTree) AuthRoute(uri string) error {
+	var route []byte
+	var err error
+	for i:= 0; i<len(uri); i++ {
+		switch uri[i] {
+		case '/':
+			rs := string(route)
+			fmt.Println(string(route))
+			if len(route) > 0 {
+				if _, ok := rt["*"]; ok {
+					err = rt["*"].AuthRoute(uri[i+1:])
+					return err
+				}
+				if _, ok := rt[rs]; ok {
+					err = rt[rs].AuthRoute(uri[i+1:])
+					return err
+				}
+				return errors.New("no permission")
+			} else {
+				return rt.AuthRoute(uri[i+1:])
+			}
+		default:
+			route = append(route, uri[i])
+		}
+	}
+
+	if route != nil {
+		if _, ok := rt["*"]; ok {
+			return nil
+		}
+		if _, ok := rt[string(route)]; ok {
+			return nil
+		}
+	}
+	return errors.New("no permission")
+}
+
+func makePermissionRouteTree(ps []models.Permission) routeTree {
+	rt := make(routeTree)
+	for _, v := range ps {
+		makeUri(v.Uri + "/" + v.Method.String(), rt)
+	}
+	return rt
+}
+
+func makeUri(uri string, rt routeTree) {
+	var b bool
+	var route []byte
+	for i:= 0; i<len(uri); i++ {
+		switch uri[i] {
+		case '/':
+			rs := string(route)
+			if len(route) > 0 {
+				if b {
+					if _, ok := rt["*"]; !ok {
+						rt["*"] = make(routeTree)
+					}
+					makeUri(uri[i+1:], rt["*"])
+				} else {
+					if _, ok := rt[rs]; !ok {
+						rt[rs] = make(routeTree)
+					}
+					makeUri(uri[i+1:], rt[rs])
+				}
+			} else {
+				makeUri(uri[i+1:], rt)
+			}
+			return
+		case '*':
+			b = true
+		case ':':
+			b = true
+		default:
+			route = append(route, uri[i])
+		}
+	}
+	if route != nil {
+		if b {
+			rt["*"] = make(routeTree)
+		} else {
+			rt[string(route)] = make(routeTree)
+		}
+	}
 }
