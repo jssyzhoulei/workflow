@@ -96,6 +96,7 @@ func (o *OrgServiceClient) GetRoleService() services.RoleServiceI {
 	endpoints.AddRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeAddRoleEndpoint, RoleGrpcConn)
 	endpoints.UpdateRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeUpdateRoleEndpoint, RoleGrpcConn)
 	endpoints.DeleteRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeDeleteRoleEndpoint, RoleGrpcConn)
+	endpoints.QueryRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeQueryRoleEndpoint, RoleGrpcConn)
 	return endpoints
 }
 

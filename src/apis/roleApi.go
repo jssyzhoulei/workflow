@@ -8,12 +8,14 @@ import (
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type RoleApiInterface interface {
 	AddRoleApi(ctx *gin.Context)
 	UpdateRoleApi(ctx *gin.Context)
 	DeleteRoleApi(ctx *gin.Context)
+	QueryRoleApi(ctx *gin.Context)
 }
 
 type roleApi struct {
@@ -66,19 +68,35 @@ func (r *roleApi) UpdateRoleApi(c *gin.Context) {
 
 func (r *roleApi) DeleteRoleApi(c *gin.Context) {
 
-	var data = new(models.CreateMenuPermRequest)
-
-	err := c.BindJSON(data)
-	if err != nil {
-		log.Logger().Warn(fmt.Sprintf("delete role request param error : %s", err.Error()))
+	var idStr = c.Query("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id == 0 {
 		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
-	_, err = r.roleService.DeleteRoleSvc(context.Background(), *data)
+	_, err = r.roleService.DeleteRoleSvc(context.Background(), id)
 	if err != nil {
 		log.Logger().Error("delete role error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
 	response(c, http.StatusOK, "success", nil, false)
+}
+
+func (r *roleApi) QueryRoleApi(c *gin.Context) {
+
+	var idStr = c.Query("id")
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil || id == 0 {
+		response(c, http.StatusBadRequest, "param error", nil, false)
+		return
+	}
+	resp, err := r.roleService.QueryRoleSvc(context.Background(), id)
+	if err != nil {
+		log.Logger().Error("delete role error: " + err.Error())
+		response(c, http.StatusBadRequest, "server error", nil, false)
+		return
+	}
+	response(c, http.StatusOK, "success", resp, false)
 }

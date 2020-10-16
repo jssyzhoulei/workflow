@@ -117,5 +117,5 @@ func error_(c *gin.Context, status code.Code, err ...error) {
 type ApiResponse struct {
 	Code code.Code `json:"code"`
 	Message string `json:"message"`
-	Data interface{}
+	Data interface{} `json:"data"`
 }
