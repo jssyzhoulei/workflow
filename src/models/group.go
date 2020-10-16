@@ -9,6 +9,7 @@ type Quota struct {
 	GroupID    int          `gorm:"column:group_id;type:int(10);comment:'组织ID'" json:"group_id"`
 	Total      int          `json:"total" gorm:"column:total;type:int(10);comment:'资源总数'"`
 	Used       int          `json:"used" gorm:"column:used;type:int(10);comment:'已经使用'"`
+	Status     int          `json:"status" gorm:"column:status;type:int(10);default:0;comment:'1 已删除 0 未删除'"`
 }
 
 // TableName ...
