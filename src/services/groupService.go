@@ -15,6 +15,7 @@ type GroupServiceInterface interface {
 	GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAddRequest) (*pb_user_v1.GroupResponse, error)
 	GroupQueryWithQuotaByConditionSvc(ctx context.Context, data *pb_user_v1.GroupQueryWithQuotaByConditionRequest) (*pb_user_v1.GroupQueryWithQuotaByConditionResponse, error)
 	GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error)
+	QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.QuotaUpdateRequest) (*pb_user_v1.GroupResponse, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -53,6 +54,30 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 	if err != nil {
 		return nil, err
 	}
+
+	// 相同配额类型,资源组校验不允许重复
+	var _share int64
+	var _nonShare int64
+	var _shareResourcesID string
+	var _nonShareResourcesID string
+	for i := 0; i < len(data.Quotas); i++ {
+		q := data.Quotas[i]
+		
+		if q.IsShare == 1 {
+			if _share == q.IsShare && _shareResourcesID == q.ResourcesGroupId {
+				return &pb_user_v1.GroupResponse{Code: 1}, errors.New("共享配额类型,重复划分相同资源组")
+			}
+			_share = q.IsShare
+			_shareResourcesID = q.ResourcesGroupId
+		} else if q.IsShare == 2 {
+			if _nonShare == q.IsShare && _nonShareResourcesID == q.ResourcesGroupId {
+				return &pb_user_v1.GroupResponse{Code: 1}, errors.New("独享配额类型,重复划分相同资源组")
+			}
+			_nonShare = q.IsShare
+			_nonShareResourcesID = q.ResourcesGroupId
+		}
+	}
+
 	quotaTypeMap := map[string]models.ResourceType{
 		"cpu":    models.ResourceCpu,
 		"gpu":    models.ResourceGpu,
@@ -61,7 +86,7 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 	}
 
 	l := len(data.Quotas)
-	var result []*models.Quota
+	var result = make([]*models.Quota, 0)
 	for i := 0; i < l; i++ {
 		q := data.Quotas[i]
 
@@ -85,9 +110,11 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		}
 	}
 
+
+
 	err = g.groupRepo.QuotaAddRepo(result, tx)
 	if err != nil {
-		return nil, err
+		return &pb_user_v1.GroupResponse{Code: 1}, err
 	}
 	tx.Commit()
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
@@ -142,8 +169,8 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 		if _, ok := groupQuotaTemp[r.ID][r.IsShare][r.ResourceID]; !ok {
 			// 创建 quota 数据,并设置 is_share 和 resources_id 字段信息
 			groupQuotaTemp[r.ID][r.IsShare][r.ResourceID] = &pb_user_v1.Quota{
-				IsShare:              int64(r.IsShare),
-				ResourcesGroupId:     r.ResourceID,
+				IsShare:          int64(r.IsShare),
+				ResourcesGroupId: r.ResourceID,
 			}
 		}
 
@@ -185,8 +212,8 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
 
 	d := &models.GroupUpdateRequest{
-		ID:       data.Id,
-		Name:     data.Name,
+		ID:   data.Id,
+		Name: data.Name,
 	}
 
 	if data.UseParentId {
@@ -198,5 +225,25 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 		return &pb_user_v1.GroupResponse{Code: 1}, err
 	}
 
+	return &pb_user_v1.GroupResponse{Code: 0}, nil
+}
+
+// QuotaUpdateSvc 配额信息更新
+func (g *GroupService) QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.QuotaUpdateRequest) (*pb_user_v1.GroupResponse, error) {
+
+	var err error
+	d := &models.QuotaUpdateRequest{
+		GroupID:     data.GroupId,
+		IsShare:     data.IsShare,
+		ResourcesID: data.ResourcesId,
+		QuotaType:   data.QuotaType,
+		Total:       data.Total,
+		Used:        data.Used,
+	}
+
+	err = g.groupRepo.QuotaUpdateRepo(d, nil)
+	if err != nil {
+		return &pb_user_v1.GroupResponse{Code: 1}, nil
+	}
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
 }
