@@ -36,16 +36,16 @@ func (u *userApi) AddUserApi(ctx *gin.Context) {
 	err := ctx.BindJSON(&user)
 	if err != nil {
 		log.Logger().Error(fmt.Sprintf("add user request param error : %s", err.Error()))
-		response(ctx, http.StatusBadRequest, "param error", nil)
+		error_(ctx, 201, err)
 		return
 	}
 	_, err = u.userService.AddUserSvc(context.Background(), user)
 	if err != nil {
 		log.Logger().Error("add user error: " + err.Error())
-		response(ctx, http.StatusBadRequest, "操作失败", nil)
+		error_(ctx, 201, err)
 		return
 	}
-	response(ctx, http.StatusOK, "操作成功", nil)
+	success_(ctx, nil)
 	return
 }
 

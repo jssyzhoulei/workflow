@@ -16,6 +16,10 @@ message UserProto {
   repeated Index role_ids = 5;
 }
 
+message UserRoleProto {
+  int64  user_id = 1;
+  string role_ids = 2;
+}
 
 message Users {
   repeated Users users = 1;
