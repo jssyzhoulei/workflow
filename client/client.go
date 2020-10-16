@@ -39,7 +39,7 @@ type GrpcPermissionConnFunc func(conn *grpc.ClientConn) services.PermissionServi
 func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgServiceClient {
 	var (
 		etcdAddrs = addr
-		serName   = "svc.org1"
+		serName   = "svc.org"
 		ttl       = 5 * time.Second
 	)
 	options := etcdv3.ClientOptions{

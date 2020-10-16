@@ -9,22 +9,9 @@ import (
 	"gitee.com/grandeep/org-svc/src/services"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
-	"github.com/gogo/protobuf/jsonpb"
 	"net/http"
 	"strings"
 )
-
-var (
-	jsonpbMarshaler *jsonpb.Marshaler
-)
-
-func init() {
-	jsonpbMarshaler = &jsonpb.Marshaler{
-		EnumsAsInts:  true,
-		EmitDefaults: true,
-		OrigName:     true,
-	}
-}
 
 type groupAPIInterface interface {
 	GroupAddAPI(ctx *gin.Context)
@@ -43,7 +30,7 @@ func NewGroupAPI(groupService services.GroupServiceInterface) groupAPIInterface 
 	}
 }
 
-// GroupAddApi 添加组API
+// GroupAddAPI 添加组API
 func (g *groupAPI) GroupAddAPI(c *gin.Context) {
 
 	var data = new(pb_user_v1.GroupAddRequest)
@@ -54,16 +41,7 @@ func (g *groupAPI) GroupAddAPI(c *gin.Context) {
 		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
 		return
 	}
-	_, err = g.groupService.GroupAddSvc(context.Background(), data)
-	if err != nil {
-		log.Logger().Error("添加组错误: " + err.Error())
-		response(c, http.StatusBadRequest, "错误", nil)
 
-<<<<<<< HEAD
-		if data.Name == "" || len(data.Quotas) == 0 {
-			log.Logger().Warn(fmt.Sprintf("GroupAdd 必传参数缺失: name: %d quotas: %v", data.Name, data.Quotas))
-			response(c, http.StatusBadRequest, "参数不合法", nil)
-=======
 	if data.Name == "" || len(data.Quotas) == 0 {
 		log.Logger().Info(fmt.Sprintf("GroupAdd 必传参数缺失: name: %d quotas: %v", data.Name, data.Quotas))
 		response(c, http.StatusBadRequest, "参数不合法", nil, false)
@@ -77,51 +55,22 @@ func (g *groupAPI) GroupAddAPI(c *gin.Context) {
 			log.Logger().Info(fmt.Sprintf("GroupAdd 必传参数缺失: is_share: %d resources_group_id: %s", t.IsShare,
 				t.ResourcesGroupId))
 			response(c, http.StatusBadRequest, "参数不合法", nil, false)
->>>>>>> wangyong
 			return
 		}
-
-<<<<<<< HEAD
-		l := len(data.Quotas)
-		for i := 0; i < l; i++ {
-			t := data.Quotas[i]
-			if t.IsShare == 0 || strings.Trim(t.ResourcesGroupId, " ") == "" {
-				log.Logger().Warn(fmt.Sprintf("GroupAdd 必传参数缺失: is_share: %d resources_group_id: %s", t.IsShare,
-					t.ResourcesGroupId))
-				response(c, http.StatusBadRequest, "参数不合法", nil)
-				return
-			}
-		}
-
-		res, err := g.groupService.GroupAddSvc(context.Background(), data)
-		if err != nil {
-			log.Logger().Warn("添加组错误: " + err.Error())
-			response(c, http.StatusBadRequest, "操作失败", nil)
-			return
-		}
-
-		response(c, http.StatusOK, "成功", res)
-		return
 	}
-}
 
-// GroupQueryWithQuota 查询组和其配额信息
-func(g *groupAPI) GroupQueryWithQuota(c * gin.Context){
-=======
 	res, err := g.groupService.GroupAddSvc(context.Background(), data)
 	if err != nil {
 		log.Logger().Info("添加组错误: " + err.Error())
 		response(c, http.StatusBadRequest, "操作失败", nil, false)
 		return
 	}
-
 	response(c, http.StatusOK, "成功", res, false)
 	return
 }
 
 // GroupQueryWithQuotaAPI 查询组和其配额信息
 func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
->>>>>>> wangyong
 	var data = new(pb_user_v1.GroupQueryWithQuotaByConditionRequest)
 
 	err := c.BindJSON(data)
@@ -149,9 +98,6 @@ func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
 
 	response(c, http.StatusOK, "成功", _buffer.Bytes(), true)
 	return
-<<<<<<< HEAD
-}
-=======
 }
 
 // GroupUpdateAPI 更新组信息
@@ -180,10 +126,9 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		ParentId:    parentID,
 		UseParentId: useParentID,
 	}
-
 	resp, err := g.groupService.GroupUpdateSvc(context.Background(), d)
 	if err != nil {
-		log.Logger().Info("添加组错误: " + err.Error())
+		log.Logger().Info("更新组信息错误: " + err.Error())
 		response(c, http.StatusBadRequest, "操作失败", nil, false)
 		return
 	}
@@ -194,4 +139,3 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 	response(c, http.StatusOK, "成功", nil, false)
 	return
 }
->>>>>>> wangyong

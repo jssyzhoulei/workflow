@@ -76,16 +76,16 @@ func (u *userApi) UpdateUserByIDApi(ctx *gin.Context) {
 	err := ctx.BindJSON(data)
 	if err != nil {
 		log.Logger().Error(fmt.Sprintf("update user request param error : %s", err.Error()))
-		response(ctx, http.StatusBadRequest, "param error", nil)
+		response(ctx, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
 	_, err = u.userService.UpdateUserByIDSvc(context.Background(), *data)
 	if err != nil {
 		log.Logger().Error("update user error: " + err.Error())
-		response(ctx, http.StatusBadRequest, "server error", nil)
+		response(ctx, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
-	response(ctx, http.StatusOK, "success", nil)
+	response(ctx, http.StatusOK, "success", nil, false)
 	return
 }
 
@@ -96,16 +96,16 @@ func (u *userApi) DeleteUserByIDApi(ctx *gin.Context){
 	err := ctx.BindJSON(data)
 	if err != nil {
 		log.Logger().Error(fmt.Sprintf("delete user request param error : %s", err.Error()))
-		response(ctx, http.StatusBadRequest, "param error", nil)
+		response(ctx, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
 	_, err = u.userService.DeleteUserByIDSvc(context.Background(), data.ID)
 	if err != nil {
 		log.Logger().Error("delete user error: " + err.Error())
-		response(ctx, http.StatusBadRequest, "server error", nil)
+		response(ctx, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
-	response(ctx, http.StatusOK, "success", nil)
+	response(ctx, http.StatusOK, "success", nil, false)
 	return
 }
 

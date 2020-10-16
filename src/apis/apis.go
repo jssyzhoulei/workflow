@@ -2,10 +2,24 @@ package apis
 
 import (
 	"gitee.com/grandeep/org-svc/client"
+	"gitee.com/grandeep/org-svc/src/apis/code"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
+	"github.com/gogo/protobuf/jsonpb"
 	"net/http"
 )
+
+var (
+	jsonpbMarshaler *jsonpb.Marshaler
+)
+
+func init() {
+	jsonpbMarshaler = &jsonpb.Marshaler{
+		EnumsAsInts:  true,
+		EmitDefaults: true,
+		OrigName:     true,
+	}
+}
 
 type IApis interface {
 	GetUserApis() userApiInterface
@@ -39,6 +53,7 @@ func (a *apis) GetUserApis() userApiInterface {
 func (a *apis) GetGroupApis() groupAPIInterface {
 	return a.groupAPIInterface
 }
+
 func (a *apis) GetRoleApis() RoleApiInterface {
 	return a.RoleApiInterface
 }
@@ -52,10 +67,10 @@ func success_(c *gin.Context, data interface{}) {
 		data = ""
 	}
 	c.Request.Header.Set("Content-Type", "application/json")
-	c.JSON(200, map[string]interface{} {
-		"code": 200,
-		"message": "",
-		"data": data,
+	c.JSON(200, ApiResponse {
+		Code: code.OK,
+		Message: "ok",
+		Data: data,
 	})
 	c.Abort()
 	return
@@ -63,12 +78,12 @@ func success_(c *gin.Context, data interface{}) {
 
 
 
-func error_(c *gin.Context, status int, err error) {
+func error_(c *gin.Context, status code.Code, err ...error) {
 	c.Request.Header.Set("Content-Type", "application/json")
-	c.JSON(200, map[string]interface{} {
-		"code": status,
-		"message": err.Error(),
-		"data": nil,
+	c.JSON(200,ApiResponse {
+		Code: status,
+		Message: status.Message(err...),
+		Data: nil,
 	})
 	c.Abort()
 	return
@@ -96,4 +111,9 @@ func response(c *gin.Context, status int, message string, data interface{}, isPB
 
 	c.Abort()
 	return
+}
+type ApiResponse struct {
+	Code code.Code `json:"code"`
+	Message string `json:"message"`
+	Data interface{}
 }

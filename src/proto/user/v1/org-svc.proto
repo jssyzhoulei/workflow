@@ -6,6 +6,7 @@ import "user-msg.proto";
 import "role-msg.proto";
 import "base.proto";
 import "group-msg.proto";
+
 service RpcOrgService {
   rpc RpcAddUser(UserProto) returns (NullResponse);
   rpc RpcUpdateUser(UserProto) returns (NullResponse);
@@ -13,6 +14,7 @@ service RpcOrgService {
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
   rpc RPCGroupQueryWithQuotaByCondition(GroupQueryWithQuotaByConditionRequest) returns (GroupQueryWithQuotaByConditionResponse);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (NullResponse);
+  rpc RPCGroupUpdate(GroupUpdateRequest) returns (GroupResponse);
   rpc RpcAddPermission(PermissionProto) returns (NullResponse);
   rpc RpcGetPermissionByID(Index) returns (PermissionProto);
   rpc RpcUpdatePermissionByID(PermissionProto) returns (NullResponse);
@@ -20,5 +22,4 @@ service RpcOrgService {
   rpc RpcUpdateMenuByID(MenuProto) returns (NullResponse);
   rpc RpcDeletePermissionByID(Index) returns (NullResponse);
   rpc RpcGetMenuCascadeByModule(MenuModule) returns(Cascades);
-  rpc RPCGroupUpdate(GroupUpdateRequest) returns (GroupResponse);
 }
