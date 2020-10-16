@@ -74,7 +74,7 @@ func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 	}
 
 	if !parentIsNotExist {
-		levelPath = "0-" + strconv.FormatInt(int64(parentGroup.ID), 10) + "-"
+		levelPath = parentGroup.LevelPath + strconv.FormatInt(int64(parentGroup.ID), 10) + "-"
 	}
 
 	// 创建新的组
