@@ -17,6 +17,7 @@ service RpcOrgService {
   rpc RPCGroupQueryWithQuotaByCondition(GroupQueryWithQuotaByConditionRequest) returns (GroupQueryWithQuotaByConditionResponse);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (NullResponse);
   rpc RPCGroupUpdate(GroupUpdateRequest) returns (GroupResponse);
+  rpc RPCQuotaUpdate(QuotaUpdateRequest) returns (GroupResponse);
   rpc RpcAddPermission(PermissionProto) returns (NullResponse);
   rpc RpcGetPermissionByID(Index) returns (PermissionProto);
   rpc RpcUpdatePermissionByID(PermissionProto) returns (NullResponse);

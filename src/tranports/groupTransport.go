@@ -12,6 +12,7 @@ type groupGrpcTransport struct {
 	groupAdd   transport.Handler
 	groupQueryWithQuotaByCondition transport.Handler
 	groupUpdate transport.Handler
+	quotaUpdate transport.Handler
 }
 
 // NewGroupGrpcTransport ...
@@ -20,6 +21,7 @@ func NewGroupGrpcTransport(endpoint *endpoints.GroupServiceEndpoint) *groupGrpcT
 		groupAdd: transport.NewServer(endpoint.GroupAddEndpoint, parser.DecodeGroupAddProto, parser.EncodeGroupProto),
 		groupQueryWithQuotaByCondition: transport.NewServer(endpoint.GroupQueryWithQuotaByConditionEndpoint, parser.DecodeGroupQueryByConditionProto, parser.EncodeGroupQueryByConditionProto),
 		groupUpdate: transport.NewServer(endpoint.GroupUpdateEndpoint, parser.DecodeGroupUpdateProto, parser.EncodeGroupProto),
+		quotaUpdate: transport.NewServer(endpoint.QuotaUpdateEndpoint, parser.DecodeQuotaUpdateProto, parser.EncodeGroupProto),
 	}
 }
 
@@ -44,6 +46,15 @@ func (g *groupGrpcTransport) RPCGroupQueryWithQuotaByCondition(ctx context.Conte
 // RPCGroupUpdate ...
 func (g *groupGrpcTransport) RPCGroupUpdate(ctx context.Context, proto *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
 	_, resp, err := g.groupUpdate.ServeGRPC(ctx, proto)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupResponse), err
+}
+
+// RPCQuotaUpdate ...
+func (g *groupGrpcTransport) RPCQuotaUpdate(ctx context.Context, proto *pb_user_v1.QuotaUpdateRequest) (*pb_user_v1.GroupResponse, error) {
+	_, resp, err := g.quotaUpdate.ServeGRPC(ctx, proto)
 	if err != nil {
 		return nil, err
 	}

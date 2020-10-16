@@ -22,6 +22,7 @@ type Group struct {
 	Name      string `gorm:"column:name;type:varchar(50);comment:'组织名称'" json:"name"`
 	ParentID  int    `gorm:"column:parent_id;type:int(10);comment:'父级组织ID'" json:"parent_id"`
 	LevelPath string `gorm:"column:level_path;type:varchar(255);comment:'组织等级路径'" json:"level_path"`
+	Status    int    `json:"status" gorm:"column:status;type:int(10);default:0;comment:'1 已删除 0 未删除'"`
 }
 
 // TableName ...
@@ -30,6 +31,13 @@ func (g Group) TableName() string {
 }
 
 type ResourceType int8
+
+func (t ResourceType) Auth() bool {
+	if ResourceCpu <= t && t <= ResourceDisk {
+		return true
+	}
+	return false
+}
 
 // 资源类型枚举
 const (
@@ -88,7 +96,17 @@ type GroupQueryWithQuotaScanRes struct {
 
 // GroupUpdateRequest 组信息更新请求
 type GroupUpdateRequest struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
-	ParentID   *int64  `json:"parent_id"`
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	ParentID *int64 `json:"parent_id"`
+}
+
+// QuotaUpdateRequest 配额更新请求
+type QuotaUpdateRequest struct {
+	GroupID     int64  `json:"group_id"`
+	IsShare     int64  `json:"is_share"`
+	ResourcesID string `json:"resources_id"`
+	QuotaType   int64  `json:"quota_type"`
+	Total       int64  `json:"total"`
+	Used        int64  `json:"used"`
 }

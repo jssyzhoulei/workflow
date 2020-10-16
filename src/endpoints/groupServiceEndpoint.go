@@ -14,6 +14,7 @@ type GroupServiceEndpoint struct {
 	GroupAddEndpoint endpoint.Endpoint
 	GroupQueryWithQuotaByConditionEndpoint endpoint.Endpoint
 	GroupUpdateEndpoint endpoint.Endpoint
+	QuotaUpdateEndpoint endpoint.Endpoint
 }
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
@@ -22,6 +23,7 @@ func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 		GroupAddEndpoint: MakeGroupAddEndpoint(service.GetGroupService()),
 		GroupQueryWithQuotaByConditionEndpoint: MakeGroupQueryWithQuotaByConditionEndpoint(service.GetGroupService()),
 		GroupUpdateEndpoint: MakeGroupUpdateEndpoint(service.GetGroupService()),
+		QuotaUpdateEndpoint: MakeQuotaUpdateEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -84,6 +86,28 @@ func MakeGroupUpdateEndpoint(groupServiceInterface services.GroupServiceInterfac
 func (g *GroupServiceEndpoint) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
 
 	resp , err := g.GroupUpdateEndpoint(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupResponse), nil
+}
+
+// MakeQuotaUpdateEndpoint ...
+func MakeQuotaUpdateEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.QuotaUpdateRequest)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = groupServiceInterface.QuotaUpdateSvc(ctx, data)
+		return
+	}
+}
+
+// QuotaUpdateSvc ...
+func (g *GroupServiceEndpoint) QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.QuotaUpdateRequest) (*pb_user_v1.GroupResponse, error) {
+
+	resp , err := g.QuotaUpdateEndpoint(ctx, data)
 	if err != nil {
 		return nil, err
 	}

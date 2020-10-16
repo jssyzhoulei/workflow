@@ -57,3 +57,12 @@ func EncodeGroupUpdateProto(ctx context.Context, request interface{}) (interface
 	}
 	return r, nil
 }
+
+// EncodeQuotaUpdateProto ...
+func EncodeQuotaUpdateProto(ctx context.Context, request interface{}) (interface{}, error) {
+	r, ok := request.(*pb_user_v1.QuotaUpdateRequest)
+	if !ok {
+		return nil, errors.New("EncodeQuotaUpdateProto 失败")
+	}
+	return r, nil
+}

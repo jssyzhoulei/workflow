@@ -54,7 +54,7 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 	}
 }
 
-// groupAddGrpcConn 添加组
+// groupGrpcConn 组
 func groupGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 	return &endpoints.GroupServiceEndpoint{
 		GroupAddEndpoint: grpctransport.NewClient(
@@ -78,6 +78,14 @@ func groupGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 			"pb_user_v1.RpcOrgService",
 			"RPCGroupUpdate",
 			parser.EncodeGroupUpdateProto,
+			parser.DecodeGroupProto,
+			pb_user_v1.GroupResponse{},
+		).Endpoint(),
+		QuotaUpdateEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RPCQuotaUpdate",
+			parser.EncodeQuotaUpdateProto,
 			parser.DecodeGroupProto,
 			pb_user_v1.GroupResponse{},
 		).Endpoint(),
