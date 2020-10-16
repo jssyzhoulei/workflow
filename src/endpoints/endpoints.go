@@ -8,6 +8,7 @@ type OrgEndpoint struct {
 	*UserServiceEndpoint
 	*GroupServiceEndpoint
 	*RoleServiceEndpoint
+	*PermissionServiceEndpoint
 }
 
 func NewEndpoint(service services.ServiceI) *OrgEndpoint {
@@ -15,5 +16,6 @@ func NewEndpoint(service services.ServiceI) *OrgEndpoint {
 		UserServiceEndpoint: NewUserEndpoint(service),
 		GroupServiceEndpoint: NewGroupEndpoint(service),
 		RoleServiceEndpoint: NewRoleEndpoint(service),
+		PermissionServiceEndpoint: NewPermissionEndpoint(service),
 	}
 }

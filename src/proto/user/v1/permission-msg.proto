@@ -1,0 +1,47 @@
+syntax = "proto3";
+package pb_user_v1;
+import "base.proto";
+
+message PermissionProto {
+  Index index = 9;
+  int64 user_id = 1;
+  string uri_name = 2;
+  int32 method = 3;
+  string uri = 4;
+  int32  relation = 5;
+  string button_name = 6;
+  string button_key = 7;
+  int64  menu_id = 8;
+  int32 module = 10;
+}
+
+message MenuProto {
+  Index index = 1;
+  string name = 2;
+  int64 paren_id = 3;
+  Module  module = 4;
+  int64  order = 5;
+  string  template_path = 6;
+  int64 user_id = 7;
+}
+
+enum Module
+{
+  _Module = 0;
+  //算力云平台
+  MODULE_BASIC = 1;
+}
+
+message MenuModule {
+  Module module = 1;
+}
+
+message Cascade {
+  int64 value = 1;
+  string label = 2;
+  repeated Cascade children = 3;
+}
+
+message Cascades {
+  repeated Cascade cascades = 1;
+}

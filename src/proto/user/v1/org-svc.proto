@@ -1,14 +1,24 @@
-//protoc --go_out=plugins=grpc:.
 syntax = "proto3";
 package pb_user_v1;
+
+import "permission-msg.proto";
 import "user-msg.proto";
 import "role-msg.proto";
+import "base.proto";
 import "group-msg.proto";
 service RpcOrgService {
-  rpc RpcAddUser(UserProto) returns (UserProto);
-  rpc RpcGetUserById(UserProto) returns (UserProto);
+  rpc RpcAddUser(UserProto) returns (NullResponse);
+  rpc RpcUpdateUser(UserProto) returns (NullResponse);
+  rpc RpcGetUserById(Index) returns (UserProto);
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
   rpc RPCGroupQueryWithQuotaByCondition(GroupQueryWithQuotaByConditionRequest) returns (GroupQueryWithQuotaByConditionResponse);
   rpc RPCGroupUpdate(GroupUpdateRequest) returns (GroupResponse);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (RoleProto);
+  rpc RpcAddPermission(PermissionProto) returns (NullResponse);
+  rpc RpcGetPermissionByID(Index) returns (PermissionProto);
+  rpc RpcUpdatePermissionByID(PermissionProto) returns (NullResponse);
+  rpc RpcAddMenu(MenuProto) returns (NullResponse);
+  rpc RpcUpdateMenuByID(MenuProto) returns (NullResponse);
+  rpc RpcDeletePermissionByID(Index) returns (NullResponse);
+  rpc RpcGetMenuCascadeByModule(MenuModule) returns(Cascades);
 }

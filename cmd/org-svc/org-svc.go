@@ -22,7 +22,7 @@ import (
 
 func main() {
 	var (
-		serName   = "svc.org"
+		serName   = "svc.org1"
 		ttl       = 5 * time.Second
 		quitChan = make(chan error, 1)
 		baseServer *grpc.Server

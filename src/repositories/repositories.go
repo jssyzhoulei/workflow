@@ -5,27 +5,34 @@ import (
 )
 
 type RepoI interface {
-	GetUserRepo() UserRepoI
+	GetUserRepo() UserRepoInterface
 	GetGroupRepo() GroupRepoInterface
 	GetRoleRepo() RoleRepoI
+	GetPermissionRepo() PermissionRepoInterface
 }
 
 type repo struct {
-	UserRepoI
+	UserRepoInterface
 	GroupRepoInterface
 	RoleRepoI
+	PermissionRepoInterface
+}
+
+func (r *repo) GetPermissionRepo() PermissionRepoInterface {
+	return r.PermissionRepoInterface
 }
 
 func NewRepoI(db *yorm.DB) RepoI {
 	return &repo{
-		UserRepoI:  NewUserRepo(db),
+		UserRepoInterface:  NewUserRepo(db),
 		GroupRepoInterface: NewGroupRepo(db),
 		RoleRepoI:  NewRoleRepo(db),
+		PermissionRepoInterface: NewPermissionRepo(db),
 	}
 }
 
-func (r *repo) GetUserRepo() UserRepoI {
-	return r.UserRepoI
+func (r *repo) GetUserRepo() UserRepoInterface {
+	return r.UserRepoInterface
 }
 
 func (r *repo) GetGroupRepo() GroupRepoInterface {

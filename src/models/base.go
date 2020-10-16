@@ -12,3 +12,11 @@ type BaseModel struct {
 	Remark        string     `gorm:"column:remark;type:text;comment:'备注'" json:"remark"`
 	Extend        string     `gorm:"column:extend;type:text;comment:'扩展字段'" json:"extend"`
 }
+
+type Page struct {
+	Total int64 `json:"total"`
+	TotalPage float64 `json:"total_page"`
+	PageSize int `json:"page_size"`
+	PageNum int `json:"page_num"`
+	Data interface{} `json:"data"`
+}

@@ -24,7 +24,7 @@ func GinLogger(logger *zap.Logger) gin.HandlerFunc {
 		c.Next()
 
 		cost := time.Since(start)
-		logger.Info(path,
+			logger.Info(path,
 			zap.Int("status", c.Writer.Status()),
 			zap.String("method", c.Request.Method),
 			zap.String("uri", c.Request.RequestURI),
@@ -49,5 +49,8 @@ func Routers(e *gin.Engine) {
 	api := apis.NewApis(o)
 	g := e.Group("/apis/v1")
 	userApiRouters(g, api)
+	permissionApiRouters(g, api)
 	groupAPIRouters(g, api)
+	roleApiRouters(g, api)
 }
+

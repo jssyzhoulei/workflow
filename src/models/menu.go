@@ -7,7 +7,7 @@ type Menu struct {
 	Module       MenuModule `gorm:"column:module;type:int(10);comment:'所属模块'" json:"module"`
 	Order        int        `gorm:"column:order;type:int(10);comment:'组件次序'" json:"order"`
 	Version      int        `gorm:"column:version;type:int(10);comment:'版本号'" json:"version"`
-	TemplatePath string     `gorm:"column:version;type:varchar(128);comment:'前段组件路径'" json:"template_path"`
+	TemplatePath string     `gorm:"column:template_path;type:varchar(128);comment:'前段组件路径'" json:"template_path"`
 	Status       int        `gorm:"column:status;type:int(2);not null;comment:'菜单状态 1 启用 2 未启用';default:1" json:"status"`
 }
 
@@ -27,4 +27,5 @@ const (
 	MODULE_TRAINING
 	MODULE_DEVELOP
 	MODULE_SERVICE
+
 )

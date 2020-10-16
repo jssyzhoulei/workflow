@@ -13,7 +13,7 @@ type RoleRepoI interface {
 	UpdateRoleRepo(role *models.Role) error
 	DeleteRoleRepo(role *models.Role) error
 	ListRoleRepo(page, perPage, userId int) (*[]models.Role, error)
-	RoleDetailRepo(page, perPage, roleId, userId int) (*[]models.MenuPermResponse, error)
+	RoleDetailRepo(roleId, userId int) (*[]models.MenuPermResponse, error)
 	DeleteMenuPermissionByRoleIDRepo(roleId int) error
 }
 
@@ -54,12 +54,11 @@ func (u *roleRepo) ListRoleRepo(page, perPage, userId int) (*[]models.Role, erro
 		Scan(&roles).Error
 }
 
-func (u *roleRepo) RoleDetailRepo(page, perPage, roleId, userId int) (*[]models.MenuPermResponse, error) {
+func (u *roleRepo) RoleDetailRepo(roleId, userId int) (*[]models.MenuPermResponse, error) {
 	var roles []models.MenuPermResponse
 	return &roles, u.DB.Model(models.Role{}).
 		Joins("left join role_menu_permission on role_menu_permission.role_id = role.id").
-		Where("role_menu_permission.delete_at is null and role_menu_permission.created_user_id = ? and role.id = ?",
-			userId, roleId).
+		Where("role_menu_permission.delete_at is null and role.id = ?", roleId).
 		Scan(&roles).Error
 }
 

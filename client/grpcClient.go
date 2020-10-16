@@ -9,16 +9,40 @@ import (
 	"google.golang.org/grpc"
 )
 
-func addUserGrpcConn(conn *grpc.ClientConn) services.UserServiceI {
+func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 	return &endpoints.UserServiceEndpoint{
 		AddUserEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcAddUser",
 			parser.EncodeUserModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+		).Endpoint(),
+		GetUserByIDEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcGetUserById",
+			parser.EncodeIndexProto,
 			parser.DecodeUserModel,
 			pb_user_v1.UserProto{},
-		).Endpoint(),
+			).Endpoint(),
+		UpdateUserByIDEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcUpdateUserByID",
+			parser.EncodeUserModel,
+			parser.DecodeUserModel,
+			pb_user_v1.NullResponse{},
+			).Endpoint(),
+		DeleteUserByIDEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcDeleteUserByID",
+			parser.DecodeUserModel,
+			parser.DecodeUserModel,
+			pb_user_v1.NullResponse{},
+			).Endpoint(),
 	}
 }
 
@@ -52,31 +76,85 @@ func groupGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 	}
 }
 
-func addRoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
+func RoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 	return &endpoints.RoleServiceEndpoint{
 		AddRoleEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcAddRole",
-			parser.DecodeUserModel,
-			parser.DecodeUserModel,
-			pb_user_v1.RoleProto{},
+			parser.EncodeCreateMenuPermRequestModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
 		).Endpoint(),
 		UpdateRoleEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcUpdateRole",
-			parser.DecodeUserModel,
-			parser.DecodeUserModel,
-			pb_user_v1.RoleProto{},
+			parser.EncodeCreateMenuPermRequestModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
 		).Endpoint(),
 		DeleteRoleEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcDeleteRole",
-			parser.DecodeUserModel,
-			parser.DecodeUserModel,
-			pb_user_v1.RoleProto{},
+			parser.EncodeCreateMenuPermRequestModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
 		).Endpoint(),
 	}
 }
+
+func permissionGrpcConn(conn *grpc.ClientConn) services.PermissionServiceInterface {
+	return &endpoints.PermissionServiceEndpoint{
+		AddPermissionEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcAddPermission",
+			parser.EncodePermissionModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+		).Endpoint(),
+		AddMenuEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcAddMenu",
+			parser.EncodeMenuModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+		).Endpoint(),
+		GetMenuCascadeByModuleEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcGetMenuCascadeByModule",
+			parser.EncodeMenuModule,
+			parser.DecodeCascadeProto,
+			pb_user_v1.Cascades{},
+		).Endpoint(),
+		GetPermissionByIDEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcGetPermissionByID",
+			parser.EncodeIndexProto,
+			parser.DecodePermissionProto,
+			pb_user_v1.PermissionProto{},
+		).Endpoint(),
+		DeletePermissionByIDEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcDeletePermissionByID",
+			parser.EncodeIndexProto,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+		).Endpoint(),
+		UpdatePermissionByIDEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcUpdatePermissionByID",
+			parser.EncodePermissionModel,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+		).Endpoint(),
+	}
+}
+
