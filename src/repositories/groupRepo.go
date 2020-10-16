@@ -49,7 +49,7 @@ func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 		db = tx
 	}
 
-	// 判定用户组是否存在
+	// 判定组是否存在
 	var count int64
 	err = db.Model(&models.Group{}).Where("name=?", data.Name).Count(&count).Error
 	if err != nil {
@@ -61,20 +61,27 @@ func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 
 	// 查询父级数据
 	var parentGroup = new(models.Group)
+	var parentIsNotExist = false
+	var levelPath string
 	err = db.Model(&models.Group{}).Where("id=?", data.ParentID).First(&parentGroup).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			parentGroup.LevelPath = "0-"
+			parentIsNotExist = true
+			levelPath = "0-"
 		} else {
 			return err
 		}
+	}
+
+	if !parentIsNotExist {
+		levelPath = "0-" + strconv.FormatInt(int64(parentGroup.ID), 10) + "-"
 	}
 
 	// 创建新的组
 	newGroupRecord := &models.Group{
 		Name:      data.Name,
 		ParentID:  data.ParentID,
-		LevelPath: parentGroup.LevelPath,
+		LevelPath: levelPath,
 	}
 	if err = db.Create(newGroupRecord).Error; err != nil {
 		return err
