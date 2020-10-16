@@ -19,12 +19,13 @@ message Quota {
 }
 
 // group 组信息
-message Group {
+message GroupWithQuota {
   int64 id = 1;
   string name = 2;
   int64 parent_id = 3;
-  int64 disk_quota_size = 4;
-  repeated Quota quotas = 5;
+  int64 top_parent_id = 4;
+  int64 disk_quota_size = 5;
+  repeated Quota quotas = 6;
 }
 
 // GroupAddRequest 用户组添加请求
@@ -36,14 +37,20 @@ message GroupAddRequest {
 }
 
 // GroupQueryByConditionRequest 按条件查询组信息请求
-message GroupQueryByConditionRequest {
+message GroupQueryWithQuotaByConditionRequest {
   repeated int64 id = 1;
   repeated string name = 2;
   repeated int64 parent_id = 3;
-  string create_time = 4;
 }
 
 // GroupQueryByConditionResponse 按条件查询组信息响应
-message GroupQueryByConditionResponse {
-  repeated Group groups = 1;
+message GroupQueryWithQuotaByConditionResponse {
+  repeated GroupWithQuota groups= 1;
+}
+
+// GroupUpdateRequest 组信息更新请求
+message GroupUpdateRequest {
+  int64 id = 1;
+  string name = 2;
+  int64 parent_id = 3;
 }

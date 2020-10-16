@@ -11,16 +11,18 @@ import (
 	"strings"
 )
 
-type groupApiInterface interface {
-	GroupAddApi(ctx *gin.Context)
+type groupAPIInterface interface {
+	GroupAddAPI(ctx *gin.Context)
+	GroupQueryWithQuota(c *gin.Context)
 }
 
-type groupApi struct {
+type groupAPI struct {
 	groupService services.GroupServiceInterface
 }
 
-func NewGroupApi(groupService services.GroupServiceInterface) groupApiInterface {
-	return &groupApi{
+// NewGroupAPI ...
+func NewGroupAPI(groupService services.GroupServiceInterface) groupAPIInterface {
+	return &groupAPI{
 		groupService: groupService,
 	}
 }
@@ -41,7 +43,7 @@ func response(c *gin.Context, status int, message string, data interface{}) {
 }
 
 // GroupAddApi 添加组API
-func (g *groupApi) GroupAddApi(c *gin.Context) {
+func (g *groupAPI) GroupAddAPI(c *gin.Context) {
 
 	var data = new(pb_user_v1.GroupAddRequest)
 
@@ -83,4 +85,26 @@ func (g *groupApi) GroupAddApi(c *gin.Context) {
 		response(c, http.StatusOK, "成功", res)
 		return
 	}
+}
+
+// GroupQueryWithQuota 查询组和其配额信息
+func(g *groupAPI) GroupQueryWithQuota(c * gin.Context){
+	var data = new(pb_user_v1.GroupQueryWithQuotaByConditionRequest)
+
+	err := c.BindJSON(data)
+	if err != nil {
+		log.Logger().Warn(fmt.Sprintf("GroupQueryWithQuota 参数解析错误: %s", err.Error()))
+		response(c, http.StatusBadRequest, "参数解析错误", nil)
+		return
+	}
+
+	res, err := g.groupService.GroupQueryWithQuotaByConditionSvc(context.Background(), data)
+	if err != nil {
+		log.Logger().Warn("查询组和其配额信息错误: " + err.Error())
+		response(c, http.StatusBadRequest, "操作失败", nil)
+		return
+	}
+
+	response(c, http.StatusOK, "成功", res.Groups)
+	return
 }

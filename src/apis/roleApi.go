@@ -31,8 +31,8 @@ func (r *roleApi) AddRoleApi(c *gin.Context) {
 	var data = new(models.CreateMenuPermRequest)
 
 	err := c.BindJSON(data)
-	if err != nil {
-		log.Logger().Warn(fmt.Sprintf("add role request param error : %s", err.Error()))
+	if err != nil || !data.Check() {
+		log.Logger().Warn(fmt.Sprintf("add role request param error with data : %+v ", data))
 		response(c, http.StatusBadRequest, "param error", nil)
 		return
 	}

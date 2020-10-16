@@ -2,10 +2,21 @@
 // protoc -I src/proto/user/v1/ --go_out=plugins=grpc:. src/proto/user/v1/*.proto
 syntax = "proto3";
 package pb_user_v1;
+import "base.proto";
 
+// AddUserRequest 添加用户请求
 message UserProto {
-  int64 user_id = 1;
-  string user_name = 2;
+  Index id = 6;
+  string user_name = 1;
+  string login_name = 2;
+  string password = 3;
+  int64  mobile = 4;
+  int64  group_id = 7;
+  int64  user_type = 8;
+  repeated Index role_ids = 5;
 }
 
 
+message Users {
+  repeated Users users = 1;
+}

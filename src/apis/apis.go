@@ -7,38 +7,39 @@ import (
 )
 
 type IApis interface {
-	GetUserApis() userApiI
+	GetUserApis() userApiInterface
 	GetPermission() permissionApiInterface
+	GetGroupApis() groupAPIInterface
 	GetRoleApis() RoleApiInterface
-	GetGroupApis() groupApiInterface
 }
 
 type apis struct {
-	userApiI
+	userApiInterface
 	permissionApiInterface permissionApiInterface
+	groupAPIInterface
 	RoleApiInterface
-	groupApiInterface
 }
 
 func NewApis(o *client.OrgServiceClient) IApis {
 	return &apis{
-		userApiI: NewUserApi(o.GetUserService()),
+		userApiInterface: NewUserApi(o.GetUserService()),
+		//groupApiI,NewGroupApi(o.),
+		//groupApiI,NewGroupApi(o.),
 		RoleApiInterface:NewRoleApi(o.GetRoleService()),
 		permissionApiInterface: NewPermissionApi(o.GetPermissionService()),
-		groupApiInterface: NewGroupApi(o.GetGroupService()),
+		groupAPIInterface: NewGroupAPI(o.GetGroupService()),
 	}
 }
 
-func (a *apis) GetUserApis() userApiI {
-	return a.userApiI
+func (a *apis) GetUserApis() userApiInterface {
+	return a.userApiInterface
 }
 
+func (a *apis) GetGroupApis() groupAPIInterface {
+	return a.groupAPIInterface
+}
 func (a *apis) GetRoleApis() RoleApiInterface {
 	return a.RoleApiInterface
-}
-
-func (a *apis) GetGroupApis() groupApiInterface {
-	return a.groupApiInterface
 }
 
 func (a *apis) GetPermission() permissionApiInterface {

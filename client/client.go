@@ -20,9 +20,9 @@ type OrgServiceClient struct {
 	retryTimeout time.Duration
 }
 
-type GrpcUserConnFunc func(conn *grpc.ClientConn) services.UserServiceI
+type GrpcUserConnFunc func(conn *grpc.ClientConn) services.UserServiceInterface
 
-type MakeUserEndpointFunc func(userService services.UserServiceI) endpoint.Endpoint
+type MakeUserEndpointFunc func(userService services.UserServiceInterface) endpoint.Endpoint
 
 type MakeGroupEndpointFunc func(userService services.GroupServiceInterface) endpoint.Endpoint
 
@@ -39,7 +39,7 @@ type GrpcPermissionConnFunc func(conn *grpc.ClientConn) services.PermissionServi
 func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgServiceClient {
 	var (
 		etcdAddrs = addr
-		serName   = "svc.org"
+		serName   = "svc.org1"
 		ttl       = 5 * time.Second
 	)
 	options := etcdv3.ClientOptions{
@@ -63,13 +63,16 @@ func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgSe
 	return o
 }
 
-func (o *OrgServiceClient) GetUserService() services.UserServiceI {
+func (o *OrgServiceClient) GetUserService() services.UserServiceInterface {
 	endpoints := &org_endpoints.UserServiceEndpoint{}
-	endpoints.AddUserEndpoint = o.getRetryEndpoint(org_endpoints.MakeAddUserEndpoint, addUserGrpcConn)
+	endpoints.AddUserEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeAddUserEndpoint, userGrpcConn)
+	endpoints.GetUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeGetUserByIDEndpoint, userGrpcConn)
+	endpoints.UpdateUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeUpdataUserByIDEndpoint, userGrpcConn)
+	endpoints.DeleteUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeDeleteUserByIDEndpoint, userGrpcConn)
 	return endpoints
 }
 
-func (o *OrgServiceClient) factoryFor(makeEndpoint MakeUserEndpointFunc, conn GrpcUserConnFunc) sd.Factory {
+func (o *OrgServiceClient) factoryForUser(makeEndpoint MakeUserEndpointFunc, conn GrpcUserConnFunc) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		con, err := grpc.Dial(instance, grpc.WithInsecure())
 		if err != nil {
@@ -81,8 +84,8 @@ func (o *OrgServiceClient) factoryFor(makeEndpoint MakeUserEndpointFunc, conn Gr
 	}
 }
 
-func (o *OrgServiceClient) getRetryEndpoint(ept MakeUserEndpointFunc, conn GrpcUserConnFunc) endpoint.Endpoint {
-	factory := o.factoryFor(ept, conn)
+func (o *OrgServiceClient) getRetryUserEndpoint(ept MakeUserEndpointFunc, conn GrpcUserConnFunc) endpoint.Endpoint {
+	factory := o.factoryForUser(ept, conn)
 	endpointer := sd.NewEndpointer(o.instance, factory, log.NewNopLogger())
 	balance := lb.NewRandom(endpointer, time.Now().UnixNano())
 	return lb.Retry(o.retryMax, o.retryTimeout, balance)
@@ -90,9 +93,9 @@ func (o *OrgServiceClient) getRetryEndpoint(ept MakeUserEndpointFunc, conn GrpcU
 
 func (o *OrgServiceClient) GetRoleService() services.RoleServiceI {
 	endpoints := &org_endpoints.RoleServiceEndpoint{}
-	endpoints.AddRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeAddRoleEndpoint, addRoleGrpcConn)
-	endpoints.UpdateRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeUpdateRoleEndpoint, addRoleGrpcConn)
-	endpoints.DeleteRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeDeleteRoleEndpoint, addRoleGrpcConn)
+	endpoints.AddRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeAddRoleEndpoint, RoleGrpcConn)
+	endpoints.UpdateRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeUpdateRoleEndpoint, RoleGrpcConn)
+	endpoints.DeleteRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeDeleteRoleEndpoint, RoleGrpcConn)
 	return endpoints
 }
 
@@ -120,8 +123,8 @@ func (o *OrgServiceClient) getRetryRoleEndpoint(ept MakeRoleEndpointFunc, conn G
 // GetGroupService  ...
 func (o *OrgServiceClient) GetGroupService() services.GroupServiceInterface {
 	return &org_endpoints.GroupServiceEndpoint{
-		GroupAddEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupAddGrpcConn),
-		GroupQueryByConditionEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupQueryByConditionEndpoint, groupQueryByConditionGrpcConn),
+		GroupAddEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupGrpcConn),
+		GroupQueryWithQuotaByConditionEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupQueryWithQuotaByConditionEndpoint, groupGrpcConn),
 	}
 }
 

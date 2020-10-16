@@ -33,18 +33,18 @@ func EncodeGroupProto(ctx context.Context, request interface{}) (interface{}, er
 
 // DecodeGroupQueryByConditionProto ...
 func DecodeGroupQueryByConditionProto(ctx context.Context, request interface{}) (interface{}, error) {
-	r, ok := request.(*pb_user_v1.GroupQueryByConditionRequest)
+	r, ok := request.(*pb_user_v1.GroupQueryWithQuotaByConditionRequest)
 	if !ok {
-		return nil, errors.New("DecodeGroupQueryByConditionProto 失败")
+		return nil, errors.New("transport DecodeGroupQueryByConditionProto 失败")
 	}
 	return r, nil
 }
 
 // EncodeGroupQueryByConditionProto ...
 func EncodeGroupQueryByConditionProto(ctx context.Context, response interface{}) (interface{}, error) {
-	r, ok := response.([]*pb_user_v1.GroupQueryByConditionResponse)
+	r, ok := response.(*pb_user_v1.GroupQueryWithQuotaByConditionResponse)
 	if !ok {
-		return nil, errors.New("EncodeGroupQueryByConditionProto 失败")
+		return nil, errors.New("transport EncodeGroupQueryByConditionProto 失败")
 	}
 	return r, nil
 }
