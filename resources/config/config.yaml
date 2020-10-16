@@ -6,4 +6,4 @@ mysql:
   dbName: gdp
   timeZone: Local
   sqlPath: ./resources/sql
-etcdHost: 127.0.0.1:2379
+etcdHost: 172.18.97.22:2379

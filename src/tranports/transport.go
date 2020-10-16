@@ -14,6 +14,7 @@ type OrgTransport struct {
 	*roleGrpcTransport
 }
 
+
 func (o *OrgTransport) RpcUpdateUser(c context.Context, proto *pb_user_v1.UserProto) (*pb_user_v1.NullResponse, error) {
 	panic("implement me")
 }

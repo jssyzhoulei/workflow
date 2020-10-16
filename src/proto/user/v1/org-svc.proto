@@ -11,6 +11,8 @@ service RpcOrgService {
   rpc RpcAddUser(UserProto) returns (NullResponse);
   rpc RpcUpdateUser(UserProto) returns (NullResponse);
   rpc RpcGetUserById(Index) returns (UserProto);
+  rpc RpcDeleteUserByID(Index) returns (NullResponse);
+  rpc RpcGetUserList(UserPage) returns (UsersPage);
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
   rpc RPCGroupQueryWithQuotaByCondition(GroupQueryWithQuotaByConditionRequest) returns (GroupQueryWithQuotaByConditionResponse);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (NullResponse);

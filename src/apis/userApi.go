@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
+	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ type userApiInterface interface {
 	GetUserByIDApi(ctx *gin.Context)
 	UpdateUserByIDApi(ctx *gin.Context)
 	DeleteUserByIDApi(ctx *gin.Context)
+	GetUserListApi(ctx *gin.Context)
 }
 
 type userApi struct {
@@ -91,21 +93,43 @@ func (u *userApi) UpdateUserByIDApi(ctx *gin.Context) {
 
 // DeleteUserByIDApi 删除用户API
 func (u *userApi) DeleteUserByIDApi(ctx *gin.Context){
-	var data = new(models.User)
-
-	err := ctx.BindJSON(data)
+	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		log.Logger().Error(fmt.Sprintf("delete user request param error : %s", err.Error()))
-		response(ctx, http.StatusBadRequest, "param error", nil, false)
+		log.Logger().Error(fmt.Sprintf("delete user request param error: %s", err.Error()))
+		error_(ctx, 201, err)
 		return
 	}
-	_, err = u.userService.DeleteUserByIDSvc(context.Background(), data.ID)
+	_, err = u.userService.DeleteUserByIDSvc(context.Background(), id)
 	if err != nil {
 		log.Logger().Error("delete user error: " + err.Error())
-		response(ctx, http.StatusBadRequest, "server error", nil, false)
+		error_(ctx, 201, err)
 		return
 	}
-	response(ctx, http.StatusOK, "success", nil, false)
+	success_(ctx, nil)
+	return
+}
+
+// GetUserListApi 获取用户列表
+func (u *userApi) GetUserListApi(ctx *gin.Context){
+	var (
+		userPage pb_user_v1.UserPage
+	)
+	err := ctx.BindJSON(&userPage)
+
+
+	if err != nil {
+		log.Logger().Error(fmt.Sprintf("get user list request param error: %s", err.Error()))
+		error_(ctx, 201, err)
+		return
+	}
+
+	users, err := u.userService.GetUserListSvc(context.Background(), &userPage)
+	if err != nil {
+		log.Logger().Error("get user list error: " + err.Error())
+		error_(ctx, 201, err)
+		return
+	}
+	success_(ctx, users)
 	return
 }
 

@@ -21,8 +21,8 @@ func NewUserGrpcTransport(userEndpoint *endpoints.UserServiceEndpoint) *userGrpc
 		addUserServer = transport.NewServer(userEndpoint.AddUserEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
 		getUserByIDServer = transport.NewServer(userEndpoint.GetUserByIDEndpoint, parser.DecodeIndexProto, parser.EncodeUserProto)
 		updateUserByIDServer = transport.NewServer(userEndpoint.UpdateUserByIDEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
-		deleteUserByIDServer = transport.NewServer(userEndpoint.DeleteUserByIDEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
-		getUserListServer = transport.NewServer(userEndpoint.GetUserListEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
+		deleteUserByIDServer = transport.NewServer(userEndpoint.DeleteUserByIDEndpoint, parser.DecodeIndexProto, parser.EncodeNullProto)
+		getUserListServer = transport.NewServer(userEndpoint.GetUserListEndpoint, parser.DecodeUserPageProto, parser.EncodeUsersPage)
 	)
 	return &userGrpcTransport{
 		addUser:     addUserServer,
@@ -66,4 +66,11 @@ func (u *userGrpcTransport) RpcDeleteUserByID(ctx context.Context, index *pb_use
 	return resp.(*pb_user_v1.NullResponse), nil
 }
 
-//func (u *userGrpcTransport) RpcGetUserList(ctx context.Context, proto *pb_user_v1.UserProto) ()
+
+func (u *userGrpcTransport) RpcGetUserList(c context.Context, proto *pb_user_v1.UserPage) (*pb_user_v1.UsersPage, error) {
+	_, resp, err := u.getUserList.ServeGRPC(c, proto)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.UsersPage), nil
+}

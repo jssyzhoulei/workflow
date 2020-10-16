@@ -14,6 +14,7 @@ message UserProto {
   int64  group_id = 7;
   int64  user_type = 8;
   repeated Index role_ids = 5;
+  int64  ststus = 9;
 }
 
 message UserRoleProto {
@@ -22,5 +23,15 @@ message UserRoleProto {
 }
 
 message Users {
-  repeated Users users = 1;
+  repeated UserProto users = 1;
+}
+
+message UsersPage {
+  Users users = 1;
+  Page page = 2;
+}
+
+message UserPage {
+  UserProto user = 1;
+  Page page = 2;
 }

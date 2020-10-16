@@ -79,7 +79,7 @@ func success_(c *gin.Context, data interface{}) {
 
 
 func error_(c *gin.Context, status code.Code, err ...error) {
-	c.Request.Header.Set("Content-Type", "application/json")
+	//c.Request.Header.Set("Content-Type", "application/json")
 	c.JSON(200,ApiResponse {
 		Code: status,
 		Message: status.Message(err...),
@@ -115,5 +115,5 @@ func response(c *gin.Context, status int, message string, data interface{}, isPB
 type ApiResponse struct {
 	Code code.Code `json:"code"`
 	Message string `json:"message"`
-	Data interface{}
+	Data interface{} `json:"data"`
 }
