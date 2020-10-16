@@ -11,4 +11,5 @@ func userApiRouters(g *gin.RouterGroup, api apis.IApis) {
 	g.GET("/user/query/:id", api.GetUserApis().GetUserByIDApi)
 	g.DELETE("/user/del/:id", api.GetUserApis().DeleteUserByIDApi)
 	g.GET("/user/list", api.GetUserApis().GetUserListApi)
+	g.POST("/user/import_user", api.GetUserApis().ImportUser)
 }

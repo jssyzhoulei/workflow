@@ -38,6 +38,10 @@ func (u UserRole) TableName() string {
 	return "user_role"
 }
 
+type ImportUserRequest struct {
+
+}
+
 // CREATE TABLE `user` (
 //  `id` int NOT NULL AUTO_INCREMENT COMMENT '用户ID',
 //  `username` varchar(50) NOT NULL DEFAULT '' COMMENT '用户名',

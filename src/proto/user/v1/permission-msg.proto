@@ -40,6 +40,7 @@ message Cascade {
   int64 value = 1;
   string label = 2;
   repeated Cascade children = 3;
+  repeated Cascade child = 4;
 }
 
 message Cascades {

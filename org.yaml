@@ -8,41 +8,40 @@ metadata:
 apiVersion: v1
 kind: Service
 metadata:
-  name: draco
-  namespace: draco
+  name: org-svc
+  namespace: gdp
   labels:
-    app: draco
+    app: org-svc
 spec:
-  #type: NodePort
+  type: NodePort
   ports:
-    - port: 10002                             #分配集群ip的端口
-      targetPort: 10002                   #分配pod端口
-      #nodePort: 30985              #node节点端口
+    - port: 88
+      targetPort: 88
       protocol: TCP
-  #  clusterIP: 172.18.77.16   #分配集群ip
+      nodePort: 30788
   selector:
-    app: draco
+    app: org-svc
 
 ---
 #创建 deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: draco-deploy
-  namespace: draco
+  name: org-svc
+  namespace: gdp
   labels:
-    app: draco
+    app: org-svc
 spec:
   replicas: 1            #生成复本数量为2
   selector:
     matchLabels:
-      app: draco
+      app: org-svc
   template:
     metadata:
       labels:
-        app: draco
+        app: org-svc
       annotations:
-        app: draco
+        app: org-svc
     spec:
       nodeName: node1
       containers:
@@ -51,7 +50,7 @@ spec:
           command:
             - "/bin/sh"
             - "-c"
-            - "/app/org-svc"
+            - "/app/org-svc -ip $POD_IP"
           env:
             - name: POD_IP
               valueFrom:
@@ -67,13 +66,11 @@ spec:
               cpu: 100m
               memory: 100Mi
           ports:
-            - containerPort: 10002
-              name: dracocontainer
+            - containerPort: 886
+              name: svc-port
           volumeMounts:
             - mountPath: /resources/config
-              name: draco
-            - mountPath: /mnt/inspurfs
-              name: work
+              name: config
             - mountPath: /etc/localtime
               name: localtime
         - name: org-api
@@ -81,13 +78,7 @@ spec:
           command:
             - "/bin/sh"
             - "-c"
-            - "/app/org-api"
-          env:
-            - name: POD_IP
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: status.podIP
+            - "/app/org-api -eh 192.168.2.191:2379"
           imagePullPolicy: Always
           resources:
             limits:
@@ -97,24 +88,16 @@ spec:
               cpu: 100m
               memory: 100Mi
           ports:
-            - containerPort: 10002
-              name: dracocontainer
+            - containerPort: 88
+              name: org-svc
           volumeMounts:
-            - mountPath: /resources/config
-              name: draco
-            - mountPath: /mnt/inspurfs
-              name: work
             - mountPath: /etc/localtime
               name: localtime
       volumes:
         - hostPath:
-            path: /data/config
+            path: /mnt/inspurfs/org/config
             type: Directory
-          name: draco
-        - hostPath:
-            path: /mnt/inspurfs
-            type: Directory
-          name: work
+          name: config
         - hostPath:
             path: /etc/localtime
           name: localtime
