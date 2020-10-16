@@ -45,7 +45,7 @@ message GroupQueryWithQuotaByConditionRequest {
 
 // GroupQueryByConditionResponse 按条件查询组信息响应
 message GroupQueryWithQuotaByConditionResponse {
-  repeated GroupWithQuota groups= 1;
+  repeated GroupWithQuota groups = 1;
 }
 
 // GroupUpdateRequest 组信息更新请求
@@ -53,4 +53,5 @@ message GroupUpdateRequest {
   int64 id = 1;
   string name = 2;
   int64 parent_id = 3;
+  bool use_parent_id = 4;
 }

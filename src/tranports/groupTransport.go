@@ -19,6 +19,7 @@ func NewGroupGrpcTransport(endpoint *endpoints.GroupServiceEndpoint) *groupGrpcT
 	return &groupGrpcTransport{
 		groupAdd: transport.NewServer(endpoint.GroupAddEndpoint, parser.DecodeGroupAddProto, parser.EncodeGroupProto),
 		groupQueryWithQuotaByCondition: transport.NewServer(endpoint.GroupQueryWithQuotaByConditionEndpoint, parser.DecodeGroupQueryByConditionProto, parser.EncodeGroupQueryByConditionProto),
+		groupUpdate: transport.NewServer(endpoint.GroupUpdateEndpoint, parser.DecodeGroupUpdateProto, parser.EncodeGroupProto),
 	}
 }
 

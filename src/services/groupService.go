@@ -187,8 +187,12 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 	d := &models.GroupUpdateRequest{
 		ID:       data.Id,
 		Name:     data.Name,
-		ParentID: &data.ParentId,
 	}
+
+	if data.UseParentId {
+		d.ParentID = &data.ParentId
+	}
+
 	err := g.groupRepo.GroupUpdateRepo(d, nil)
 	if err != nil {
 		return &pb_user_v1.GroupResponse{Code: 1}, err

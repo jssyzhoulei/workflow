@@ -20,15 +20,16 @@ var (
 
 func init() {
 	jsonpbMarshaler = &jsonpb.Marshaler{
-		EnumsAsInts : true,
+		EnumsAsInts:  true,
 		EmitDefaults: true,
-		OrigName    : true,
+		OrigName:     true,
 	}
 }
 
 type groupAPIInterface interface {
 	GroupAddAPI(ctx *gin.Context)
 	GroupQueryWithQuotaAPI(c *gin.Context)
+	GroupUpdateAPI(c *gin.Context)
 }
 
 type groupAPI struct {
@@ -123,24 +124,33 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
 		return
 	}
-
 	var parentID int64
+	var useParentID bool
 	if data.ParentID == nil {
-		parentID = 99999
+		parentID = 0
+		useParentID = false
+	} else {
+		parentID = *data.ParentID
+		useParentID = true
 	}
 
 	d := &pb_user_v1.GroupUpdateRequest{
-		Id:                   data.ID,
-		Name:                 data.Name,
-		ParentId:             parentID,
+		Id:          data.ID,
+		Name:        data.Name,
+		ParentId:    parentID,
+		UseParentId: useParentID,
 	}
 
-	_, err = g.groupService.GroupUpdateSvc(context.Background(), d)
+	resp, err := g.groupService.GroupUpdateSvc(context.Background(), d)
 	if err != nil {
 		log.Logger().Info("添加组错误: " + err.Error())
 		response(c, http.StatusBadRequest, "操作失败", nil, false)
 		return
 	}
-	response(c, http.StatusBadRequest, "成功", nil, false)
+	if resp.Code != 0 {
+		response(c, http.StatusBadRequest, "操作失败", nil, false)
+		return
+	}
+	response(c, http.StatusOK, "成功", nil, false)
 	return
 }
