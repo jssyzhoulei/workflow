@@ -87,16 +87,16 @@ func Test_permissionService_DeletePermissionByID(t *testing.T) {
 func Test_permissionService_GetMenuCascadeByModule(t *testing.T) {
 	//fmt.Println(NewPermissionService(repo).GetMenuCascadeByModuleSvc(background, 1))
 	rs := makePermissionRouteTree([]models.Permission{{
-		Uri:"/apis/v1/user/:id",
+		Uri:"/apis/v1/user/:id/a/:id/b",
 		Method: models.METHOD_GET,
 	},{
 		Uri:"/apis/v1/user/a",
-		Method: models.METHOD_POST,
+		Method: models.METHOD_GET,
 	},{
 		Uri:"/apis/v1/user/",
 		Method: models.METHOD_DELETE,
 	}})
-	fmt.Println(rs.AuthRoute("/apis/v1/user/a/POST"))
+	fmt.Println(rs.AuthRoute("/apis/v1/user//DELETE"))
 	fmt.Println(rs)
 }
 
@@ -109,14 +109,18 @@ func (rt routeTree) AuthRoute(uri string) error {
 		switch uri[i] {
 		case '/':
 			rs := string(route)
-			fmt.Println(string(route))
 			if len(route) > 0 {
-				if _, ok := rt["*"]; ok {
-					err = rt["*"].AuthRoute(uri[i+1:])
-					return err
-				}
 				if _, ok := rt[rs]; ok {
 					err = rt[rs].AuthRoute(uri[i+1:])
+					if err != nil {
+						if _, ok := rt["*"]; ok {
+							err = rt["*"].AuthRoute(uri[i+1:])
+						}
+					}
+					return err
+				}
+				if _, ok := rt["*"]; ok {
+					err = rt["*"].AuthRoute(uri[i+1:])
 					return err
 				}
 				return errors.New("no permission")
@@ -132,6 +136,7 @@ func (rt routeTree) AuthRoute(uri string) error {
 		if _, ok := rt["*"]; ok {
 			return nil
 		}
+		fmt.Println(string(route))
 		if _, ok := rt[string(route)]; ok {
 			return nil
 		}

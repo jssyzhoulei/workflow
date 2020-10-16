@@ -157,7 +157,7 @@ func AddPermissionCascade(permissions []models.Permission, cascades []*pb_user_v
 					copy(permissionsNew[index:], permissions[index+1:])
 					c.Value = int64(permission.ID)
 					c.Label = permission.UriName
-					cascade.Children = append(cascade.Children, c)
+					cascade.Child = append(cascade.Child, c)
 				}
 			}
 			cascades[k] = cascade
