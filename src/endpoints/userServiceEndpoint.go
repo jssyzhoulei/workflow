@@ -49,11 +49,11 @@ func MakeAddUserEndpoint(userService services.UserServiceInterface) endpoint.End
 // MakeGetUserByIDEndpoint ...
 func MakeGetUserByIDEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		user, ok := request.(models.User)
+		id, ok := request.(int)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		response, err = userService.GetUserByIDSvc(ctx, user.ID)
+		response, err = userService.GetUserByIDSvc(ctx, id)
 		return
 	}
 }

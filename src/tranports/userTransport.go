@@ -19,7 +19,7 @@ type userGrpcTransport struct {
 func NewUserGrpcTransport(userEndpoint *endpoints.UserServiceEndpoint) *userGrpcTransport {
 	var (
 		addUserServer = transport.NewServer(userEndpoint.AddUserEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
-		getUserByIDServer = transport.NewServer(userEndpoint.GetUserByIDEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
+		getUserByIDServer = transport.NewServer(userEndpoint.GetUserByIDEndpoint, parser.DecodeIndexProto, parser.EncodeUserProto)
 		updateUserByIDServer = transport.NewServer(userEndpoint.UpdateUserByIDEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
 		deleteUserByIDServer = transport.NewServer(userEndpoint.DeleteUserByIDEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
 		getUserListServer = transport.NewServer(userEndpoint.GetUserListEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
@@ -42,8 +42,8 @@ func (u *userGrpcTransport) RpcAddUser(ctx context.Context, proto *pb_user_v1.Us
 	return resp.(*pb_user_v1.NullResponse), nil
 }
 
-func (u *userGrpcTransport) RpcGetUserByID(ctx context.Context, index *pb_user_v1.Index) (*pb_user_v1.UserProto, error) {
-	_, resp, err := u.getUserByID.ServeGRPC(ctx, index)
+func (u *userGrpcTransport) RpcGetUserById(c context.Context, index *pb_user_v1.Index) (*pb_user_v1.UserProto, error) {
+	_, resp, err := u.getUserByID.ServeGRPC(c, index)
 	if err != nil {
 		return nil, err
 	}

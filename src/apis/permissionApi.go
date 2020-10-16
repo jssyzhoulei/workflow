@@ -2,13 +2,20 @@ package apis
 
 import (
 	"context"
+	"errors"
 	"gitee.com/grandeep/org-svc/src/models"
 	"gitee.com/grandeep/org-svc/src/services"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 type permissionApiInterface interface {
 	AddPermissionApi(ctx *gin.Context)
+	AddMenuApi(c *gin.Context)
+	GetMenuCascade(c *gin.Context)
+	GetPermissionByID(c *gin.Context)
+	DeletePermissionByID(c *gin.Context)
+	UpdatePermission(c *gin.Context)
 }
 
 type permissionApi struct {
@@ -17,7 +24,7 @@ type permissionApi struct {
 
 func NewPermissionApi(permissionService services.PermissionServiceInterface) permissionApiInterface {
 	return &permissionApi{
-		permissionService:  permissionService,
+		permissionService: permissionService,
 	}
 }
 
@@ -39,27 +46,84 @@ func (p *permissionApi) AddPermissionApi(ctx *gin.Context) {
 	return
 }
 
-func success_(c *gin.Context, data interface{}) {
-	if data == nil {
-		data = ""
+func (p *permissionApi) AddMenuApi(c *gin.Context) {
+	var (
+		menu models.Menu
+	)
+	err := c.BindJSON(&menu)
+	if err != nil {
+		error_(c, 201, err)
+		return
 	}
-	c.Request.Header.Set("Content-Type", "application/json")
-	c.JSON(200, map[string]interface{} {
-		"code": 200,
-		"message": "",
-		"data": data,
-	})
-	c.Abort()
+	_, err = p.permissionService.AddMenuSvc(context.Background(), menu)
+	if err != nil {
+		error_(c, 201, err)
+		return
+	}
+	success_(c, nil)
 	return
 }
 
-func error_(c *gin.Context, status int, err error) {
-	c.Request.Header.Set("Content-Type", "application/json")
-	c.JSON(200, map[string]interface{} {
-		"code": status,
-		"message": err.Error(),
-		"data": nil,
-	})
-	c.Abort()
+func (p *permissionApi) GetMenuCascade(c *gin.Context) {
+	module := c.Query("module")
+	m, err := strconv.Atoi(module)
+	if err != nil {
+		error_(c, 201, errors.New("params err"))
+		return
+	}
+	cascades, err := p.permissionService.GetMenuCascadeByModuleSvc(context.Background(), models.MenuModule(m))
+	if err != nil {
+		error_(c, 201, err)
+		return
+	}
+	success_(c, cascades.Cascades)
+	return
+}
+
+func (p *permissionApi) GetPermissionByID(c *gin.Context) {
+	id := c.Param("id")
+	ID, err := strconv.Atoi(id)
+	if err != nil {
+		error_(c, 201, errors.New("params err"))
+		return
+	}
+	permission, err := p.permissionService.GetPermissionByIDSvc(context.Background(), ID)
+	if err != nil {
+		error_(c, 201, err)
+		return
+	}
+	success_(c, permission)
+}
+
+func (p *permissionApi) DeletePermissionByID(c *gin.Context) {
+	id := c.Param("id")
+	ID, err := strconv.Atoi(id)
+	if err != nil {
+		error_(c, 201, errors.New("params err"))
+		return
+	}
+	permission, err := p.permissionService.DeletePermissionByIDSvc(context.Background(), ID)
+	if err != nil {
+		error_(c, 201, err)
+		return
+	}
+	success_(c, permission)
+}
+
+func (p *permissionApi) UpdatePermission(c *gin.Context) {
+	var (
+		permission models.Permission
+	)
+	err := c.BindJSON(&permission)
+	if err != nil {
+		error_(c, 201, err)
+		return
+	}
+	_, err = p.permissionService.UpdatePermissionByIDSvc(context.Background(), permission)
+	if err != nil {
+		error_(c, 201, err)
+		return
+	}
+	success_(c, nil)
 	return
 }

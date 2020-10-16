@@ -17,6 +17,8 @@ func EncodeUserModel(ctx context.Context, req interface{}) (interface{}, error) 
 		LoginName: user.LoginName,
 		Password:  user.Password,
 		Mobile:    int64(user.Mobile),
+		GroupId:   int64(user.GroupID),
+		UserType:  int64(user.UserType),
 	}, nil
 }
 

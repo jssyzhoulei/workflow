@@ -12,15 +12,17 @@ message PermissionProto {
   string button_name = 6;
   string button_key = 7;
   int64  menu_id = 8;
+  int32 module = 10;
 }
 
 message MenuProto {
   Index index = 1;
   string name = 2;
   int64 paren_id = 3;
-  int32  module = 4;
+  Module  module = 4;
   int64  order = 5;
   string  template_path = 6;
+  int64 user_id = 7;
 }
 
 enum Module
@@ -37,9 +39,9 @@ message MenuModule {
 message Cascade {
   int64 value = 1;
   string label = 2;
-  repeated Cascade Children = 3;
+  repeated Cascade children = 3;
 }
 
 message Cascades {
-  repeated Cascades cascades = 1;
+  repeated Cascade cascades = 1;
 }

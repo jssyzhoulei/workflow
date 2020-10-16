@@ -23,7 +23,7 @@ type PermissionServiceInterface interface {
 	//DeletePermissionByID: 删除权限通过ID
 	DeletePermissionByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
 	//GetMenuCascade: 获取菜单级联数据
-	GetMenuCascadeByModuleSvc(ctx context.Context, module models.MenuModule) ([]models.Cascade, error)
+	GetMenuCascadeByModuleSvc(ctx context.Context, module models.MenuModule) (*pb_user_v1.Cascades, error)
 }
 
 type permissionService struct {
@@ -90,7 +90,7 @@ func (p *permissionService) DeletePermissionByIDSvc(ctx context.Context, id int)
 	return pb_user_v1.NullResponse{}, err
 }
 
-func (p *permissionService) GetMenuCascadeByModuleSvc(ctx context.Context, module models.MenuModule) (cascades []models.Cascade,err error) {
+func (p *permissionService) GetMenuCascadeByModuleSvc(ctx context.Context, module models.MenuModule) (c *pb_user_v1.Cascades,err error) {
 	var (
 		menu models.Menu
 		menus []models.Menu
@@ -102,18 +102,66 @@ func (p *permissionService) GetMenuCascadeByModuleSvc(ctx context.Context, modul
 		return
 	}
 	menu.Module = module
-	permissions,err = p.permissionRepo.GetPermissionListRepo(permission, &models.Page{})
+	permissions,err = p.permissionRepo.GetPermissionListRepo(permission, nil)
 	if err != nil {
-		return nil, err
+		return c, err
 	}
 	menus,err = p.permissionRepo.GetMenuListRepo(menu)
 	if err != nil {
-		return nil, err
+		return c, err
 	}
 
-	cascades = menu.GetMenuCascade(menus, 0)
-	cascades = menu.AddPermissionCascade(permissions, cascades)
+	cascades := GetMenuCascade(menus, 0)
+	cascades = AddPermissionCascade(permissions, cascades)
+	c = &pb_user_v1.Cascades{
+		Cascades:             cascades,
+	}
 	return
 }
 
 
+func GetMenuCascade(menus []models.Menu, parentId int) (cascades []*pb_user_v1.Cascade) {
+	for k, menu := range menus {
+		var (
+			cascade = &pb_user_v1.Cascade{}
+		)
+		if parentId == menu.ParentID {
+			var (
+				menusNew = make([]models.Menu, len(menus)-1)
+			)
+			copy(menusNew[:k], menus[:k])
+			copy(menusNew[k:], menus[k+1:])
+			cascade.Value = int64(menu.ID)
+			cascade.Label = menu.Name
+			cascade.Children = GetMenuCascade(menusNew, menu.ID)
+			cascades = append(cascades, cascade)
+		}
+	}
+	return cascades
+}
+
+func AddPermissionCascade(permissions []models.Permission, cascades []*pb_user_v1.Cascade) []*pb_user_v1.Cascade {
+	for k, cascade := range cascades {
+		if len(cascade.Children) > 0 {
+			cs := AddPermissionCascade(permissions, cascade.Children)
+			cascades[k].Children = cs
+			continue
+		} else {
+			for index, permission := range permissions {
+				if cascade.Value == int64(permission.MenuID) {
+					var (
+						c = &pb_user_v1.Cascade{}
+						permissionsNew = make([]models.Permission, len(permissions) -1)
+					)
+					copy(permissionsNew[:index], permissions[:index])
+					copy(permissionsNew[index:], permissions[index+1:])
+					c.Value = int64(permission.ID)
+					c.Label = permission.UriName
+					cascade.Children = append(cascade.Children, c)
+				}
+			}
+			cascades[k] = cascade
+		}
+	}
+	return cascades
+}

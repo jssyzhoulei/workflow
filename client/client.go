@@ -152,6 +152,11 @@ func (o *OrgServiceClient) factoryGroupFor(makeEndpoint MakeGroupEndpointFunc, c
 func (o *OrgServiceClient) GetPermissionService() services.PermissionServiceInterface {
 	endpoints := &org_endpoints.PermissionServiceEndpoint{}
 	endpoints.AddPermissionEndpoint = o.getPermissionRetryEndpoint(org_endpoints.MakeAddPermissionEndpoint, permissionGrpcConn)
+	endpoints.AddMenuEndpoint = o.getPermissionRetryEndpoint(org_endpoints.MakeAddMenuEndpoint, permissionGrpcConn)
+	endpoints.GetMenuCascadeByModuleEndpoint = o.getPermissionRetryEndpoint(org_endpoints.MakeGetMenuCascadeByModuleEndpoint, permissionGrpcConn)
+	endpoints.GetPermissionByIDEndpoint = o.getPermissionRetryEndpoint(org_endpoints.MakeGetPermissionByID, permissionGrpcConn)
+	endpoints.DeletePermissionByIDEndpoint = o.getPermissionRetryEndpoint(org_endpoints.MakeDeletePermissionByID, permissionGrpcConn)
+	endpoints.UpdatePermissionByIDEndpoint = o.getPermissionRetryEndpoint(org_endpoints.MakeUpdatePermissionByIDEndpoint, permissionGrpcConn)
 	return endpoints
 }
 

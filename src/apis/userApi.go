@@ -42,10 +42,10 @@ func (u *userApi) AddUserApi(ctx *gin.Context) {
 	_, err = u.userService.AddUserSvc(context.Background(), user)
 	if err != nil {
 		log.Logger().Error("add user error: " + err.Error())
-		response(ctx, http.StatusBadRequest, "server error", nil)
+		response(ctx, http.StatusBadRequest, "操作失败", nil)
 		return
 	}
-	response(ctx, http.StatusOK, "success", nil)
+	response(ctx, http.StatusOK, "操作成功", nil)
 	return
 }
 
@@ -58,13 +58,13 @@ func (u *userApi) GetUserByIDApi(ctx *gin.Context){
 		error_(ctx, 201, err)
 		return
 	}
-	_, err = u.userService.GetUserByIDSvc(context.Background(), ID)
+	data, err := u.userService.GetUserByIDSvc(context.Background(), ID)
 	if err != nil {
 		log.Logger().Error("get user error: " + err.Error())
 		error_(ctx, 201, err)
 		return
 	}
-	success_(ctx, nil)
+	success_(ctx, data)
 	return
 }
 
