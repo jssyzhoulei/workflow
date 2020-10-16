@@ -16,6 +16,7 @@ type userApiInterface interface {
 	GetUserByIDApi(ctx *gin.Context)
 	UpdateUserByIDApi(ctx *gin.Context)
 	DeleteUserByIDApi(ctx *gin.Context)
+	ImportUser(ctx *gin.Context)
 }
 
 type userApi struct {
@@ -107,6 +108,12 @@ func (u *userApi) DeleteUserByIDApi(ctx *gin.Context){
 	}
 	response(ctx, http.StatusOK, "success", nil, false)
 	return
+}
+
+
+//导入用户
+func (u *userApi) ImportUser(ctx *gin.Context) {
+
 }
 
 
