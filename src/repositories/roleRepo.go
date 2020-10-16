@@ -36,7 +36,7 @@ func (u *roleRepo) AddRoleRepo(role *models.CreateMenuPermRequest) error {
 }
 
 func (u *roleRepo) BatchCreateMenuPermRepo(mps *[]*models.RoleMenuPermission) error {
-	return u.DB.Model(models.Role{}).Create(mps).Error
+	return u.DB.Model(models.RoleMenuPermission{}).Create(mps).Error
 }
 
 func (u *roleRepo) UpdateRoleRepo(role *models.Role) error {
