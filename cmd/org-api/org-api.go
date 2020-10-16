@@ -1,8 +1,12 @@
 package main
 
-import "gitee.com/grandeep/org-svc/src/routers"
+import (
+	"flag"
+	"gitee.com/grandeep/org-svc/src/routers"
+)
 
 func main()  {
+	flag.Parse()
 	routers.Routers(routers.Gin())
 	_ = routers.Gin().Run(":88")
 }

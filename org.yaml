@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gdp
+
+---
+#定义 service
+apiVersion: v1
+kind: Service
+metadata:
+  name: draco
+  namespace: draco
+  labels:
+    app: draco
+spec:
+  #type: NodePort
+  ports:
+    - port: 10002                             #分配集群ip的端口
+      targetPort: 10002                   #分配pod端口
+      #nodePort: 30985              #node节点端口
+      protocol: TCP
+  #  clusterIP: 172.18.77.16   #分配集群ip
+  selector:
+    app: draco
+
+---
+#创建 deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: draco-deploy
+  namespace: draco
+  labels:
+    app: draco
+spec:
+  replicas: 1            #生成复本数量为2
+  selector:
+    matchLabels:
+      app: draco
+  template:
+    metadata:
+      labels:
+        app: draco
+      annotations:
+        app: draco
+    spec:
+      nodeName: node1
+      containers:
+        - name: org-svc
+          image: 192.168.2.190:5000/library/org-svc:1.0.0
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "/app/org-svc"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 300m
+              memory: 3000Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 10002
+              name: dracocontainer
+          volumeMounts:
+            - mountPath: /resources/config
+              name: draco
+            - mountPath: /mnt/inspurfs
+              name: work
+            - mountPath: /etc/localtime
+              name: localtime
+        - name: org-api
+          image: 192.168.2.190:5000/library/org-api:1.0.0
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "/app/org-api"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 300m
+              memory: 3000Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 10002
+              name: dracocontainer
+          volumeMounts:
+            - mountPath: /resources/config
+              name: draco
+            - mountPath: /mnt/inspurfs
+              name: work
+            - mountPath: /etc/localtime
+              name: localtime
+      volumes:
+        - hostPath:
+            path: /data/config
+            type: Directory
+          name: draco
+        - hostPath:
+            path: /mnt/inspurfs
+            type: Directory
+          name: work
+        - hostPath:
+            path: /etc/localtime
+          name: localtime

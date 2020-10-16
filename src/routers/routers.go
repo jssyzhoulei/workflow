@@ -1,11 +1,13 @@
 package routers
 
 import (
+	"flag"
 	"gitee.com/grandeep/org-svc/client"
 	"gitee.com/grandeep/org-svc/src/apis"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"strings"
 	"sync"
 	"time"
 )
@@ -13,6 +15,7 @@ import (
 var (
 	once sync.Once
 	engine *gin.Engine
+	etcdHosts = flag.String("eh", "127.0.0.1:2379", "")
 )
 
 // GinLogger 接收gin框架默认的日志
@@ -44,7 +47,8 @@ func Gin() *gin.Engine {
 }
 
 func Routers(e *gin.Engine) {
-	o := client.NewOrgServiceClient([]string{"172.18.28.226:2379"}, 3, time.Second)
+	es := strings.Split(*etcdHosts, ";")
+	o := client.NewOrgServiceClient(es, 2, time.Second)
 	api := apis.NewApis(o)
 	g := e.Group("/apis/v1")
 	userApiRouters(g, api)
