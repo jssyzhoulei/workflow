@@ -21,12 +21,14 @@ type GroupServiceInterface interface {
 // GroupService 组服务,实现了 GroupServiceInterface
 type GroupService struct {
 	groupRepo repositories.GroupRepoInterface
+	userRepo repositories.UserRepoInterface
 }
 
 // NewGroupService GroupService 构造函数
 func NewGroupService(repos repositories.RepoI) GroupServiceInterface {
 	return &GroupService{
 		groupRepo: repos.GetGroupRepo(),
+		userRepo: repos.GetUserRepo(),
 	}
 }
 
@@ -246,4 +248,28 @@ func (g *GroupService) QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.Quot
 		return &pb_user_v1.GroupResponse{Code: 1}, nil
 	}
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
+}
+
+// GroupDeleteSvc 组删除(软删除)
+func (g *GroupService) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.Index) (*pb_user_v1.GroupResponse, error) {
+	if data.Id == 0 {
+		return &pb_user_v1.GroupResponse{Code:1}, errors.New("id 不允许为空")
+	}
+
+	//g.userRepo.GetUserListRepo()
+
+
+	return &pb_user_v1.GroupResponse{Code:0}, nil
+}
+
+// GroupTreeQuerySvc 组树查询
+func (g *GroupService) GroupTreeQuerySvc() error {
+
+	//allGroup, err := g.groupRepo.GroupQueryByConditionRepo(&models.GroupQueryByCondition{}, nil)
+	//if err != nil {
+	//	return err
+	//}
+
+	return nil
+
 }

@@ -338,3 +338,20 @@ func (g *groupRepo) QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB
 
 	return nil
 }
+
+// GroupDeleteRepo 组删除
+func (g *groupRepo) GroupDeleteRepo(id int64, tx *gorm.DB) error {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	err = db.Model(&models.Group{}).Where("id=?", id).Update("status", 1).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
