@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"gitee.com/grandeep/org-svc/src/endpoints"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
@@ -20,13 +21,18 @@ import (
 	"time"
 )
 
+var (
+	ip = flag.String("ip", "", "")
+)
+
 func main() {
+	flag.Parse()
 	var (
-		serName   = "svc.org1"
+		serName   = "svc.org"
 		ttl       = 5 * time.Second
 		quitChan = make(chan error, 1)
 		baseServer *grpc.Server
-		grpcAddr = ":866"
+		grpcAddr = *ip + ":866"
 	)
 
 	e := engine.NewEngine("./resources/config/config.yaml")
