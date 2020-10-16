@@ -50,5 +50,6 @@ func Routers(e *gin.Engine) {
 	userApiRouters(g, api)
 	permissionApiRouters(g, api)
 	groupAPIRouters(g, api)
+	roleApiRouters(g, api)
 }
 

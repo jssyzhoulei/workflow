@@ -39,7 +39,7 @@ type GrpcPermissionConnFunc func(conn *grpc.ClientConn) services.PermissionServi
 func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgServiceClient {
 	var (
 		etcdAddrs = addr
-		serName   = "svc.org"
+		serName   = "svc.org1"
 		ttl       = 5 * time.Second
 	)
 	options := etcdv3.ClientOptions{
@@ -93,9 +93,9 @@ func (o *OrgServiceClient) getRetryUserEndpoint(ept MakeUserEndpointFunc, conn G
 
 func (o *OrgServiceClient) GetRoleService() services.RoleServiceI {
 	endpoints := &org_endpoints.RoleServiceEndpoint{}
-	endpoints.AddRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeAddRoleEndpoint, addRoleGrpcConn)
-	endpoints.UpdateRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeUpdateRoleEndpoint, addRoleGrpcConn)
-	endpoints.DeleteRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeDeleteRoleEndpoint, addRoleGrpcConn)
+	endpoints.AddRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeAddRoleEndpoint, RoleGrpcConn)
+	endpoints.UpdateRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeUpdateRoleEndpoint, RoleGrpcConn)
+	endpoints.DeleteRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeDeleteRoleEndpoint, RoleGrpcConn)
 	return endpoints
 }
 
