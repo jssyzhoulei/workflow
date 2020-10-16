@@ -315,6 +315,16 @@ func (g *groupRepo) QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB
 		return errors.New("资源类型不存在")
 	}
 
+	// 增加组信息校验,被删除的组,无法修改其配额数据
+	group, err := g.GroupQueryByIDRepo(data.GroupID, nil)
+	if err != nil {
+		return errors.New("查询组信息错误: " + err.Error())
+	}
+	
+	if group.Status == 1 {
+		return errors.New("组已删除,无法修改数据")
+	}
+
 	updateColumnMap := map[string]interface{} {
 		"total": data.Total,
 		"used": data.Used,

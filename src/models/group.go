@@ -9,7 +9,6 @@ type Quota struct {
 	GroupID    int          `gorm:"column:group_id;type:int(10);comment:'组织ID'" json:"group_id"`
 	Total      int          `json:"total" gorm:"column:total;type:int(10);comment:'资源总数'"`
 	Used       int          `json:"used" gorm:"column:used;type:int(10);comment:'已经使用'"`
-	Status     int          `json:"status" gorm:"column:status;type:int(10);default:0;comment:'1 已删除 0 未删除'"`
 }
 
 // TableName ...
@@ -23,6 +22,7 @@ type Group struct {
 	Name      string `gorm:"column:name;type:varchar(50);comment:'组织名称'" json:"name"`
 	ParentID  int    `gorm:"column:parent_id;type:int(10);comment:'父级组织ID'" json:"parent_id"`
 	LevelPath string `gorm:"column:level_path;type:varchar(255);comment:'组织等级路径'" json:"level_path"`
+	Status    int    `json:"status" gorm:"column:status;type:int(10);default:0;comment:'1 已删除 0 未删除'"`
 }
 
 // TableName ...
