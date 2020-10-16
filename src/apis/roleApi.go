@@ -33,16 +33,16 @@ func (r *roleApi) AddRoleApi(c *gin.Context) {
 	err := c.BindJSON(data)
 	if err != nil || !data.Check() {
 		log.Logger().Warn(fmt.Sprintf("add role request param error with data : %+v ", data))
-		response(c, http.StatusBadRequest, "param error", nil)
+		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
 	_, err = r.roleService.AddRoleSvc(context.Background(), *data)
 	if err != nil {
 		log.Logger().Error("create role error: " + err.Error())
-		response(c, http.StatusBadRequest, "server error", nil)
+		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
-	response(c, http.StatusOK, "success", nil)
+	response(c, http.StatusOK, "success", nil, false)
 }
 
 func (r *roleApi) UpdateRoleApi(c *gin.Context) {
@@ -52,16 +52,16 @@ func (r *roleApi) UpdateRoleApi(c *gin.Context) {
 	err := c.BindJSON(data)
 	if err != nil {
 		log.Logger().Warn(fmt.Sprintf("update role request param error : %s", err.Error()))
-		response(c, http.StatusBadRequest, "param error", nil)
+		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
 	_, err = r.roleService.UpdateRoleSvc(context.Background(), *data)
 	if err != nil {
 		log.Logger().Error("update role error: " + err.Error())
-		response(c, http.StatusBadRequest, "server error", nil)
+		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
-	response(c, http.StatusOK, "success", nil)
+	response(c, http.StatusOK, "success", nil, false)
 }
 
 func (r *roleApi) DeleteRoleApi(c *gin.Context) {
@@ -71,14 +71,14 @@ func (r *roleApi) DeleteRoleApi(c *gin.Context) {
 	err := c.BindJSON(data)
 	if err != nil {
 		log.Logger().Warn(fmt.Sprintf("delete role request param error : %s", err.Error()))
-		response(c, http.StatusBadRequest, "param error", nil)
+		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
 	_, err = r.roleService.DeleteRoleSvc(context.Background(), *data)
 	if err != nil {
 		log.Logger().Error("delete role error: " + err.Error())
-		response(c, http.StatusBadRequest, "server error", nil)
+		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
-	response(c, http.StatusOK, "success", nil)
+	response(c, http.StatusOK, "success", nil, false)
 }

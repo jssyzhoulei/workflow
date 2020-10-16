@@ -40,6 +40,7 @@ func GinLogger(logger *zap.Logger) gin.HandlerFunc {
 
 func Gin() *gin.Engine {
 	once.Do(func() {
+		gin.SetMode(gin.ReleaseMode)
 		engine = gin.New()
 		engine.Use(GinLogger(log.Logger()))
 	})
