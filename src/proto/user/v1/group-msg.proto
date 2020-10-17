@@ -9,6 +9,11 @@ message GroupResponse {
   int64 code = 1;
 }
 
+// GroupID 用户组ID
+message GroupID {
+  int64 id = 1;
+}
+
 // quota 配额信息
 message Quota {
   int64  is_share = 1;
@@ -64,4 +69,9 @@ message QuotaUpdateRequest {
   int64 quota_type = 4;
   int64 total = 5;
   int64 used = 6;
+}
+
+// GroupTreeResponse 组树查询响应
+message GroupTreeResponse {
+  bytes tree_json = 1;
 }

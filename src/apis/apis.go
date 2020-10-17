@@ -57,11 +57,11 @@ func (a *apis) GetGroupApis() groupAPIInterface {
 
 // response 通用响应
 // @data 当 isPB(是否返回的是 jsonpb 处理的数据) 为 true 时, data 必须为 []byte 参考 apis.groupAPIInterface GroupQueryWithQuotaAPI 方法
-func response(c *gin.Context, status int, message string, data interface{}, isPB bool) {
+func response(c *gin.Context, status int, message string, data interface{}, isByte bool) {
 	if data == nil {
 		data = ""
 	}
-	if !isPB {
+	if !isByte {
 		c.JSON(http.StatusOK, map[string]interface{}{
 			"code":    status,
 			"message": message,

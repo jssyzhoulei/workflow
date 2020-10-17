@@ -22,6 +22,7 @@ type GroupRepoInterface interface {
 	GroupQueryWithQuotaByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.GroupQueryWithQuotaScanRes, error)
 	GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB) error
 	QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB) error
+	GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB) ([]*models.Group, error)
 }
 
 type groupRepo struct {
@@ -230,6 +231,8 @@ func (g *groupRepo) GroupQueryWithQuotaByConditionRepo(condition *models.GroupQu
 		whereCondition += " and parent_id in @parent_ids "
 		conditionVal["parent_ids"] = condition.ParentID
 	}
+	// 过滤软删除的数据
+	whereCondition += " and status=0 "
 
 	sqlStr := `
 SELECT
@@ -361,4 +364,33 @@ func (g *groupRepo) GroupDeleteRepo(id int64, tx *gorm.DB) error {
 		return err
 	}
 	return nil
+}
+
+// GroupListWithChangedLevelPathRepo 通过ID查询组及其下级组信息,查询结果的 levelPath 会从顶级组开始
+// 此方法被 services.GroupTreeQuerySvc 使用,用于生成 group 树形数据
+func (g *groupRepo) GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB) ([]*models.Group, error) {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+	if groupID == 0 {
+		return nil, err
+	}
+
+	sqlStr := `
+select id,name,parent_id,
+	-- 这里字符串截取path,截取起始位置为父级level_path长度+1 至末尾
+	substring(level_path,(select LENGTH(level_path) from ` + "`group`" + ` where id = ? and status = 0) + 1) as level_path
+from ` + "`group`" + ` where level_path like ? and status = 0 order by id;
+`
+	var lpStr = "%-"+strconv.Itoa(int(groupID)) + "-%"
+	var result = make([]*models.Group, 0)
+	err = db.Raw(sqlStr, groupID, lpStr).Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
