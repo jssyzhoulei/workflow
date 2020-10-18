@@ -15,6 +15,7 @@ type GroupServiceEndpoint struct {
 	GroupQueryWithQuotaByConditionEndpoint endpoint.Endpoint
 	GroupUpdateEndpoint endpoint.Endpoint
 	QuotaUpdateEndpoint endpoint.Endpoint
+	GroupTreeQueryEndpoint endpoint.Endpoint
 }
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
@@ -24,6 +25,7 @@ func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 		GroupQueryWithQuotaByConditionEndpoint: MakeGroupQueryWithQuotaByConditionEndpoint(service.GetGroupService()),
 		GroupUpdateEndpoint: MakeGroupUpdateEndpoint(service.GetGroupService()),
 		QuotaUpdateEndpoint: MakeQuotaUpdateEndpoint(service.GetGroupService()),
+		GroupTreeQueryEndpoint: MakeGroupTreeQueryEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -112,4 +114,26 @@ func (g *GroupServiceEndpoint) QuotaUpdateSvc(ctx context.Context, data *pb_user
 		return nil, err
 	}
 	return resp.(*pb_user_v1.GroupResponse), nil
+}
+
+// MakeGroupTreeQueryEndpoint ...
+func MakeGroupTreeQueryEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.GroupID)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = groupServiceInterface.GroupTreeQuerySvc(ctx, data)
+		return
+	}
+}
+
+// GroupTreeQuerySvc ...
+func (g *GroupServiceEndpoint) GroupTreeQuerySvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupTreeResponse, error) {
+
+	resp , err := g.GroupTreeQueryEndpoint(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupTreeResponse), nil
 }
