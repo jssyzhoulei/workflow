@@ -2,10 +2,18 @@ package parser
 
 import (
 	"context"
-	"errors"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 )
+
+func DecodeRoleMenuPermissionProto(ctx context.Context, req interface{}) (interface{}, error) {
+	r := req.(*pb_user_v1.RoleMenuPermissionProto)
+	return models.RoleMenuPermission{
+		RoleID:       int(r.RoleId),
+		MenuID:       int(r.MenuId),
+		PermissionID: int(r.PermissionId),
+	}, nil
+}
 
 func EncodeRoleMenuPermission(ctx context.Context, req interface{}) (interface{}, error) {
 	r := req.(models.RoleMenuPermission)
@@ -14,6 +22,16 @@ func EncodeRoleMenuPermission(ctx context.Context, req interface{}) (interface{}
 		MenuId:       int64(r.MenuID),
 		PermissionId: int64(r.PermissionID),
 	}, nil
+}
+
+func buildRoleMenuPermission(r *[]*pb_user_v1.RoleMenuPermissionProto, ctx context.Context) *[]*models.RoleMenuPermission {
+	var resp []*models.RoleMenuPermission
+	for i := range *r {
+		decodeMP, _ := DecodeRoleMenuPermissionProto(ctx, (*r)[i])
+		rmp := decodeMP.(models.RoleMenuPermission)
+		resp = append(resp, &rmp)
+	}
+	return &resp
 }
 
 func buildRoleMenuPermissionProto(r *[]*models.RoleMenuPermission, ctx context.Context) *[]*pb_user_v1.RoleMenuPermissionProto {
@@ -27,15 +45,27 @@ func buildRoleMenuPermissionProto(r *[]*models.RoleMenuPermission, ctx context.C
 	return &resp
 }
 
-func EncodeCreateMenuPermRequestModel(ctx context.Context, req interface{}) (interface{}, error) {
-	if role, ok := req.(models.CreateMenuPermRequest); ok {
-		return &pb_user_v1.CreateMenuPermRequestProto{
-			Name:                role.Name,
-			Remark:              role.Remark,
-			DataPermit:          int32(role.DataPermit),
-			Status:              int32(role.Status),
-			RoleMenuPermissions: *buildRoleMenuPermissionProto(&(role.MenuPerms), ctx),
-		}, nil
+func DecodeCreateMenuPermRequestProto(ctx context.Context, req interface{}) (interface{}, error) {
+	r := req.(*pb_user_v1.CreateMenuPermRequestProto)
+	mpr := models.CreateMenuPermRequest{
+		Role: models.Role{
+			Name:       r.Name,
+			DataPermit: int(r.DataPermit),
+			Status:     int(r.Status),
+		},
+		MenuPerms: *buildRoleMenuPermission(&r.RoleMenuPermissions, ctx),
 	}
-	return nil, errors.New("error type")
+	mpr.Remark = r.Remark
+	return &mpr, nil
+}
+
+func EncodeCreateMenuPermRequest(ctx context.Context, req interface{}) (interface{}, error) {
+	r := req.(*models.CreateMenuPermRequest)
+	return &pb_user_v1.CreateMenuPermRequestProto{
+		Name:                r.Name,
+		DataPermit:          int32(r.DataPermit),
+		Status:              int32(r.Status),
+		Remark:              r.Remark,
+		RoleMenuPermissions: *buildRoleMenuPermissionProto(&r.MenuPerms, ctx),
+	}, nil
 }

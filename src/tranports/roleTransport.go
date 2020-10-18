@@ -20,11 +20,13 @@ func NewRoleGrpcTransport(endpoint *endpoints.RoleServiceEndpoint) *roleGrpcTran
 		addRoleServer    = transport.NewServer(endpoint.AddRoleEndpoint, parser.DecodeCreateMenuPermRequestProto, parser.EncodeNullProto)
 		updateRoleServer = transport.NewServer(endpoint.UpdateRoleEndpoint, parser.DecodeCreateMenuPermRequestProto, parser.EncodeNullProto)
 		deleteRoleServer = transport.NewServer(endpoint.DeleteRoleEndpoint, parser.DecodeIndexProto, parser.EncodeNullProto)
+		queryRoleServer = transport.NewServer(endpoint.QueryRoleEndpoint, parser.DecodeIndexProto, parser.EncodeCreateMenuPermRequest)
 	)
 	return &roleGrpcTransport{
 		addRole:    addRoleServer,
 		updateRole: updateRoleServer,
 		deleteRole: deleteRoleServer,
+		queryRole: queryRoleServer,
 	}
 }
 

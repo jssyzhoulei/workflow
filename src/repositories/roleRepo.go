@@ -55,10 +55,7 @@ func (u *roleRepo) ListRoleRepo(page, perPage, userId int) (*[]models.Role, erro
 }
 
 func buildCreateMenuPermRequest(r *[]models.MenuPermResponse) *models.CreateMenuPermRequest {
-	var (
-		MPermMap = make(map[int]*models.CreateMenuPermRequest)
-		resp     models.CreateMenuPermRequest
-	)
+	var resp models.CreateMenuPermRequest
 	for i := range *r {
 		ele := (*r)[i]
 		var rmp models.RoleMenuPermission
@@ -71,7 +68,6 @@ func buildCreateMenuPermRequest(r *[]models.MenuPermResponse) *models.CreateMenu
 		} else {
 			menuPerms := []*models.RoleMenuPermission{&rmp}
 			resp = models.CreateMenuPermRequest{Role: ele.Role, MenuPerms: menuPerms}
-			MPermMap[ele.ID] = &resp
 		}
 	}
 	return &resp
@@ -82,7 +78,7 @@ func (u *roleRepo) RoleDetailRepo(roleId, userId int) (*models.CreateMenuPermReq
 	err := u.DB.Model(models.Role{}).
 		Select("role.*, role_menu_permission.menu_id, role_menu_permission.role_id, role_menu_permission.permission_id").
 		Joins("left join role_menu_permission on role_menu_permission.role_id = role.id").
-		Where("role_menu_permission.delete_at is null and role.id = ?", roleId).
+		Where("role_menu_permission.deleted_at is null and role.id = ?", roleId).
 		Scan(&roles).Error
 	if err != nil {
 		return nil, err
