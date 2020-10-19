@@ -52,6 +52,11 @@ type ImportUserRequest struct {
 	IsCover int32 `json:"is_cover"`
 }
 
+type UserRolesDTO struct {
+	User
+	RoleIDs []int `json:"role_ids"`
+}
+
 func (u User) EncodePwd(key string) (string, error) {
 	if u.Password != "" {
 		return md5.EncodeMD5(fmt.Sprintf("%s%s%s", key, md5.EncodeMD5(u.Password), key)), nil

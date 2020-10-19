@@ -14,19 +14,26 @@ func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 	if !ok {
 		return models.User{}, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
 	}
-	user := models.User{
-		UserName: r.UserName,
+	userRoleDTO := models.UserRolesDTO{
+		User: models.User{UserName: r.UserName,
 		LoginName: r.LoginName,
 		Password: r.Password,
 		Mobile: int(r.Mobile),
 		GroupID: int(r.GroupId),
 		UserType: int(r.UserType),
-		Status: int(r.Ststus),
+		Status: int(r.Ststus),},
 	}
 	if r.Id != nil {
-		user.ID = int(r.Id.Id)
+		userRoleDTO.ID = int(r.Id.Id)
 	}
-	return user, nil
+	if r.RoleIds != nil {
+		for _, roleId := range r.RoleIds {
+			if roleId != nil {
+				userRoleDTO.RoleIDs = append(userRoleDTO.RoleIDs, int(roleId.Id))
+			}
+		}
+	}
+	return userRoleDTO, nil
 }
 
 func EncodeUserProto(ctx context.Context, req interface{}) (interface{}, error) {

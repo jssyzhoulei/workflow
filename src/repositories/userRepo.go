@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"errors"
+	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gorm.io/gorm"
@@ -10,7 +11,7 @@ import (
 
 // UserRepoI ...
 type UserRepoInterface interface {
-	AddUserRepo(user models.User) error
+	AddUserRepo(user models.User, tx *gorm.DB) (int, error)
 	GetUserByIDRepo(id int) (user models.User, err error)
 	UpdateUserByIDRepo(user models.User, tx *gorm.DB) error
 	DeleteUserByIDRepo(id int) error
@@ -40,12 +41,32 @@ func NewUserRepo(db *yorm.DB) UserRepoInterface {
 }
 
 // AddUserRepo 添加用户
-func (u *userRepo) AddUserRepo(user models.User) error {
-	userRecord, err := u.GetUserByName(user.LoginName)
-	if err != nil && userRecord.ID == 0 {
-		return u.Create(&user).Error
+func (u *userRepo) AddUserRepo(user models.User, tx *gorm.DB) (int, error) {
+	//userRecord, err := u.GetUserByName(user.LoginName)
+	//if err != nil && userRecord.ID == 0 {
+	//	return u.Create(&user).Error
+	//}
+	//return errors.New("user is exist")
+	var db *gorm.DB
+	if tx == nil {
+		db = u.DB
+	} else {
+		db = tx
 	}
-	return errors.New("user is exist")
+
+	userRecord, err := u.GetUserByName(user.LoginName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = db.Create(&user).Error
+			if err != nil {
+				fmt.Println("create user error: ", err.Error())
+			}
+		} else {
+			fmt.Println(err.Error(), "=================")
+		}
+	}
+	fmt.Println("run  ---->")
+	return userRecord.ID, err
 }
 
 // GetUserByIDRepo 通过ID获取用户详情
@@ -148,11 +169,11 @@ func (u *userRepo) BatchDeleteUsersRepo(ids []int64) error {
 // GetUserByName 根据用户名获取用户
 func (u *userRepo) GetUserByName(name string)(models.User, error) {
 	var(
-		user models.User
+		user = new(models.User)
 		err error
 	)
 	err = u.Where("login_name=?", name).First(&user).Error
-	return user, err
+	return *user, err
 }
 
 func (u *userRepo) GetUsersByLoginNames(loginNames []string) ([]models.User, error) {

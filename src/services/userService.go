@@ -12,7 +12,7 @@ import (
 
 // UserServiceI 用户服务接口
 type UserServiceInterface interface {
-	AddUserSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error)
+	AddUserSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error)
 	GetUserByIDSvc(ctx context.Context, id int) (models.User, error)
 	UpdateUserByIDSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error)
 	DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
@@ -38,11 +38,41 @@ func NewUserService(repos repositories.RepoI, c *config.Config) UserServiceInter
 }
 
 // AddUserSvc 添加用户
-func (u *userService) AddUserSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error) {
-	var err error
-	key, _ := u.config.GetString("passwordKey")
-	user.Password,_ = user.EncodePwd(key)
-	err = u.userRepo.AddUserRepo(user)
+func (u *userService) AddUserSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error) {
+	var (
+		userRoles    []models.UserRole
+	)
+
+	tx := u.userRepo.GetTx()
+	id, err := u.userRepo.AddUserRepo(userRolesDTO.User, tx)
+	if err != nil {
+		tx.Rollback()
+	}
+	for _, roleId := range userRolesDTO.RoleIDs {
+		userRoles = append(userRoles, models.UserRole{
+			UserID: id,
+			RoleID: int(roleId),
+		})
+	}
+
+	err = u.userRepo.AddUserRolesRepo(userRoles, tx)
+	if err != nil {
+		fmt.Println(err.Error(), ">----------------")
+		tx.Rollback()
+	}
+	tx.Commit()
+
+
+
+
+	//var err error
+	//var userRole models.UserRole
+	//key, _ := u.config.GetString("passwordKey")
+	//user.Password,_ = user.EncodePwd(key)
+	//id, err = u.userRepo.AddUserRepo(user)
+	//
+	//userRole.UserID = user.ID
+	//err = u.userRepo.AddUserRoleRepo(userRole)
 	return pb_user_v1.NullResponse{}, err
 }
 

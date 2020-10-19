@@ -53,11 +53,11 @@ var (
 // MakeAddUserEndpoint 创建添加用户端点，把服务包装成 Endpoint，传入 user 接口
 func MakeAddUserEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		user, ok := request.(models.User)
+		userRoleDTO, ok := request.(models.UserRolesDTO)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		response, err = userService.AddUserSvc(ctx, user)
+		response, err = userService.AddUserSvc(ctx, userRoleDTO)
 		return
 	}
 }
@@ -125,8 +125,8 @@ func MakeBatchDeleteUsersEndpoint(userService services.UserServiceInterface) end
 }
 
 // AddUserSvc ...
-func (u *UserServiceEndpoint) AddUserSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error) {
-	resp, err := u.AddUserEndpoint(ctx, user)
+func (u *UserServiceEndpoint) AddUserSvc(ctx context.Context, userProto models.UserRolesDTO) (pb_user_v1.NullResponse, error) {
+	resp, err := u.AddUserEndpoint(ctx, userProto)
 	if err != nil {
 		return pb_user_v1.NullResponse{}, err
 	}

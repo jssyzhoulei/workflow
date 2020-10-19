@@ -37,15 +37,15 @@ func NewUserApi(userService services.UserServiceInterface) userApiInterface {
 // AddUserApi 添加用户API
 func (u *userApi) AddUserApi(ctx *gin.Context) {
 	var (
-		user models.User
+		userRoleDTO models.UserRolesDTO
 	)
-	err := ctx.BindJSON(&user)
+	err := ctx.BindJSON(&userRoleDTO)
 	if err != nil {
 		log.Logger().Error(fmt.Sprintf("add user request param error : %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
-	_, err = u.userService.AddUserSvc(context.Background(), user)
+	_, err = u.userService.AddUserSvc(context.Background(), userRoleDTO)
 	if err != nil {
 		log.Logger().Error("add user error: " + err.Error())
 		error_(ctx, 201, err)

@@ -9,23 +9,27 @@ import (
 	"reflect"
 )
 
-func EncodeUserModel(ctx context.Context, req interface{}) (interface{}, error) {
-	user, ok := req.(models.User)
+func EncodeUserRoleDTO(ctx context.Context, req interface{}) (interface{}, error) {
+	r, ok := req.(models.UserRolesDTO)
 	if !ok {
-		return nil, errors.New("error type")
+		return models.User{}, fmt.Errorf(clientEncodeErr, reflect.TypeOf(req))
 	}
-	return &pb_user_v1.UserProto{
-		Id:     &pb_user_v1.Index{
-			Id:    int64(user.ID),
-		},
-		UserName:  user.UserName,
-		LoginName: user.LoginName,
-		Password:  user.Password,
-		Mobile:    int64(user.Mobile),
-		GroupId:   int64(user.GroupID),
-		UserType:  int64(user.UserType),
-		Ststus:    int64(user.Status),
-	}, nil
+	userProto := &pb_user_v1.UserProto{
+		UserName: r.UserName,
+		LoginName: r.LoginName,
+		Password: r.Password,
+		Mobile: int64(r.Mobile),
+		GroupId: int64(r.GroupID),
+		UserType: int64(r.UserType),
+		Ststus: int64(r.Status),
+	}
+	for _, v := range r.RoleIDs {
+		userProto.RoleIds = append(userProto.RoleIds, &pb_user_v1.Index{Id:int64(v)})
+	}
+	if r.ID != 0 {
+		userProto.Id = &pb_user_v1.Index{Id: int64(r.ID)}
+	}
+	return userProto, nil
 }
 
 func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) {
