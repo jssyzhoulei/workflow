@@ -83,7 +83,7 @@ func (u *userRepo) DeleteUserByIDRepo(id int) error {
 
 
 // GetUserListRepo 获取用户列表
-func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB) ([]models.User, error){
+func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB, groupIds ...int64) ([]models.User, error){
 	var(
 		users []models.User
 	)
@@ -106,7 +106,9 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm
 		db = db.Where("id=?", user.ID)
 	}
 	if user.GroupID != 0 {
-		db = db.Where("group_id=?", user.GroupID)
+		db = db.Where("group_id = ?", user.GroupID)
+	}else if len(groupIds) > 0 {
+		db = db.Where("group_id in ?", groupIds)
 	}
 	if page != nil {
 		db.DB()
