@@ -15,6 +15,9 @@ func EncodeUserModel(ctx context.Context, req interface{}) (interface{}, error) 
 		return nil, errors.New("error type")
 	}
 	return &pb_user_v1.UserProto{
+		Id:     &pb_user_v1.Index{
+			Id:    int64(user.ID),
+		},
 		UserName:  user.UserName,
 		LoginName: user.LoginName,
 		Password:  user.Password,

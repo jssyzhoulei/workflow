@@ -15,7 +15,7 @@ import (
 var (
 	once sync.Once
 	engine *gin.Engine
-	etcdHosts = flag.String("eh", "127.0.0.1:2379", "")
+	etcdHosts = flag.String("eh", "172.18.97.18:2379", "")
 )
 
 // GinLogger 接收gin框架默认的日志

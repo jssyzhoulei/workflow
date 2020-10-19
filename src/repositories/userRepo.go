@@ -37,7 +37,7 @@ func NewUserRepo(db *yorm.DB) UserRepoInterface {
 
 // AddUserRepo 添加用户
 func (u *userRepo) AddUserRepo(user models.User) error {
-	userRecord, err := u.GetUserByName(user.UserName)
+	userRecord, err := u.GetUserByName(user.LoginName)
 	if err != nil && userRecord.ID == 0 {
 		return u.Create(&user).Error
 	}
@@ -52,11 +52,7 @@ func (u *userRepo) GetUserByIDRepo(id int) (user models.User, err error) {
 
 // UpdateUserByIDRepo 根据ID编辑用户
 func (u *userRepo) UpdateUserByIDRepo(user models.User) error {
-	userRecord, err := u.GetUserByName(user.UserName)
-	if err != nil || userRecord.ID == user.ID {
-		return u.Model(&user).Updates(user).Error
-	}
-	return errors.New("user is exist")
+	return u.Model(&user).Where("id=?", user.ID).Updates(user).Error
 }
 
 // DeleteUserByIDRepo 根据ID删除用户
@@ -133,6 +129,6 @@ func (u *userRepo) GetUserByName(name string)(models.User, error) {
 		user models.User
 		err error
 	)
-	err = u.Where("user_name=?", name).First(&user).Error
+	err = u.Where("login_name=?", name).First(&user).Error
 	return user, err
 }

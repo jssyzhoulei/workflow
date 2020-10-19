@@ -8,7 +8,6 @@ import (
 	"gitee.com/grandeep/org-svc/src/services"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"strconv"
 )
 
@@ -76,19 +75,20 @@ func (u *userApi) UpdateUserByIDApi(ctx *gin.Context) {
 
 	var data = new(models.User)
 
-	err := ctx.BindJSON(data)
+	err := ctx.BindJSON(&data)
+	//fmt.Printf("%+v",*data)
 	if err != nil {
 		log.Logger().Error(fmt.Sprintf("update user request param error : %s", err.Error()))
-		response(ctx, http.StatusBadRequest, "param error", nil, false)
+		error_(ctx, 201, err)
 		return
 	}
 	_, err = u.userService.UpdateUserByIDSvc(context.Background(), *data)
 	if err != nil {
 		log.Logger().Error("update user error: " + err.Error())
-		response(ctx, http.StatusBadRequest, "server error", nil, false)
+		error_(ctx, 201, err)
 		return
 	}
-	response(ctx, http.StatusOK, "success", nil, false)
+	success_(ctx, nil)
 	return
 }
 

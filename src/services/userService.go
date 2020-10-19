@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
@@ -49,6 +50,7 @@ func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (models.User, 
 
 // UpdateUserByIDSvc 根据ID编辑用户
 func (u *userService) UpdateUserByIDSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error) {
+	fmt.Printf("%+v",user)
 	err := u.userRepo.UpdateUserByIDRepo(user)
 	return pb_user_v1.NullResponse{}, err
 }

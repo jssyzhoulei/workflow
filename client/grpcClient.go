@@ -32,7 +32,7 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			"pb_user_v1.RpcOrgService",
 			"RpcUpdateUserByID",
 			parser.EncodeUserModel,
-			parser.DecodeUserModel,
+			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
 			).Endpoint(),
 		DeleteUserByIDEndpoint: grpctransport.NewClient(

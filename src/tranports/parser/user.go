@@ -9,11 +9,12 @@ import (
 )
 
 func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) {
-	r := req.(*pb_user_v1.UserProto)
+
+	r, ok := req.(*pb_user_v1.UserProto)
+	if !ok {
+		return models.User{}, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
+	}
 	user := models.User{
-		//BaseModel: models.BaseModel{
-		//	ID:            int(r.Id.Id),
-		//},
 		UserName: r.UserName,
 		LoginName: r.LoginName,
 		Password: r.Password,
@@ -21,6 +22,9 @@ func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 		GroupID: int(r.GroupId),
 		UserType: int(r.UserType),
 		Status: int(r.Ststus),
+	}
+	if r.Id != nil {
+		user.ID = int(r.Id.Id)
 	}
 	return user, nil
 }
