@@ -94,7 +94,7 @@ func (r *roleApi) QueryRoleApi(c *gin.Context) {
 	}
 	resp, err := r.roleService.QueryRoleSvc(context.Background(), id)
 	if err != nil {
-		log.Logger().Error("delete role error: " + err.Error())
+		log.Logger().Error("query role error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
