@@ -19,6 +19,7 @@ type UserServiceEndpoint struct {
 	DeleteUserByIDEndpoint endpoint.Endpoint
 	GetUserListEndpoint endpoint.Endpoint
 	BatchDeleteUsersEndpoint endpoint.Endpoint
+	AddUsersEndpoint endpoint.Endpoint
 }
 
 // NewUserEndpoint UserServiceEndpoint 的构造函数
@@ -30,7 +31,19 @@ func NewUserEndpoint(service services.ServiceI) *UserServiceEndpoint {
 	userServiceEndpoint.DeleteUserByIDEndpoint = MakeDeleteUserByIDEndpoint(service.GetUserService())
 	userServiceEndpoint.GetUserListEndpoint = MakeGetUserListEndpoint(service.GetUserService())
 	userServiceEndpoint.BatchDeleteUsersEndpoint = MakeBatchDeleteUsersEndpoint(service.GetUserService())
+	userServiceEndpoint.AddUsersEndpoint = MakeAddUsersEndpoint(service.GetUserService())
 	return userServiceEndpoint
+}
+
+func MakeAddUsersEndpoint(service services.UserServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		addUserReq, ok := request.(*pb_user_v1.AddUsersRequest)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = service.AddUsersSvc(ctx, addUserReq)
+		return
+	}
 }
 
 var (
@@ -158,6 +171,13 @@ func (u *UserServiceEndpoint) GetUserListSvc(ctx context.Context, user *pb_user_
 // BatchDeleteUsersSvc ...
 func (u *UserServiceEndpoint) BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error) {
 	resp, err := u.BatchDeleteUsersEndpoint(ctx, ids)
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
+	}
+	return resp.(pb_user_v1.NullResponse), nil
+}
+func (u *UserServiceEndpoint) AddUsersSvc(ctx context.Context, users *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error) {
+	resp, err := u.AddUsersEndpoint(ctx, users)
 	if err != nil {
 		return pb_user_v1.NullResponse{}, err
 	}

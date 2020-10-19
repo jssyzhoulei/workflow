@@ -69,6 +69,7 @@ func (o *OrgServiceClient) GetUserService() services.UserServiceInterface {
 	endpoints.GetUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeGetUserByIDEndpoint, userGrpcConn)
 	endpoints.UpdateUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeUpdataUserByIDEndpoint, userGrpcConn)
 	endpoints.DeleteUserByIDEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeDeleteUserByIDEndpoint, userGrpcConn)
+	endpoints.AddUsersEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeAddUsersEndpoint, userGrpcConn)
 	endpoints.GetUserListEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeGetUserListEndpoint, userGrpcConn)
 	endpoints.BatchDeleteUsersEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeBatchDeleteUsersEndpoint, userGrpcConn)
 	return endpoints
@@ -99,6 +100,7 @@ func (o *OrgServiceClient) GetRoleService() services.RoleServiceI {
 	endpoints.UpdateRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeUpdateRoleEndpoint, RoleGrpcConn)
 	endpoints.DeleteRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeDeleteRoleEndpoint, RoleGrpcConn)
 	endpoints.QueryRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeQueryRoleEndpoint, RoleGrpcConn)
+	endpoints.QueryRolesEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeQueryRolesEndpoint, RoleGrpcConn)
 	return endpoints
 }
 
@@ -131,6 +133,7 @@ func (o *OrgServiceClient) GetGroupService() services.GroupServiceInterface {
 		GroupUpdateEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupUpdateEndpoint, groupGrpcConn),
 		QuotaUpdateEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeQuotaUpdateEndpoint, groupGrpcConn),
 		GroupTreeQueryEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupTreeQueryEndpoint, groupGrpcConn),
+		GroupDeleteEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupDeleteEndpoint, groupGrpcConn),
 	}
 }
 

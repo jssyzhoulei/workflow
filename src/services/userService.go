@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
@@ -15,6 +16,7 @@ type UserServiceInterface interface {
 	GetUserByIDSvc(ctx context.Context, id int) (models.User, error)
 	UpdateUserByIDSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error)
 	DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
+	AddUsersSvc(ctx context.Context, users *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error)
 	GetUserListSvc(ctx context.Context, user *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error)
 	BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error)
 }
@@ -23,6 +25,7 @@ type UserServiceInterface interface {
 type userService struct {
 	userRepo repositories.UserRepoInterface
 	config   *config.Config
+	roleRepo repositories.RoleRepoI
 }
 
 // NewUserService UserService 构造函数
@@ -30,6 +33,7 @@ func NewUserService(repos repositories.RepoI, c *config.Config) UserServiceInter
 	return &userService{
 		userRepo: repos.GetUserRepo(),
 		config: c,
+		roleRepo: repos.GetRoleRepo(),
 	}
 }
 
@@ -46,7 +50,7 @@ func (u *userService) AddUserSvc(ctx context.Context, user models.User) (pb_user
 func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (models.User, error) {
 	var (
 		user models.User
-		err error
+		err  error
 	)
 	user, err = u.userRepo.GetUserByIDRepo(id)
 	return user, err
@@ -54,8 +58,7 @@ func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (models.User, 
 
 // UpdateUserByIDSvc 根据ID编辑用户
 func (u *userService) UpdateUserByIDSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error) {
-	fmt.Printf("%+v",user)
-	err := u.userRepo.UpdateUserByIDRepo(user)
+	err := u.userRepo.UpdateUserByIDRepo(user, nil)
 	return pb_user_v1.NullResponse{}, err
 }
 
@@ -69,6 +72,7 @@ func (u *userService) DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1
 }
 
 // GetUserListSvc 获取用户列表
+
 func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error){
 	var (
 		page models.Page
@@ -99,10 +103,148 @@ func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.U
 }
 
 // BatchDeleteUsersRepo ...
-func (u *userService) BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error){
+func (u *userService) BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error) {
 	var (
 		err error
 	)
 	err = u.userRepo.BatchDeleteUsersRepo(ids)
 	return pb_user_v1.NullResponse{}, err
+}
+
+// AddUsersSvc ...
+func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error) {
+	//查找所有用户，如果用户是别的用户组下将不进行操作返回那个用户重复
+	//如果是覆盖写将对已经存在的用户修改
+	//如果是追加则只新增对应的用户
+	//覆盖写将对用户角色进行逻辑删除后在插入新的角色
+	var (
+		names        []string
+		users        []models.User
+		userIsExist  []models.User
+		userIdsIsExist []int
+		userNotExist []models.User
+		roleIds      []int64
+		userRoles    []models.UserRole
+	)
+	if usersReq.Users != nil {
+		for _, user := range usersReq.Users {
+			names = append(names, user.LoginName)
+		}
+	}
+	if len(names) == 0 {
+		return pb_user_v1.NullResponse{}, errors.New("无用户可导入")
+	}
+	users, _ = u.userRepo.GetUsersByLoginNames(names)
+	//找出已存在的用户
+	if usersReq.Users != nil {
+		for _, userReq := range usersReq.Users {
+			var (
+				isExist bool
+				id      int
+			)
+			for _, user := range users {
+				if user.GroupID == int(userReq.GroupId) && user.LoginName == userReq.LoginName {
+					isExist = true
+					id = user.ID
+					break
+				}
+			}
+			if isExist {
+				fmt.Println(id)
+				userIsExist = append(userIsExist, models.User{
+					BaseModel: models.BaseModel{
+						ID: id,
+					},
+					UserName:  userReq.UserName,
+					LoginName: userReq.LoginName,
+					Password:  userReq.Password,
+					GroupID:   int(userReq.GroupId),
+					Mobile:    int(userReq.Mobile),
+				})
+				userIdsIsExist = append(userIdsIsExist, id)
+			} else {
+				userNotExist = append(userNotExist, models.User{
+					UserName:  userReq.UserName,
+					LoginName: userReq.LoginName,
+					Password:  userReq.Password,
+					GroupID:   int(userReq.GroupId),
+					Mobile:    int(userReq.Mobile),
+				})
+			}
+			if roleIds == nil {
+				if userReq.RoleIds != nil {
+					for _, index := range userReq.RoleIds {
+						if index != nil {
+							roleIds = append(roleIds, index.Id)
+						}
+					}
+				}
+
+			}
+		}
+
+	}
+	//将未存在的用户插入
+	tx := u.userRepo.GetTx()
+	tx.Begin()
+	ids, err := u.userRepo.AddUsersRepo(userNotExist, tx)
+
+	if err != nil {
+		tx.Rollback()
+	}
+	for _, id := range ids {
+		for _, roleId := range roleIds {
+			userRoles = append(userRoles, models.UserRole{
+				UserID: id,
+				RoleID: int(roleId),
+			})
+		}
+	}
+	err = u.userRepo.AddUserRolesRepo(userRoles, tx)
+	if err != nil {
+		tx.Rollback()
+	} else {
+		tx.Commit()
+	}
+
+	userRoles = nil
+	//如果覆盖写入对已存在用户修改
+	tx = u.userRepo.GetTx()
+	tx.Begin()
+	if usersReq.IsCover == 1 {
+		for _, user := range userIsExist {
+			err = u.userRepo.UpdateUserByIDRepo(user, tx)
+			if err != nil {
+				tx.Rollback()
+				break
+			}
+		}
+
+		//对原有角色删除插入新的
+		if err == nil {
+			err = u.userRepo.DeleteUserRolesByUserId(userIdsIsExist, tx)
+			if err != nil {
+				tx.Rollback()
+			}
+			if err == nil {
+				for _, id := range userIdsIsExist {
+					for _, roleId := range roleIds {
+						userRoles = append(userRoles, models.UserRole{
+							UserID:    id,
+							RoleID:    int(roleId),
+						})
+					}
+				}
+				err = u.userRepo.AddUserRolesRepo(userRoles, tx)
+				if err != nil {
+					tx.Rollback()
+				}
+			}
+		}
+	}
+	if err == nil {
+		tx.Commit()
+	}
+
+	return pb_user_v1.NullResponse{}, nil
 }

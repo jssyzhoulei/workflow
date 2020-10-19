@@ -1,12 +1,14 @@
 //protoc --go_out=plugins=grpc:.
 syntax = "proto3";
 package pb_user_v1;
+import "base.proto";
 
 message RoleProto {
   string name = 1;
   string remark = 2;
   int32 data_permit = 3;
   int32 status = 4;
+  int64 id = 5;
 }
 
 message RoleMenuPermissionProto {
@@ -21,4 +23,10 @@ message CreateMenuPermRequestProto {
   int32 data_permit = 3;
   int32 status = 4;
   repeated RoleMenuPermissionProto role_menu_permissions = 5;
+}
+
+message RolePageRequestProto {
+  string name = 1;
+  Page page = 2;
+  repeated RoleProto roles = 3;
 }

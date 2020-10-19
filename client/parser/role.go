@@ -69,3 +69,13 @@ func EncodeCreateMenuPermRequest(ctx context.Context, req interface{}) (interfac
 		RoleMenuPermissions: *buildRoleMenuPermissionProto(&r.MenuPerms, ctx),
 	}, nil
 }
+
+func DecodeRolePageProto(ctx context.Context, req interface{}) (interface{}, error) {
+	r := req.(*pb_user_v1.RolePageRequestProto)
+	return r, nil
+}
+
+func EncodeRolePageProto(ctx context.Context, req interface{}) (interface{}, error) {
+	r := req.(*pb_user_v1.RolePageRequestProto)
+	return r, nil
+}

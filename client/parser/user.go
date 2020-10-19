@@ -45,6 +45,13 @@ func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) 
 	}, nil
 }
 
+func EncodeAddUsersRequest(ctx context.Context, req interface{}) (interface{}, error) {
+	if users, ok := req.(*pb_user_v1.AddUsersRequest); ok {
+		return users, nil
+	}
+	return nil, fmt.Errorf(clientEncodeErr, reflect.TypeOf(req))
+}
+
 func DecodeUsers(_ context.Context, i interface{}) (interface{}, error) {
 	if users, ok := i.(*pb_user_v1.Users); ok {
 		return users, nil

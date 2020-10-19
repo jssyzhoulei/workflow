@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
+	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ type RoleApiInterface interface {
 	UpdateRoleApi(ctx *gin.Context)
 	DeleteRoleApi(ctx *gin.Context)
 	QueryRoleApi(ctx *gin.Context)
+	QueryRolesApi(ctx *gin.Context)
 }
 
 type roleApi struct {
@@ -95,6 +97,26 @@ func (r *roleApi) QueryRoleApi(c *gin.Context) {
 	resp, err := r.roleService.QueryRoleSvc(context.Background(), id)
 	if err != nil {
 		log.Logger().Error("query role error: " + err.Error())
+		response(c, http.StatusBadRequest, "server error", nil, false)
+		return
+	}
+	response(c, http.StatusOK, "success", resp, false)
+}
+
+func (r *roleApi) QueryRolesApi(c *gin.Context) {
+
+	var data = new(pb_user_v1.RolePageRequestProto)
+
+	err := c.BindJSON(data)
+	if err != nil {
+		log.Logger().Warn(fmt.Sprintf("query roles request param error : %s", err.Error()))
+		response(c, http.StatusBadRequest, "param error", nil, false)
+		return
+	}
+	resp, err := r.roleService.QueryRolesSvc(context.Background(), data)
+	fmt.Printf("%+v", *data)
+	if err != nil {
+		log.Logger().Error("query roles error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}

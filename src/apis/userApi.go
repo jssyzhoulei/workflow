@@ -2,13 +2,16 @@ package apis
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"gitee.com/grandeep/org-svc/src/apis/code"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
 	"strconv"
+	"github.com/tealeg/xlsx"
 )
 
 type userApiInterface interface {
@@ -158,6 +161,62 @@ func (u *userApi) BatchDeleteUsersApi(ctx *gin.Context) {
 
 //导入用户
 func (u *userApi) ImportUser(ctx *gin.Context) {
-
+	var (
+		importUserRequest models.ImportUserRequest
+		content []byte
+		file *xlsx.File
+		users = &pb_user_v1.AddUsersRequest{}
+	)
+	err := ctx.BindJSON(&importUserRequest)
+	if err != nil {
+		error_(ctx, code.PARAMS_ERROR)
+		return
+	}
+	content, err = base64.StdEncoding.DecodeString(importUserRequest.Content)
+	if err != nil {
+		error_(ctx, code.PARAMS_ERROR)
+		return
+	}
+	file, err = xlsx.OpenBinary(content)
+	if err != nil {
+		error_(ctx, code.PARAMS_ERROR)
+		return
+	}
+	for _, sheet := range file.Sheets {
+		//验证模板是否正确
+		for k, row := range sheet.Rows {
+			if k == 0 {
+				if len(row.Cells) >= 4 {
+					if row.Cells[0].Value != "*用户名" || row.Cells[1].Value != "*登录名" || row.Cells[2].Value != "*密码" || row.Cells[3].Value != "手机号" {
+						error_(ctx, code.XlsxError)
+						return
+					}
+				}
+				continue
+			}
+			if row.Cells[0].Value != "" && row.Cells[1].Value != "" && row.Cells[2].Value != "" {
+				var (
+					user pb_user_v1.UserProto
+				)
+				user.UserName = row.Cells[0].Value
+				user.Password = row.Cells[2].Value
+				user.LoginName = row.Cells[1].Value
+				user.Mobile,_ = strconv.ParseInt(row.Cells[1].Value, 10, 64)
+				user.GroupId  = importUserRequest.GroupID
+				for _, v := range importUserRequest.RoleID {
+					user.RoleIds = append(user.RoleIds, &pb_user_v1.Index{Id: v})
+				}
+				users.Users = append(users.Users, &user)
+			}
+		}
+	}
+	users.IsCover = importUserRequest.IsCover
+	_ , err = u.userService.AddUsersSvc(context.Background(), users)
+	fmt.Println(err)
+	if err != nil {
+		error_(ctx, code.SVC_ERROR)
+		return
+	}
+	success_(ctx, nil)
 }
 

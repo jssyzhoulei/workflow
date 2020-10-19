@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // GroupRepoInterface ...
@@ -23,6 +24,7 @@ type GroupRepoInterface interface {
 	GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB) error
 	QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB) error
 	GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB) ([]*models.Group, error)
+	GroupDeleteRepo(id int64, tx *gorm.DB) error
 }
 
 type groupRepo struct {
@@ -359,7 +361,13 @@ func (g *groupRepo) GroupDeleteRepo(id int64, tx *gorm.DB) error {
 		db = tx
 	}
 
-	err = db.Model(&models.Group{}).Where("id=?", id).Update("status", 1).Error
+	updateColumnMap := map[string]interface{} {
+		"status": 1,
+		"deleted_at": time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+
+	err = db.Model(&models.Group{}).Where("id=?", id).Updates(updateColumnMap).Error
 	if err != nil {
 		return err
 	}
