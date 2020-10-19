@@ -376,19 +376,21 @@ func (g *groupRepo) GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB
 	} else {
 		db = tx
 	}
-	if groupID == 0 {
-		return nil, err
+
+	// 查询组ID为0时,其level_path不需要处理,取消子查询
+	var subQueryLevelPath = "level_path"
+	if groupID != 0 {
+		subQueryLevelPath = fmt.Sprintf("substring(level_path,(select LENGTH(level_path) from `group` where id=%d and status = 0) + 1) as level_path", groupID)
 	}
 
-	sqlStr := `
+	sqlStr := fmt.Sprintf(`
 select id,name,parent_id,
-	-- 这里字符串截取path,截取起始位置为父级level_path长度+1 至末尾
-	substring(level_path,(select LENGTH(level_path) from ` + "`group`" + ` where id = ? and status = 0) + 1) as level_path
-from ` + "`group`" + ` where level_path like ? and status = 0 order by id;
+	%s
+from `, subQueryLevelPath) + "`group`" + ` where level_path like ? and status = 0 order by id;
 `
-	var lpStr = "%-"+strconv.Itoa(int(groupID)) + "-%"
+	var lpStr = "%"+strconv.Itoa(int(groupID)) + "-%"
 	var result = make([]*models.Group, 0)
-	err = db.Raw(sqlStr, groupID, lpStr).Find(&result).Error
+	err = db.Raw(sqlStr, lpStr).Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
