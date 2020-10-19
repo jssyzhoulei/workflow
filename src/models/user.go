@@ -37,8 +37,12 @@ func (u UserRole) TableName() string {
 	return "user_role"
 }
 
+//导入用户请求
 type ImportUserRequest struct {
-
+	RoleID []int64 `json:"role_id"`
+	GroupID int64 `json:"group_id"`
+	Content string `json:"content"`
+	IsCover int32 `json:"is_cover"`
 }
 
 // CREATE TABLE `user` (

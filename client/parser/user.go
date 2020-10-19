@@ -3,8 +3,10 @@ package parser
 import (
 	"context"
 	"errors"
+	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
+	"reflect"
 )
 
 func EncodeUserModel(ctx context.Context, req interface{}) (interface{}, error) {
@@ -36,4 +38,11 @@ func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) 
 		Password:  user.Password,
 		Mobile:    int(user.Mobile),
 	}, nil
+}
+
+func EncodeAddUsersRequest(ctx context.Context, req interface{}) (interface{}, error) {
+	if users, ok := req.(*pb_user_v1.AddUsersRequest); ok {
+		return users, nil
+	}
+	return nil, fmt.Errorf(clientEncodeErr, reflect.TypeOf(req))
 }

@@ -18,5 +18,10 @@ message UserProto {
 
 
 message Users {
-  repeated Users users = 1;
+  repeated UserProto users = 1;
+}
+
+message AddUsersRequest {
+  repeated UserProto users = 1;
+  int32 is_cover = 2;
 }

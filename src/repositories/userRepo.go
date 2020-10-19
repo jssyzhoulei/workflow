@@ -6,16 +6,21 @@ import (
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gorm.io/gorm"
 	"math"
+	"time"
 )
 
 // UserRepoI ...
 type UserRepoInterface interface {
 	AddUserRepo(user models.User) error
 	GetUserByIDRepo(id int) (user models.User, err error)
-	UpdateUserByIDRepo(user models.User) error
+	UpdateUserByIDRepo(user models.User, tx *gorm.DB) error
 	DeleteUserByIDRepo(id int) error
 	GetUserListRepo(user models.User, page *models.Page) ([]models.User, error)
 	GetTx() *gorm.DB
+	GetUsersByLoginNames([]string) ([]models.User, error)
+	AddUsersRepo(users []models.User, tx *gorm.DB) ([]int, error)
+	AddUserRolesRepo(roles []models.UserRole, tx *gorm.DB) error
+	DeleteUserRolesByUserId(ids []int, tx *gorm.DB) error
 }
 
 type userRepo struct {
@@ -33,7 +38,6 @@ func NewUserRepo(db *yorm.DB) UserRepoInterface {
 	}
 }
 
-
 // AddUserRepo 添加用户
 func (u *userRepo) AddUserRepo(user models.User) error {
 	userRecord, err := u.GetUserByName(user.UserName)
@@ -50,10 +54,16 @@ func (u *userRepo) GetUserByIDRepo(id int) (user models.User, err error) {
 }
 
 // UpdateUserByIDRepo 根据ID编辑用户
-func (u *userRepo) UpdateUserByIDRepo(user models.User) error {
+func (u *userRepo) UpdateUserByIDRepo(user models.User, tx *gorm.DB) error {
+	var (
+		db = u.DB
+	)
+	if tx != nil {
+		db = tx
+	}
 	userRecord, err := u.GetUserByName(user.UserName)
 	if err != nil || userRecord.ID == user.ID {
-		return u.Model(&user).Updates(user).Error
+		return db.Model(&user).Updates(user).Error
 	}
 	return errors.New("user is exist")
 }
@@ -69,6 +79,7 @@ func (u *userRepo) DeleteUserByIDRepo(id int) error {
 	}
 	return nil
 }
+
 
 // GetUserListRepo 获取用户列表
 func (u *userRepo) GetUserListRepo(user models.User, page *models.Page) ([]models.User, error){
@@ -120,4 +131,63 @@ func (u *userRepo) GetUserByName(name string)(models.User, error) {
 	)
 	err = u.Where("user_name=?", name).First(&user).Error
 	return user, err
+}
+
+func (u *userRepo) GetUsersByLoginNames(loginNames []string) ([]models.User, error) {
+	var (
+		users []models.User
+		err error
+	)
+	err = u.Table("user").Select("*").Where("login_name In ?", loginNames).Find(&users).Error
+	return users, err
+}
+
+func (u *userRepo) AddUsersRepo(users []models.User, tx *gorm.DB) ([]int, error) {
+	var (
+		db = u.DB
+		err error
+		ids []int
+	)
+	if tx != nil {
+		db = tx
+	}
+	if users != nil {
+		err = db.Create(&users).Error
+	}
+
+	if err == nil {
+		for _, user := range users {
+			ids = append(ids, user.ID)
+		}
+	}
+	return ids, err
+}
+
+func (u *userRepo) AddUserRolesRepo(roles []models.UserRole, tx *gorm.DB) error {
+	var (
+		db = u.DB
+		err error
+	)
+	if tx != nil {
+		db = tx
+	}
+	if roles != nil {
+		err = db.Create(&roles).Error
+	}
+	return err
+}
+
+func (u *userRepo) DeleteUserRolesByUserId(ids []int, tx *gorm.DB) error {
+	var (
+		db = u.DB
+	)
+	if tx != nil {
+		db = tx
+	}
+	t := time.Now()
+	return db.Table("user_role").Where("user_id IN ?", ids).Where("deleted_at is NULL").Updates(models.UserRole{
+		BaseModel: models.BaseModel{
+			DeletedAt: &t,
+		},
+	}).Error
 }

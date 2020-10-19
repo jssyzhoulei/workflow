@@ -17,6 +17,7 @@ type UserServiceEndpoint struct {
 	UpdateUserByIDEndpoint endpoint.Endpoint
 	DeleteUserByIDEndpoint endpoint.Endpoint
 	GetUserListEndpoint endpoint.Endpoint
+	AddUsersEndpoint endpoint.Endpoint
 }
 
 // NewUserEndpoint UserServiceEndpoint 的构造函数
@@ -27,7 +28,19 @@ func NewUserEndpoint(service services.ServiceI) *UserServiceEndpoint {
 	userServiceEndpoint.UpdateUserByIDEndpoint = MakeUpdataUserByIDEndpoint(service.GetUserService())
 	userServiceEndpoint.DeleteUserByIDEndpoint = MakeDeleteUserByIDEndpoint(service.GetUserService())
 	userServiceEndpoint.GetUserListEndpoint = MakeGetUserListEndpoint(service.GetUserService())
+	userServiceEndpoint.AddUsersEndpoint = MakeAddUsersEndpoint(service.GetUserService())
 	return userServiceEndpoint
+}
+
+func MakeAddUsersEndpoint(service services.UserServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		addUserReq, ok := request.(*pb_user_v1.AddUsersRequest)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = service.AddUsersSvc(ctx, addUserReq)
+		return
+	}
 }
 
 var (
@@ -93,6 +106,7 @@ func MakeGetUserListEndpoint(userService services.UserServiceInterface) endpoint
 		return
 	}
 }
+
 // AddUserSvc ...
 func (u *UserServiceEndpoint) AddUserSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error) {
 	resp, err := u.AddUserEndpoint(ctx, user)
@@ -101,7 +115,6 @@ func (u *UserServiceEndpoint) AddUserSvc(ctx context.Context, user models.User) 
 	}
 	return resp.(pb_user_v1.NullResponse), nil
 }
-
 // GetUserByIDSvc ...
 func (u *UserServiceEndpoint) GetUserByIDSvc(ctx context.Context, id int) (models.User, error) {
 	resp, err := u.GetUserByIDEndpoint(ctx, id)
@@ -136,4 +149,12 @@ func (u *UserServiceEndpoint) GetUserListSvc(ctx context.Context, user models.Us
 		return nil, err
 	}
 	return resp.([]models.User), nil
+}
+
+func (u *UserServiceEndpoint) AddUsersSvc(ctx context.Context, users *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error) {
+	resp, err := u.AddUsersEndpoint(ctx, users)
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
+	}
+	return resp.(pb_user_v1.NullResponse), nil
 }
