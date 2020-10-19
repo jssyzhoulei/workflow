@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
@@ -12,6 +13,7 @@ type RoleServiceI interface {
 	UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
 	DeleteRoleSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
 	QueryRoleSvc(ctx context.Context, id int) (*models.CreateMenuPermRequest, error)
+	QueryRolesSvc(ctx context.Context, page *pb_user_v1.RolePageRequestProto) (*pb_user_v1.RolePageRequestProto, error)
 }
 
 type roleService struct {
@@ -58,4 +60,10 @@ func (r *roleService) DeleteRoleSvc(ctx context.Context, id int) (pb_user_v1.Nul
 
 func (r *roleService) QueryRoleSvc(ctx context.Context, id int) (*models.CreateMenuPermRequest, error) {
 	return r.roleRepo.RoleDetailRepo(id, 0)
+}
+
+func (r *roleService) QueryRolesSvc(ctx context.Context, page *pb_user_v1.RolePageRequestProto) (*pb_user_v1.RolePageRequestProto, error) {
+	r1, e := r.roleRepo.ListRolesRepo(page, 0)
+	fmt.Printf("执行2", r1.Roles)
+	return r1, e
 }

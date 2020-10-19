@@ -13,6 +13,7 @@ type roleGrpcTransport struct {
 	updateRole transport.Handler
 	deleteRole transport.Handler
 	queryRole  transport.Handler
+	queryRoles transport.Handler
 }
 
 func NewRoleGrpcTransport(endpoint *endpoints.RoleServiceEndpoint) *roleGrpcTransport {
@@ -21,12 +22,14 @@ func NewRoleGrpcTransport(endpoint *endpoints.RoleServiceEndpoint) *roleGrpcTran
 		updateRoleServer = transport.NewServer(endpoint.UpdateRoleEndpoint, parser.DecodeCreateMenuPermRequestProto, parser.EncodeNullProto)
 		deleteRoleServer = transport.NewServer(endpoint.DeleteRoleEndpoint, parser.DecodeIndexProto, parser.EncodeNullProto)
 		queryRoleServer = transport.NewServer(endpoint.QueryRoleEndpoint, parser.DecodeIndexProto, parser.EncodeCreateMenuPermRequest)
+		queryRolesServer = transport.NewServer(endpoint.QueryRolesEndpoint, parser.DecodeRolePageProto, parser.EncodeRolePageProto)
 	)
 	return &roleGrpcTransport{
 		addRole:    addRoleServer,
 		updateRole: updateRoleServer,
 		deleteRole: deleteRoleServer,
 		queryRole: queryRoleServer,
+		queryRoles: queryRolesServer,
 	}
 }
 
@@ -60,4 +63,12 @@ func (u *roleGrpcTransport) RpcQueryRole(ctx context.Context, index *pb_user_v1.
 		return nil, err
 	}
 	return role.(*pb_user_v1.CreateMenuPermRequestProto), err
+}
+
+func (u *roleGrpcTransport) RpcQueryRoles(ctx context.Context, page *pb_user_v1.RolePageRequestProto) (*pb_user_v1.RolePageRequestProto, error) {
+	_, role, err := u.queryRoles.ServeGRPC(ctx, page)
+	if err != nil {
+		return nil, err
+	}
+	return role.(*pb_user_v1.RolePageRequestProto), err
 }

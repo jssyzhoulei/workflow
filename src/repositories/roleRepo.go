@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"gitee.com/grandeep/org-svc/src/models"
+	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gorm.io/gorm"
 )
@@ -15,6 +16,7 @@ type RoleRepoI interface {
 	ListRoleRepo(page, perPage, userId int) (*[]models.Role, error)
 	RoleDetailRepo(roleId, userId int) (*models.CreateMenuPermRequest, error)
 	DeleteMenuPermissionByRoleIDRepo(roleId int) error
+	ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userId int) (*pb_user_v1.RolePageRequestProto, error)
 }
 
 type roleRepo struct {
@@ -50,8 +52,50 @@ func (u *roleRepo) DeleteRoleRepo(role *models.Role) error {
 func (u *roleRepo) ListRoleRepo(page, perPage, userId int) (*[]models.Role, error) {
 	var roles []models.Role
 	return &roles, u.DB.Model(models.Role{}).
-		Where("delete_at is null and created_user_id = ?", userId).
+		Where("deleted_at is null and created_user_id = ?", userId).
 		Scan(&roles).Error
+}
+
+func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userId int) (*pb_user_v1.RolePageRequestProto, error) {
+	var (
+		page  int = 1
+		limit int = 10
+		name  string
+		roles []models.Role
+		resp pb_user_v1.RolePageRequestProto
+	)
+
+	resp.Page = new(pb_user_v1.Page)
+	if pageObj != nil {
+		if pageObj.Page.PageNum != 0 {
+			page = int(pageObj.Page.PageNum)
+			limit = int(pageObj.Page.PageSize)
+		}
+		name = pageObj.Name
+	}
+
+	err := u.DB.Model(models.Role{}).
+		Where("deleted_at is null and name like ? ", "%"+name+"%").
+		Count(&resp.Page.Total).
+		Offset((page - 1) * limit).Limit(limit).
+		Scan(&roles).Error
+
+	if err == nil {
+		var rolesPbs []*pb_user_v1.RoleProto
+		for _, r := range roles {
+			rp := pb_user_v1.RoleProto{
+				Name:       r.Name,
+				Remark:     r.Remark,
+				DataPermit: int32(r.DataPermit),
+				Status:     int32(r.Status),
+				Id:         int64(r.ID),
+			}
+			rolesPbs = append(rolesPbs, &rp)
+		}
+		resp.Roles = rolesPbs
+	}
+
+	return &resp, err
 }
 
 func buildCreateMenuPermRequest(r *[]models.MenuPermResponse) *models.CreateMenuPermRequest {

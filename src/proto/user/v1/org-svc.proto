@@ -22,6 +22,7 @@ service RpcOrgService {
   rpc RpcUpdateRole(CreateMenuPermRequestProto) returns (NullResponse);
   rpc RpcDeleteRole(Index) returns (NullResponse);
   rpc RpcQueryRole(Index) returns (CreateMenuPermRequestProto);
+  rpc RpcQueryRoles(RolePageRequestProto) returns (RolePageRequestProto);
   rpc RPCQuotaUpdate(QuotaUpdateRequest) returns (GroupResponse);
   rpc RpcAddPermission(PermissionProto) returns (NullResponse);
   rpc RpcGetPermissionByID(Index) returns (PermissionProto);

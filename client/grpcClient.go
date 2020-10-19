@@ -150,6 +150,14 @@ func RoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 			parser.DecodeCreateMenuPermRequestProto,
 			pb_user_v1.CreateMenuPermRequestProto{},
 		).Endpoint(),
+		QueryRolesEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcQueryRoles",
+			parser.EncodeRolePageProto,
+			parser.DecodeRolePageProto,
+			pb_user_v1.RolePageRequestProto{},
+		).Endpoint(),
 	}
 }
 
