@@ -269,6 +269,17 @@ func (g *GroupService) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.Grou
 		return nil, fmt.Errorf("无法删除组,组内存在用户: %d 个", len(users))
 	}
 
+	// 验证是否存在下级组
+	groups, err := g.groupRepo.GroupListWithChangedLevelPathRepo(data.Id, nil)
+	if err != nil {
+		return nil, fmt.Errorf("无法删除组,查询是否包含下级组时错误: %s", err.Error())
+	}
+
+	if len(groups) > 1 {
+		return nil, fmt.Errorf("无法删除组,包含下级组: %d 个", len(groups))
+	}
+
+
 	// 删除组
 	err = g.groupRepo.GroupDeleteRepo(data.Id, nil)
 	if err != nil {
