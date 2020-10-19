@@ -20,6 +20,7 @@ type groupAPIInterface interface {
 	GroupUpdateAPI(c *gin.Context)
 	QuotaUpdateAPI(c *gin.Context)
 	GroupTreeQueryAPI(c *gin.Context)
+	GroupDelete(c *gin.Context)
 }
 
 type groupAPI struct {
@@ -99,7 +100,7 @@ func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
 		return
 	}
 
-	response(c, http.StatusOK, "成功", _buffer.Bytes(), true)
+	response(c, http.StatusOK, "成功", string(_buffer.Bytes()), false)
 	return
 }
 
@@ -183,6 +184,7 @@ func (g *groupAPI) QuotaUpdateAPI(c *gin.Context) {
 	return
 }
 
+// GroupTreeQueryAPI 组树查询
 func (g *groupAPI) GroupTreeQueryAPI(c *gin.Context) {
 	groupIDStr := c.DefaultQuery("group_id", "")
 	if groupIDStr == "" {
@@ -206,6 +208,35 @@ func (g *groupAPI) GroupTreeQueryAPI(c *gin.Context) {
 		response(c, http.StatusBadRequest, "查询失败或结果为空", nil, false)
 		return
 	}
-	response(c, http.StatusOK, "成功", resp.TreeJson, true)
+	response(c, http.StatusOK, "成功", string(resp.TreeJson), false)
 	return
+}
+
+// GroupDelete 删除组
+func (g *groupAPI) GroupDelete(c *gin.Context) {
+	groupIDStr := c.DefaultQuery("group_id", "")
+	if groupIDStr == "" {
+		response(c, http.StatusBadRequest, "获取参数失败", nil, false)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(groupIDStr, 10, 64)
+	if err != nil {
+		response(c, http.StatusBadRequest, "参数解析失败", nil, false)
+		return
+	}
+
+	d := &pb_user_v1.GroupID{
+		Id: groupID,
+	}
+
+	_, err = g.groupService.GroupDeleteSvc(context.Background(), d)
+	if err != nil {
+		log.Logger().Info("删除 组失败: " + err.Error())
+		response(c, http.StatusBadRequest, "删除失败", nil, false)
+		return
+	}
+	response(c, http.StatusOK, "成功", nil, false)
+	return
+
 }

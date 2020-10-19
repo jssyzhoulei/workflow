@@ -15,9 +15,10 @@ service RpcOrgService {
   rpc RpcGetUserList(UserPage) returns (UsersPage);
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
   rpc RPCGroupQueryWithQuotaByCondition(GroupQueryWithQuotaByConditionRequest) returns (GroupQueryWithQuotaByConditionResponse);
-  rpc RpcAddRole(CreateMenuPermRequestProto) returns (NullResponse);
   rpc RPCGroupUpdate(GroupUpdateRequest) returns (GroupResponse);
   rpc RPCGroupTreeQuery(GroupID) returns (GroupTreeResponse);
+  rpc RPCGroupDelete(GroupID) returns (GroupResponse);
+  rpc RpcAddRole(CreateMenuPermRequestProto) returns (NullResponse);
   rpc RpcUpdateRole(CreateMenuPermRequestProto) returns (NullResponse);
   rpc RpcDeleteRole(Index) returns (NullResponse);
   rpc RpcQueryRole(Index) returns (CreateMenuPermRequestProto);
