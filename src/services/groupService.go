@@ -152,7 +152,13 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 			groupData[r.ID].Name = r.Name
 			groupData[r.ID].Quotas = make([]*pb_user_v1.Quota, 0)
 			levelPath := strings.Split(r.LevelPath, "-")
-			topParentID, err := strconv.ParseInt(levelPath[0], 10, 64)
+			var topParent string
+			if levelPath[1] == "" {
+				topParent = "0"
+			} else {
+				topParent = levelPath[1]
+			}
+			topParentID, err := strconv.ParseInt(topParent, 10, 64)
 			if err != nil {
 				return nil, errors.New("转换顶级组ID失败:" + err.Error())
 			}
