@@ -13,6 +13,7 @@ service RpcOrgService {
   rpc RpcGetUserById(Index) returns (UserProto);
   rpc RpcDeleteUserByID(Index) returns (NullResponse);
   rpc RpcGetUserList(UserPage) returns (UsersPage);
+  rpc RpcBatchDeleteUsers(UserIDs) returns (NullResponse);
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
   rpc RPCGroupQueryWithQuotaByCondition(GroupQueryWithQuotaByConditionRequest) returns (GroupQueryWithQuotaByConditionResponse);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (NullResponse);

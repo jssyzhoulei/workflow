@@ -7,3 +7,4 @@ mysql:
   timeZone: Local
   sqlPath: ./resources/sql
 etcdHost: 172.18.97.18:2379
+passwordKey: Z3JhbmRlZXA=

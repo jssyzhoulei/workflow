@@ -35,3 +35,7 @@ message UserPage {
   UserProto user = 1;
   Page page = 2;
 }
+
+message UserIDs {
+  repeated int64 ids = 1;
+}

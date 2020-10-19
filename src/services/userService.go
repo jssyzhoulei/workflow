@@ -6,7 +6,7 @@ import (
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/md5"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/config"
 )
 
 // UserServiceI 用户服务接口
@@ -16,24 +16,28 @@ type UserServiceInterface interface {
 	UpdateUserByIDSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error)
 	DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
 	GetUserListSvc(ctx context.Context, user *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error)
+	BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error)
 }
 
 // UserService 用户服务，实现 UserServiceInterface
 type userService struct {
 	userRepo repositories.UserRepoInterface
+	config   *config.Config
 }
 
 // NewUserService UserService 构造函数
-func NewUserService(repos repositories.RepoI) UserServiceInterface {
+func NewUserService(repos repositories.RepoI, c *config.Config) UserServiceInterface {
 	return &userService{
 		userRepo: repos.GetUserRepo(),
+		config: c,
 	}
 }
 
 // AddUserSvc 添加用户
 func (u *userService) AddUserSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error) {
 	var err error
-	user.Password = md5.EncodeMD5(user.Password)
+	key, _ := u.config.GetString("passwordKey")
+	user.Password,_ = user.EncodePwd(key)
 	err = u.userRepo.AddUserRepo(user)
 	return pb_user_v1.NullResponse{}, err
 }
@@ -92,4 +96,13 @@ func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.U
 		c.Users.Users = append(c.Users.Users, &userProto)
 	}
 	return c, nil
+}
+
+// BatchDeleteUsersRepo ...
+func (u *userService) BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error){
+	var (
+		err error
+	)
+	err = u.userRepo.BatchDeleteUsersRepo(ids)
+	return pb_user_v1.NullResponse{}, err
 }

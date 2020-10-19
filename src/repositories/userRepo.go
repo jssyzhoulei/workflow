@@ -16,6 +16,7 @@ type UserRepoInterface interface {
 	DeleteUserByIDRepo(id int) error
 	AddUserRoleRepo(userRole models.UserRole) error
 	GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB) ([]models.User, error)
+	BatchDeleteUsersRepo(ids []int64) error
 	GetTx() *gorm.DB
 }
 
@@ -122,6 +123,11 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm
 // AddUserRoleRepo ...
 func (u *userRepo) AddUserRoleRepo(userRole models.UserRole) error {
 	return u.Create(&userRole).Error
+}
+
+// BatchDeleteUsersRepo 批量删除用户
+func (u *userRepo) BatchDeleteUsersRepo(ids []int64) error {
+	return u.Model(&models.User{}).Where("id in ?", ids).Delete(&models.User{}).Error
 }
 // GetUserByName 根据用户名获取用户
 func (u *userRepo) GetUserByName(name string)(models.User, error) {

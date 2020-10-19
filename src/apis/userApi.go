@@ -18,6 +18,7 @@ type userApiInterface interface {
 	DeleteUserByIDApi(ctx *gin.Context)
 	GetUserListApi(ctx *gin.Context)
 	ImportUser(ctx *gin.Context)
+	BatchDeleteUsersApi(ctx *gin.Context)
 }
 
 type userApi struct {
@@ -134,6 +135,26 @@ func (u *userApi) GetUserListApi(ctx *gin.Context){
 	return
 }
 
+func (u *userApi) BatchDeleteUsersApi(ctx *gin.Context) {
+	data := struct {
+		ID []int64 `json:"id"`
+	}{}
+
+	err := ctx.BindJSON(&data)
+	if err != nil {
+		log.Logger().Error(fmt.Sprintf("batch delete user request param error : %s", err.Error()))
+		error_(ctx, 201, err)
+		return
+	}
+	_, err = u.userService.BatchDeleteUsersSvc(context.Background(), data.ID)
+	if err != nil {
+		log.Logger().Error("batch delete user error: " + err.Error())
+		error_(ctx, 201, err)
+		return
+	}
+	success_(ctx, nil)
+	return
+}
 
 //导入用户
 func (u *userApi) ImportUser(ctx *gin.Context) {

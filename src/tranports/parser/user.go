@@ -65,3 +65,11 @@ func EncodeUsersPage(c context.Context, res interface{}) (interface{}, error) {
 	}
 	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(res))
 }
+
+func DecodeUserIDsProto(c context.Context, req interface{}) (interface{}, error) {
+	if userIds,ok := req.(*pb_user_v1.UserIDs); ok {
+		return userIds.Ids, nil
+	}
+	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
+}
+

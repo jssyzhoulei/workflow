@@ -1,5 +1,11 @@
 package models
 
+import (
+	"errors"
+	"fmt"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/md5"
+)
+
 type User2 struct {
 	UserId   int64  `json:"user_id"`
 	UserName string `json:"user_name"`
@@ -40,6 +46,13 @@ func (u UserRole) TableName() string {
 
 type ImportUserRequest struct {
 
+}
+
+func (u User) EncodePwd(key string) (string, error) {
+	if u.Password != "" {
+		return md5.EncodeMD5(fmt.Sprintf("%s%s%s", key, md5.EncodeMD5(u.Password), key)), nil
+	}
+	return "", errors.New("empty password")
 }
 
 // CREATE TABLE `user` (

@@ -68,3 +68,14 @@ func DecodeUsersPage(ctx context.Context, i interface{}) (response interface{}, 
 	 err= fmt.Errorf(clientEncodeErr, reflect.TypeOf(i))
 	return
 }
+
+func EncodeUserIDs(ctx context.Context, i interface{}) (request interface{}, err error) {
+	if userIds, ok := i.([]int64); ok {
+		return &pb_user_v1.UserIDs{
+			Ids: userIds,
+		}, nil
+	}
+	err = fmt.Errorf(clientEncodeErr, reflect.TypeOf(i))
+	return
+
+}

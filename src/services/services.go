@@ -23,7 +23,7 @@ type service struct {
 
 func NewService(repo repositories.RepoI, e *engine.Engine) ServiceI {
 	return &service{
-		userService:  NewUserService(repo),
+		userService:  NewUserService(repo, e.Config),
 		groupService: NewGroupService(repo),
 		roleService:  NewRoleService(repo),
 		permissionService: NewPermissionService(repo),

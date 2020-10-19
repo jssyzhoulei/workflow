@@ -51,6 +51,14 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.DecodeUsersPage,
 			pb_user_v1.UsersPage{},
 			).Endpoint(),
+		BatchDeleteUsersEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcBatchDeleteUsers",
+			parser.EncodeUserIDs,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+			).Endpoint(),
 	}
 }
 

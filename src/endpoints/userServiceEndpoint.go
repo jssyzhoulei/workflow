@@ -18,6 +18,7 @@ type UserServiceEndpoint struct {
 	UpdateUserByIDEndpoint endpoint.Endpoint
 	DeleteUserByIDEndpoint endpoint.Endpoint
 	GetUserListEndpoint endpoint.Endpoint
+	BatchDeleteUsersEndpoint endpoint.Endpoint
 }
 
 // NewUserEndpoint UserServiceEndpoint 的构造函数
@@ -28,6 +29,7 @@ func NewUserEndpoint(service services.ServiceI) *UserServiceEndpoint {
 	userServiceEndpoint.UpdateUserByIDEndpoint = MakeUpdataUserByIDEndpoint(service.GetUserService())
 	userServiceEndpoint.DeleteUserByIDEndpoint = MakeDeleteUserByIDEndpoint(service.GetUserService())
 	userServiceEndpoint.GetUserListEndpoint = MakeGetUserListEndpoint(service.GetUserService())
+	userServiceEndpoint.BatchDeleteUsersEndpoint = MakeBatchDeleteUsersEndpoint(service.GetUserService())
 	return userServiceEndpoint
 }
 
@@ -96,6 +98,19 @@ func MakeGetUserListEndpoint(userService services.UserServiceInterface) endpoint
 	}
 }
 
+// MakeBatchDeleteUsersEndpoint ...
+func MakeBatchDeleteUsersEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		ids, ok := request.([]int64)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = userService.BatchDeleteUsersSvc(ctx, ids)
+		fmt.Println(response, err)
+		return
+	}
+}
+
 // AddUserSvc ...
 func (u *UserServiceEndpoint) AddUserSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error) {
 	resp, err := u.AddUserEndpoint(ctx, user)
@@ -134,9 +149,17 @@ func (u *UserServiceEndpoint) DeleteUserByIDSvc(ctx context.Context, id int) (pb
 // GetUserListSvc ...
 func (u *UserServiceEndpoint) GetUserListSvc(ctx context.Context, user *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error) {
 	resp, err := u.GetUserListEndpoint(ctx, user)
-	fmt.Println(resp, err)
 	if err != nil {
 		return nil, err
 	}
 	return resp.(*pb_user_v1.UsersPage), nil
+}
+
+// BatchDeleteUsersSvc ...
+func (u *UserServiceEndpoint) BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error) {
+	resp, err := u.BatchDeleteUsersEndpoint(ctx, ids)
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
+	}
+	return resp.(pb_user_v1.NullResponse), nil
 }
