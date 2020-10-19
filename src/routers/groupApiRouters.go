@@ -8,6 +8,7 @@ import (
 func groupAPIRouters(g *gin.RouterGroup, api apis.IApis) {
 	g.POST("/group", api.GetGroupApis().GroupAddAPI)
 	g.PUT("/group", api.GetGroupApis().GroupUpdateAPI)
+	g.DELETE("/group", api.GetGroupApis().GroupDelete)
 	g.GET("/group/quota", api.GetGroupApis().GroupQueryWithQuotaAPI)
 	g.GET("/group/tree", api.GetGroupApis().GroupTreeQueryAPI)
 	g.PUT("/quota", api.GetGroupApis().QuotaUpdateAPI)

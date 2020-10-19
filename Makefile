@@ -2,14 +2,14 @@ GOOS 		= linux
 CGO_ENABLED = 0
 ROOT_DIR    = $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/
 DIST_DIR 	= $(ROOT_DIR)dist/
-POD_NAME	= draco-deploy
+POD_NAME	= org
 
 IMAGE_NAME_API := 192.168.2.190:5000/library/org-api:1.0.0
 IMAGE_NAME_SVC := 192.168.2.190:5000/library/org-svc:1.0.0
 #IMAGE_NAME := 10.182.240.76:30180/draco/draco:1.0.0
 
 .PHONY: release
-release: dist_dir build docker push-image clean
+release: dist_dir build docker push-image  del clean
 
 .PHONY: docker
 docker:
@@ -39,7 +39,7 @@ dist_dir: ; $(info ======== prepare distribute dir:)
 
 .PHONY: del
 del:
-	ssh root@192.168.2.190 "/root/delete-pod.sh $(POD_NAME)"
+	ssh root@192.168.2.190 "/root/org/delete-pod.sh $(POD_NAME)"
 .PHONY: clean
 clean: ; $(info ======== clean all:)
 	rm -rf $(DIST_DIR)*

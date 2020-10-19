@@ -16,6 +16,7 @@ type GroupServiceEndpoint struct {
 	GroupUpdateEndpoint endpoint.Endpoint
 	QuotaUpdateEndpoint endpoint.Endpoint
 	GroupTreeQueryEndpoint endpoint.Endpoint
+	GroupDeleteEndpoint endpoint.Endpoint
 }
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
@@ -26,6 +27,7 @@ func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 		GroupUpdateEndpoint: MakeGroupUpdateEndpoint(service.GetGroupService()),
 		QuotaUpdateEndpoint: MakeQuotaUpdateEndpoint(service.GetGroupService()),
 		GroupTreeQueryEndpoint: MakeGroupTreeQueryEndpoint(service.GetGroupService()),
+		GroupDeleteEndpoint: MakeGroupDeleteEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -136,4 +138,26 @@ func (g *GroupServiceEndpoint) GroupTreeQuerySvc(ctx context.Context, data *pb_u
 		return nil, err
 	}
 	return resp.(*pb_user_v1.GroupTreeResponse), nil
+}
+
+// MakeGroupDeleteEndpoint ...
+func MakeGroupDeleteEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.GroupID)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = groupServiceInterface.GroupDeleteSvc(ctx, data)
+		return
+	}
+}
+
+// GroupDeleteSvc ...
+func (g *GroupServiceEndpoint) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupResponse, error) {
+
+	resp , err := g.GroupDeleteEndpoint(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupResponse), nil
 }

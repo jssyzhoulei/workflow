@@ -14,6 +14,7 @@ func (c Code) Message(err ...error) string {
 const OK Code = 200
 const (
 	PARAMS_ERROR Code = iota + 200100
+	XlsxError
 )
 
 const (
