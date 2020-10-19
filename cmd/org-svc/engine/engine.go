@@ -16,8 +16,8 @@ type Engine struct {
 
 func NewEngine(path string) *Engine {
 	var (
-		e Engine
-		err error
+		e           Engine
+		err         error
 		mysqlConfig mysql.Mysql
 		//sqlPath string
 	)

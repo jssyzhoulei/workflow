@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gitee.com/grandeep/org-svc/cmd/org-svc/engine"
 	"gitee.com/grandeep/org-svc/src/models"
 	"gitee.com/grandeep/org-svc/src/repositories"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/engine"
 	"testing"
 )
 var (

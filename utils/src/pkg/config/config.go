@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"gopkg.in/yaml.v2"
 	"os"
 	"reflect"
@@ -150,7 +149,7 @@ func getString(in interface{}) string {
 			return "false"
 		}
 	default:
-		log.Logger().Warn("未知类型")
+		fmt.Println("未知类型")
 	}
 	return ""
 }
@@ -163,7 +162,7 @@ func getInt(in interface{}) int64 {
 		return value.Int()
 		break
 	default:
-		log.Logger().Warn("类型映射错误")
+		fmt.Println("未知类型")
 	}
 	return 0
 }
@@ -175,7 +174,7 @@ func getFloat(in interface{}) float64 {
 		return value.Float()
 		break
 	default:
-		log.Logger().Warn("未知类型")
+		fmt.Println("未知类型")
 	}
 	return 0
 }

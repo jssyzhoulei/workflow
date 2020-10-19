@@ -1,9 +1,9 @@
 package services
 
 import (
+	"gitee.com/grandeep/org-svc/cmd/org-svc/engine"
 	"gitee.com/grandeep/org-svc/src/repositories"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/config"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/engine"
 )
 
 type ServiceI interface {
