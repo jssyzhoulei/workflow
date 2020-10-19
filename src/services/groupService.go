@@ -20,6 +20,7 @@ type GroupServiceInterface interface {
 	GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error)
 	QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.QuotaUpdateRequest) (*pb_user_v1.GroupResponse, error)
 	GroupTreeQuerySvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupTreeResponse, error)
+	GroupDeleteSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupResponse, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -253,12 +254,26 @@ func (g *GroupService) QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.Quot
 }
 
 // GroupDeleteSvc 组删除(软删除)
-func (g *GroupService) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.Index) (*pb_user_v1.GroupResponse, error) {
+func (g *GroupService) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupResponse, error) {
 	if data.Id == 0 {
-		return &pb_user_v1.GroupResponse{Code: 1}, errors.New("id 不允许为空")
+		return nil, errors.New("组 id 不允许为空")
 	}
 
-	//g.userRepo.GetUserListRepo()
+	// 验证组下是否存在用户
+	users, err := g.userRepo.GetUserListRepo(models.User{GroupID: int(data.Id)}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(users) > 1 {
+		return nil, fmt.Errorf("无法删除组,组内存在用户: %d 个", len(users))
+	}
+
+	// 删除组
+	err = g.groupRepo.GroupDeleteRepo(data.Id, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
 }
