@@ -15,7 +15,7 @@ type UserRepoInterface interface {
 	UpdateUserByIDRepo(user models.User, tx *gorm.DB) error
 	DeleteUserByIDRepo(id int) error
 	AddUserRoleRepo(userRole models.UserRole) error
-	GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB) ([]models.User, error)
+	GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB, groupIds ...int64) ([]models.User, error)
 	BatchDeleteUsersRepo(ids []int64) error
 	GetTx() *gorm.DB
 	GetUsersByLoginNames([]string) ([]models.User, error)
