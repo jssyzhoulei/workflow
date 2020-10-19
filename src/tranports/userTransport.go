@@ -14,6 +14,7 @@ type userGrpcTransport struct {
 	updateUserByID transport.Handler
 	deleteUserByID transport.Handler
 	getUserList    transport.Handler
+	addUsers       transport.Handler
 }
 
 func NewUserGrpcTransport(userEndpoint *endpoints.UserServiceEndpoint) *userGrpcTransport {
@@ -21,6 +22,7 @@ func NewUserGrpcTransport(userEndpoint *endpoints.UserServiceEndpoint) *userGrpc
 		addUserServer = transport.NewServer(userEndpoint.AddUserEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
 		getUserByIDServer = transport.NewServer(userEndpoint.GetUserByIDEndpoint, parser.DecodeIndexProto, parser.EncodeUserProto)
 		updateUserByIDServer = transport.NewServer(userEndpoint.UpdateUserByIDEndpoint, parser.DecodeUserProto, parser.EncodeNullProto)
+		addUsersServer = transport.NewServer(userEndpoint.AddUsersEndpoint, parser.DecodeAddUsersRequest, parser.EncodeNullProto)
 		deleteUserByIDServer = transport.NewServer(userEndpoint.DeleteUserByIDEndpoint, parser.DecodeIndexProto, parser.EncodeNullProto)
 		getUserListServer = transport.NewServer(userEndpoint.GetUserListEndpoint, parser.DecodeUserPageProto, parser.EncodeUsersPage)
 	)
@@ -30,6 +32,7 @@ func NewUserGrpcTransport(userEndpoint *endpoints.UserServiceEndpoint) *userGrpc
 		updateUserByID: updateUserByIDServer,
 		deleteUserByID: deleteUserByIDServer,
 		getUserList: getUserListServer,
+		addUsers: addUsersServer,
 	}
 }
 
@@ -66,6 +69,16 @@ func (u *userGrpcTransport) RpcDeleteUserByID(ctx context.Context, index *pb_use
 	return resp.(*pb_user_v1.NullResponse), nil
 }
 
+//func (u *userGrpcTransport) RpcGetUserList(ctx context.Context, proto *pb_user_v1.UserProto) ()
+
+
+func (u *userGrpcTransport) RpcAddUsers(ctx context.Context, request *pb_user_v1.AddUsersRequest) (*pb_user_v1.NullResponse, error) {
+	_, resp, err := u.addUsers.ServeGRPC(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.NullResponse), nil
+}
 
 func (u *userGrpcTransport) RpcGetUserList(c context.Context, proto *pb_user_v1.UserPage) (*pb_user_v1.UsersPage, error) {
 	_, resp, err := u.getUserList.ServeGRPC(c, proto)

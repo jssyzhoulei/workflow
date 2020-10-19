@@ -43,6 +43,14 @@ func EncodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 	}, nil
 }
 
+func DecodeAddUsersRequest(ctx context.Context, req interface{}) (interface{}, error) {
+	if users, ok := req.(*pb_user_v1.AddUsersRequest); ok {
+		return users, nil
+	}
+	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
+
+}
+
 func EncodeUsers(ctx context.Context, req interface{}) (response interface{}, err error) {
 	if users, ok := req.(*pb_user_v1.Users); ok {
 		return users, nil
