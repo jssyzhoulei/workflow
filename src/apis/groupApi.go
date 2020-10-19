@@ -10,6 +10,7 @@ import (
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -18,6 +19,7 @@ type groupAPIInterface interface {
 	GroupQueryWithQuotaAPI(c *gin.Context)
 	GroupUpdateAPI(c *gin.Context)
 	QuotaUpdateAPI(c *gin.Context)
+	GroupTreeQueryAPI(c *gin.Context)
 }
 
 type groupAPI struct {
@@ -159,12 +161,12 @@ func (g *groupAPI) QuotaUpdateAPI(c *gin.Context) {
 	}
 
 	d := &pb_user_v1.QuotaUpdateRequest{
-		GroupId:              data.GroupID,
-		IsShare:              data.IsShare,
-		ResourcesId:          data.ResourcesID,
-		QuotaType:            data.QuotaType,
-		Total:                data.Total,
-		Used:                 data.Used,
+		GroupId:     data.GroupID,
+		IsShare:     data.IsShare,
+		ResourcesId: data.ResourcesID,
+		QuotaType:   data.QuotaType,
+		Total:       data.Total,
+		Used:        data.Used,
 	}
 
 	resp, err := g.groupService.QuotaUpdateSvc(context.Background(), d)
@@ -178,5 +180,32 @@ func (g *groupAPI) QuotaUpdateAPI(c *gin.Context) {
 		return
 	}
 	response(c, http.StatusOK, "成功", nil, false)
+	return
+}
+
+func (g *groupAPI) GroupTreeQueryAPI(c *gin.Context) {
+	groupIDStr := c.DefaultQuery("group_id", "")
+	if groupIDStr == "" {
+		response(c, http.StatusBadRequest, "获取参数失败", nil, false)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(groupIDStr, 10, 64)
+	if err != nil {
+		response(c, http.StatusBadRequest, "参数解析失败", nil, false)
+		return
+	}
+
+	d := &pb_user_v1.GroupID{
+		Id: groupID,
+	}
+
+	resp, err := g.groupService.GroupTreeQuerySvc(context.Background(), d)
+	if err != nil {
+		log.Logger().Info("获取 组树失败: " + err.Error())
+		response(c, http.StatusBadRequest, "查询失败或结果为空", nil, false)
+		return
+	}
+	response(c, http.StatusOK, "成功", resp.TreeJson, true)
 	return
 }

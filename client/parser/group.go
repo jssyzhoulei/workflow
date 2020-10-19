@@ -66,3 +66,22 @@ func EncodeQuotaUpdateProto(ctx context.Context, request interface{}) (interface
 	}
 	return r, nil
 }
+
+// DecodeGroupTreeQueryProto ...
+func DecodeGroupTreeQueryProto(ctx context.Context, request interface{}) (interface{}, error) {
+	r, ok := request.(*pb_user_v1.GroupTreeResponse)
+	if !ok {
+		return nil, errors.New("DecodeGroupTreeQueryProto 失败")
+	}
+	return r, nil
+}
+
+// EncodeGroupIDProto ...
+func EncodeGroupIDProto(ctx context.Context, request interface{}) (interface{}, error) {
+	r, ok := request.(*pb_user_v1.GroupID)
+	if !ok {
+		return nil, errors.New("EncodeGroupIDProto 失败")
+	}
+	return r, nil
+}
+

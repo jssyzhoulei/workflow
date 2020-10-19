@@ -13,6 +13,7 @@ type groupGrpcTransport struct {
 	groupQueryWithQuotaByCondition transport.Handler
 	groupUpdate transport.Handler
 	quotaUpdate transport.Handler
+	groupTreeQuery transport.Handler
 }
 
 // NewGroupGrpcTransport ...
@@ -22,6 +23,7 @@ func NewGroupGrpcTransport(endpoint *endpoints.GroupServiceEndpoint) *groupGrpcT
 		groupQueryWithQuotaByCondition: transport.NewServer(endpoint.GroupQueryWithQuotaByConditionEndpoint, parser.DecodeGroupQueryByConditionProto, parser.EncodeGroupQueryByConditionProto),
 		groupUpdate: transport.NewServer(endpoint.GroupUpdateEndpoint, parser.DecodeGroupUpdateProto, parser.EncodeGroupProto),
 		quotaUpdate: transport.NewServer(endpoint.QuotaUpdateEndpoint, parser.DecodeQuotaUpdateProto, parser.EncodeGroupProto),
+		groupTreeQuery: transport.NewServer(endpoint.GroupTreeQueryEndpoint, parser.DecodeGroupIDProto, parser.EncodeGroupTreeQueryProto),
 	}
 }
 
@@ -59,4 +61,13 @@ func (g *groupGrpcTransport) RPCQuotaUpdate(ctx context.Context, proto *pb_user_
 		return nil, err
 	}
 	return resp.(*pb_user_v1.GroupResponse), err
+}
+
+// RPCGroupTreeQuery ...
+func (g *groupGrpcTransport) RPCGroupTreeQuery(ctx context.Context, proto *pb_user_v1.GroupID) (*pb_user_v1.GroupTreeResponse, error) {
+	_, resp, err := g.groupTreeQuery.ServeGRPC(ctx, proto)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupTreeResponse), err
 }

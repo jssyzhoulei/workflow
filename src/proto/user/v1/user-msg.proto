@@ -14,8 +14,13 @@ message UserProto {
   int64  group_id = 7;
   int64  user_type = 8;
   repeated Index role_ids = 5;
+  int64  ststus = 9;
 }
 
+message UserRoleProto {
+  int64  user_id = 1;
+  string role_ids = 2;
+}
 
 message Users {
   repeated UserProto users = 1;
@@ -24,4 +29,14 @@ message Users {
 message AddUsersRequest {
   repeated UserProto users = 1;
   int32 is_cover = 2;
+}
+
+message UsersPage {
+  Users users = 1;
+  Page page = 2;
+}
+
+message UserPage {
+  UserProto user = 1;
+  Page page = 2;
 }

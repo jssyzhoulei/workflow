@@ -32,15 +32,15 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			"pb_user_v1.RpcOrgService",
 			"RpcUpdateUserByID",
 			parser.EncodeUserModel,
-			parser.DecodeUserModel,
+			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
 			).Endpoint(),
 		DeleteUserByIDEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcDeleteUserByID",
-			parser.DecodeUserModel,
-			parser.DecodeUserModel,
+			parser.EncodeIndexProto,
+			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
 			).Endpoint(),
 		AddUsersEndpoint: grpctransport.NewClient(
@@ -51,6 +51,14 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
 		).Endpoint(),
+		GetUserListEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcGetUserList",
+			parser.EncodeUserPage,
+			parser.DecodeUsersPage,
+			pb_user_v1.UsersPage{},
+			).Endpoint(),
 	}
 }
 
@@ -89,6 +97,14 @@ func groupGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 			parser.DecodeGroupProto,
 			pb_user_v1.GroupResponse{},
 		).Endpoint(),
+		GroupTreeQueryEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RPCGroupTreeQuery",
+			parser.EncodeGroupIDProto,
+			parser.DecodeGroupTreeQueryProto,
+			pb_user_v1.GroupTreeResponse{},
+		).Endpoint(),
 	}
 }
 
@@ -98,7 +114,7 @@ func RoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcAddRole",
-			parser.EncodeCreateMenuPermRequestModel,
+			parser.EncodeCreateMenuPermRequest,
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
 		).Endpoint(),
@@ -106,7 +122,7 @@ func RoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcUpdateRole",
-			parser.EncodeCreateMenuPermRequestModel,
+			parser.EncodeCreateMenuPermRequest,
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
 		).Endpoint(),
@@ -114,9 +130,17 @@ func RoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcDeleteRole",
-			parser.EncodeCreateMenuPermRequestModel,
+			parser.EncodeIndexProto,
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
+		).Endpoint(),
+		QueryRoleEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcQueryRole",
+			parser.EncodeIndexProto,
+			parser.DecodeCreateMenuPermRequestProto,
+			pb_user_v1.CreateMenuPermRequestProto{},
 		).Endpoint(),
 	}
 }

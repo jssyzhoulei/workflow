@@ -18,6 +18,7 @@ type User struct {
 	GroupID   int    `gorm:"column:group_id;type:int(10);comment:'所属组织'" json:"group_id"`
 	Mobile    int    `gorm:"column:mobile;type:int(10);comment:'手机号'" json:"mobile"`
 	UserType  int    `gorm:"column:user_type;type:int(10);comment:'用户类型0 普通用户 1 管理员 2超级管理员'" json:"user_type"`
+	Status    int   `json:"status" gorm:"column:status;type:int;default:0;comment:'1 已删除 0 未删除'"`
 }
 
 // TableName ...

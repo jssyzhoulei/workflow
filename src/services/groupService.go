@@ -2,10 +2,13 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"strconv"
 	"strings"
 )
@@ -16,17 +19,20 @@ type GroupServiceInterface interface {
 	GroupQueryWithQuotaByConditionSvc(ctx context.Context, data *pb_user_v1.GroupQueryWithQuotaByConditionRequest) (*pb_user_v1.GroupQueryWithQuotaByConditionResponse, error)
 	GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error)
 	QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.QuotaUpdateRequest) (*pb_user_v1.GroupResponse, error)
+	GroupTreeQuerySvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupTreeResponse, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
 type GroupService struct {
 	groupRepo repositories.GroupRepoInterface
+	userRepo  repositories.UserRepoInterface
 }
 
 // NewGroupService GroupService 构造函数
 func NewGroupService(repos repositories.RepoI) GroupServiceInterface {
 	return &GroupService{
 		groupRepo: repos.GetGroupRepo(),
+		userRepo:  repos.GetUserRepo(),
 	}
 }
 
@@ -62,7 +68,7 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 	var _nonShareResourcesID string
 	for i := 0; i < len(data.Quotas); i++ {
 		q := data.Quotas[i]
-		
+
 		if q.IsShare == 1 {
 			if _share == q.IsShare && _shareResourcesID == q.ResourcesGroupId {
 				return &pb_user_v1.GroupResponse{Code: 1}, errors.New("共享配额类型,重复划分相同资源组")
@@ -109,8 +115,6 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			result = append(result, tmp)
 		}
 	}
-
-
 
 	err = g.groupRepo.QuotaAddRepo(result, tx)
 	if err != nil {
@@ -246,4 +250,107 @@ func (g *GroupService) QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.Quot
 		return &pb_user_v1.GroupResponse{Code: 1}, nil
 	}
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
+}
+
+// GroupDeleteSvc 组删除(软删除)
+func (g *GroupService) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.Index) (*pb_user_v1.GroupResponse, error) {
+	if data.Id == 0 {
+		return &pb_user_v1.GroupResponse{Code: 1}, errors.New("id 不允许为空")
+	}
+
+	//g.userRepo.GetUserListRepo()
+
+	return &pb_user_v1.GroupResponse{Code: 0}, nil
+}
+
+// GroupTreeQuerySvc 组树查询
+func (g *GroupService) GroupTreeQuerySvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupTreeResponse, error) {
+
+	groupList, err := g.groupRepo.GroupListWithChangedLevelPathRepo(data.Id, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	tree := generateGroupTree(groupList, int(data.Id))
+	if tree == nil {
+		return nil, errors.New("生成失败,结果为空")
+	}
+
+	jsonByte, err := json.Marshal(tree)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &pb_user_v1.GroupTreeResponse{
+		TreeJson: jsonByte,
+	}
+
+	return res, nil
+}
+
+// insertToParentChildren generateGroupTree 中查找父节点的递归方法
+func insertToParentChildren(currentNode *models.GroupTreeNode, node *models.GroupTreeNode, targetParentID string, levelPath []string) error {
+	// 如果currentNode的ID是targetParentID,那么就直接加入该节点的children
+	if currentNode.ID == targetParentID {
+		currentNode.Children = append(currentNode.Children, node)
+		return nil
+	}
+	// 根据levelPath获取下一个节点的ID
+	nextNodeID := levelPath[0]
+
+	// 查找currentNode的children中是否包含nextNodeID,不包含则执行最后的return返回错误信息,包含则继续递归查找
+	for i := 0; i < len(currentNode.Children); i++ {
+		if currentNode.Children[i].ID == nextNodeID {
+			return insertToParentChildren(currentNode.Children[i], node, targetParentID, levelPath[1:])
+		}
+	}
+	return fmt.Errorf("未找到父ID: nodeName:%s nodeID:%s parentID:%s\n", node.Name, node.ID, targetParentID)
+}
+
+// generateGroupTree 根据数
+func generateGroupTree(data []*models.Group, rootParentID int) []*models.GroupTreeNode {
+
+	var result []*models.GroupTreeNode
+	var children []*models.Group
+
+	// 分离根节点和子节点
+	for i := 0; i < len(data); i++ {
+		if data[i].ParentID == rootParentID {
+			result = append(result, &models.GroupTreeNode{
+				Name:     data[i].Name,
+				ID:       strconv.Itoa(data[i].ID),
+				Children: make([]*models.GroupTreeNode, 0),
+			})
+		} else {
+			children = append(children, data[i])
+		}
+	}
+
+	// 如果没有子节点,那么直接返回结果
+	if len(children) == 0 {
+		return result
+	}
+	// 遍历子节点,依次插入
+	for i := 0; i < len(children); i++ {
+		_t := strings.Split(children[i].LevelPath, "-")
+		topParentID := _t[1]
+		cNode := &models.GroupTreeNode{
+			Name:     children[i].Name,
+			ID:       strconv.Itoa(children[i].ID),
+			Children: make([]*models.GroupTreeNode, 0),
+		}
+		child := children[i]
+		for i := 0; i < len(result); i++ {
+			// 找到子节点的顶级父
+			if result[i].ID == topParentID {
+				// 进行递归查找
+				err := insertToParentChildren(result[i], cNode, strconv.Itoa(child.ParentID), _t[2:])
+				if err != nil {
+					log.Logger().Info(err.Error())
+				}
+				break // 递归完成直接 break 内层循环
+			}
+		}
+	}
+	return result
 }

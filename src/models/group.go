@@ -110,3 +110,13 @@ type QuotaUpdateRequest struct {
 	Total       int64  `json:"total"`
 	Used        int64  `json:"used"`
 }
+
+// Q
+
+// GroupTreeNode 组树形结构节点
+type GroupTreeNode struct {
+	Name     string      `json:"name"`
+	ID       string      `json:"id"`
+	Children []*GroupTreeNode `json:"children"`
+}
+

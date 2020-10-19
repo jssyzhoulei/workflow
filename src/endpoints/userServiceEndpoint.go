@@ -3,6 +3,7 @@ package endpoints
 import (
 	"context"
 	"errors"
+	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
@@ -86,11 +87,11 @@ func MakeUpdataUserByIDEndpoint(userService services.UserServiceInterface) endpo
 // MakeDeleteUserByIDEndpoint ...
 func MakeDeleteUserByIDEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		user, ok := request.(models.User)
+		id, ok := request.(int)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		response, err = userService.DeleteUserByIDSvc(ctx, user.ID)
+		response, err = userService.DeleteUserByIDSvc(ctx, id)
 		return
 	}
 }
@@ -98,11 +99,12 @@ func MakeDeleteUserByIDEndpoint(userService services.UserServiceInterface) endpo
 // MakeGetUserListEndpoint ...
 func MakeGetUserListEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		user, ok := request.(models.User)
+		user, ok := request.(*pb_user_v1.UserPage)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
-		response, err = userService.GetUserListSvc(ctx, user, &models.Page{})
+		response, err = userService.GetUserListSvc(ctx, user)
+		fmt.Println(response, err)
 		return
 	}
 }
@@ -143,12 +145,13 @@ func (u *UserServiceEndpoint) DeleteUserByIDSvc(ctx context.Context, id int) (pb
 }
 
 // GetUserListSvc ...
-func (u *UserServiceEndpoint) GetUserListSvc(ctx context.Context, user models.User, page *models.Page) ([]models.User, error){
+func (u *UserServiceEndpoint) GetUserListSvc(ctx context.Context, user *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error) {
 	resp, err := u.GetUserListEndpoint(ctx, user)
+	fmt.Println(resp, err)
 	if err != nil {
 		return nil, err
 	}
-	return resp.([]models.User), nil
+	return resp.(*pb_user_v1.UsersPage), nil
 }
 
 func (u *UserServiceEndpoint) AddUsersSvc(ctx context.Context, users *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error) {

@@ -15,12 +15,16 @@ func EncodeUserModel(ctx context.Context, req interface{}) (interface{}, error) 
 		return nil, errors.New("error type")
 	}
 	return &pb_user_v1.UserProto{
+		Id:     &pb_user_v1.Index{
+			Id:    int64(user.ID),
+		},
 		UserName:  user.UserName,
 		LoginName: user.LoginName,
 		Password:  user.Password,
 		Mobile:    int64(user.Mobile),
 		GroupId:   int64(user.GroupID),
 		UserType:  int64(user.UserType),
+		Ststus:    int64(user.Status),
 	}, nil
 }
 
@@ -31,12 +35,13 @@ func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) 
 	}
 	return models.User{
 		BaseModel: models.BaseModel{
-			ID:     int(user.Id.Id),
+			ID: int(user.Id.Id),
 		},
 		UserName:  user.UserName,
 		LoginName: user.LoginName,
 		Password:  user.Password,
 		Mobile:    int(user.Mobile),
+		Status:    int(user.Ststus),
 	}, nil
 }
 
@@ -45,4 +50,28 @@ func EncodeAddUsersRequest(ctx context.Context, req interface{}) (interface{}, e
 		return users, nil
 	}
 	return nil, fmt.Errorf(clientEncodeErr, reflect.TypeOf(req))
+}
+
+func DecodeUsers(_ context.Context, i interface{}) (interface{}, error) {
+	if users, ok := i.(*pb_user_v1.Users); ok {
+		return users, nil
+	}
+	err := fmt.Errorf(clientEncodeErr, reflect.TypeOf(i))
+	return nil, err
+}
+
+func EncodeUserPage(ctx context.Context, i interface{}) (request interface{}, err error) {
+	if userPage, ok := i.(*pb_user_v1.UserPage); ok {
+		return userPage, nil
+	}
+	err = fmt.Errorf(clientEncodeErr, reflect.TypeOf(i))
+	return
+}
+
+func DecodeUsersPage(ctx context.Context, i interface{}) (response interface{}, err error) {
+	if usersPage, ok := i.(*pb_user_v1.UsersPage); ok {
+		return usersPage, nil
+	}
+	 err= fmt.Errorf(clientEncodeErr, reflect.TypeOf(i))
+	return
 }

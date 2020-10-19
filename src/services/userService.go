@@ -1,7 +1,7 @@
 package services
 
 import (
-	"context"
+	"context
 	"errors"
 	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
@@ -16,8 +16,8 @@ type UserServiceInterface interface {
 	GetUserByIDSvc(ctx context.Context, id int) (models.User, error)
 	UpdateUserByIDSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error)
 	DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
-	GetUserListSvc(ctx context.Context, user models.User, page *models.Page) ([]models.User, error)
 	AddUsersSvc(ctx context.Context, users *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error)
+	GetUserListSvc(ctx context.Context, user *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error)
 }
 
 // UserService 用户服务，实现 UserServiceInterface
@@ -36,9 +36,7 @@ func NewUserService(repos repositories.RepoI) UserServiceInterface {
 
 // AddUserSvc 添加用户
 func (u *userService) AddUserSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error) {
-	var (
-		err error
-	)
+	var err error
 	user.Password = md5.EncodeMD5(user.Password)
 	err = u.userRepo.AddUserRepo(user)
 	return pb_user_v1.NullResponse{}, err
@@ -70,16 +68,34 @@ func (u *userService) DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1
 }
 
 // GetUserListSvc 获取用户列表
-func (u *userService) GetUserListSvc(ctx context.Context, user models.User, page *models.Page) ([]models.User, error) {
+
+func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error){
 	var (
-		users []models.User
-		err   error
+		page models.Page
+		user models.User
 	)
-	users, err = u.userRepo.GetUserListRepo(user, page)
-	if err != nil {
-		return nil, err
+	if userPage.Page != nil {
+		page.PageSize = int(userPage.Page.PageSize)
+		page.PageNum = int(userPage.Page.PageNum)
 	}
-	return users, nil
+	if userPage.User != nil {
+		user.UserName = userPage.User.UserName
+	}
+	users, err := u.userRepo.GetUserListRepo(user, &page, nil)
+	if err != nil {
+		return c, err
+	}
+	c = &pb_user_v1.UsersPage{}
+	c.Users = &pb_user_v1.Users{}
+	for _, user := range users {
+		var userProto pb_user_v1.UserProto
+		userProto.Id = &pb_user_v1.Index{
+			Id:                   int64(user.ID),
+		}
+
+		c.Users.Users = append(c.Users.Users, &userProto)
+	}
+	return c, nil
 }
 
 func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error) {
