@@ -54,19 +54,19 @@ func (u *userRepo) AddUserRepo(user models.User, tx *gorm.DB) (int, error) {
 		db = tx
 	}
 
-	userRecord, err := u.GetUserByName(user.LoginName)
+	_, err := u.GetUserByName(user.LoginName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = db.Create(&user).Error
 			if err != nil {
 				fmt.Println("create user error: ", err.Error())
 			}
+			return user.ID, nil
 		} else {
 			fmt.Println(err.Error(), "=================")
 		}
 	}
-	fmt.Println("run  ---->")
-	return userRecord.ID, err
+	return 0, err
 }
 
 // GetUserByIDRepo 通过ID获取用户详情

@@ -47,6 +47,11 @@ func (u *userService) AddUserSvc(ctx context.Context, userRolesDTO models.UserRo
 	id, err := u.userRepo.AddUserRepo(userRolesDTO.User, tx)
 	if err != nil {
 		tx.Rollback()
+		return pb_user_v1.NullResponse{}, err
+	}
+	if id == 0 {
+		tx.Commit()
+		return pb_user_v1.NullResponse{}, nil
 	}
 	for _, roleId := range userRolesDTO.RoleIDs {
 		userRoles = append(userRoles, models.UserRole{
