@@ -54,31 +54,6 @@ func (a *apis) GetGroupApis() groupAPIInterface {
 	return a.groupAPIInterface
 }
 
-
-// response 通用响应
-// @data 当 isPB(是否返回的是 jsonpb 处理的数据) 为 true 时, data 必须为 []byte 参考 apis.groupAPIInterface GroupQueryWithQuotaAPI 方法
-func response(c *gin.Context, status int, message string, data interface{}, isByte bool) {
-	if data == nil {
-		data = ""
-	}
-	if !isByte {
-		c.JSON(http.StatusOK, map[string]interface{}{
-			"code":    status,
-			"message": message,
-			"data":    data,
-		})
-	} else {
-		c.Writer.Header().Set("Content-Type", "application/json")
-		_, err := c.Writer.Write(data.([]byte))
-		if err != nil {
-			log.Logger().Warn("PB消息byte写入响应信息失败: " + err.Error())
-		}
-	}
-
-	c.Abort()
-	return
-}
-
 func (a *apis) GetRoleApis() RoleApiInterface {
 	return a.RoleApiInterface
 }
@@ -104,7 +79,7 @@ func success_(c *gin.Context, data interface{}) {
 
 
 func error_(c *gin.Context, status code.Code, err ...error) {
-	c.Request.Header.Set("Content-Type", "application/json")
+	//c.Request.Header.Set("Content-Type", "application/json")
 	c.JSON(200,ApiResponse {
 		Code: status,
 		Message: status.Message(err...),
@@ -114,6 +89,29 @@ func error_(c *gin.Context, status code.Code, err ...error) {
 	return
 }
 
+// response 通用响应
+// @data 当 isPB(是否返回的是 jsonpb 处理的数据) 为 true 时, data 必须为 []byte 参考 apis.groupAPIInterface GroupQueryWithQuotaAPI 方法
+func response(c *gin.Context, status int, message string, data interface{}, isPB bool) {
+	if data == nil {
+		data = ""
+	}
+	if !isPB {
+		c.JSON(http.StatusOK, map[string]interface{}{
+			"code":    status,
+			"message": message,
+			"data":    data,
+		})
+	} else {
+		c.Writer.Header().Set("Content-Type", "application/json")
+		_, err := c.Writer.Write(data.([]byte))
+		if err != nil {
+			log.Logger().Warn("PB消息byte写入响应信息失败: " + err.Error())
+		}
+	}
+
+	c.Abort()
+	return
+}
 type ApiResponse struct {
 	Code code.Code `json:"code"`
 	Message string `json:"message"`

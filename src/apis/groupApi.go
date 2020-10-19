@@ -236,7 +236,7 @@ func (g *groupAPI) GroupDelete(c *gin.Context) {
 		response(c, http.StatusBadRequest, "删除失败", nil, false)
 		return
 	}
-	response(c, http.StatusOK, "成功", nil, true)
+	response(c, http.StatusOK, "成功", nil, false)
 	return
 
 }

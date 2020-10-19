@@ -32,16 +32,24 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			"pb_user_v1.RpcOrgService",
 			"RpcUpdateUserByID",
 			parser.EncodeUserModel,
-			parser.DecodeUserModel,
+			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
 			).Endpoint(),
 		DeleteUserByIDEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
 			"RpcDeleteUserByID",
-			parser.DecodeUserModel,
-			parser.DecodeUserModel,
+			parser.EncodeIndexProto,
+			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
+			).Endpoint(),
+		GetUserListEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcGetUserList",
+			parser.EncodeUserPage,
+			parser.DecodeUsersPage,
+			pb_user_v1.UsersPage{},
 			).Endpoint(),
 	}
 }

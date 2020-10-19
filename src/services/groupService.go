@@ -260,7 +260,7 @@ func (g *GroupService) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.Grou
 	}
 
 	// 验证组下是否存在用户
-	users, err := g.userRepo.GetUserListRepo(models.User{GroupID: int(data.Id)}, nil)
+	users, err := g.userRepo.GetUserListRepo(models.User{GroupID: int(data.Id)}, nil, nil)
 	if err != nil {
 		return nil, err
 	}

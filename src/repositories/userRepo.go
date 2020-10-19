@@ -14,7 +14,8 @@ type UserRepoInterface interface {
 	GetUserByIDRepo(id int) (user models.User, err error)
 	UpdateUserByIDRepo(user models.User) error
 	DeleteUserByIDRepo(id int) error
-	GetUserListRepo(user models.User, page *models.Page) ([]models.User, error)
+	AddUserRoleRepo(userRole models.UserRole) error
+	GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB) ([]models.User, error)
 	GetTx() *gorm.DB
 }
 
@@ -36,7 +37,7 @@ func NewUserRepo(db *yorm.DB) UserRepoInterface {
 
 // AddUserRepo 添加用户
 func (u *userRepo) AddUserRepo(user models.User) error {
-	userRecord, err := u.GetUserByName(user.UserName)
+	userRecord, err := u.GetUserByName(user.LoginName)
 	if err != nil && userRecord.ID == 0 {
 		return u.Create(&user).Error
 	}
@@ -51,11 +52,7 @@ func (u *userRepo) GetUserByIDRepo(id int) (user models.User, err error) {
 
 // UpdateUserByIDRepo 根据ID编辑用户
 func (u *userRepo) UpdateUserByIDRepo(user models.User) error {
-	userRecord, err := u.GetUserByName(user.UserName)
-	if err != nil || userRecord.ID == user.ID {
-		return u.Model(&user).Updates(user).Error
-	}
-	return errors.New("user is exist")
+	return u.Model(&user).Where("id=?", user.ID).Updates(user).Error
 }
 
 // DeleteUserByIDRepo 根据ID删除用户
@@ -71,12 +68,19 @@ func (u *userRepo) DeleteUserByIDRepo(id int) error {
 }
 
 // GetUserListRepo 获取用户列表
-func (u *userRepo) GetUserListRepo(user models.User, page *models.Page) ([]models.User, error){
+func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB) ([]models.User, error){
 	var(
 		users []models.User
 	)
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = u.DB
+	} else {
+		db = tx
+	}
 	dbPage := *u.DB
-	db := u.Table("user").
+	db = u.Table("user").
 		Select("user_name, group_id, created_at, id, login_name, mobile, user_type")
 
 	if user.UserName != "" {
@@ -85,6 +89,9 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page) ([]model
 
 	if user.ID != 0 {
 		db = db.Where("id=?", user.ID)
+	}
+	if user.GroupID != 0 {
+		db = db.Where("group_id=?", user.GroupID)
 	}
 	if page != nil {
 		db.DB()
@@ -105,19 +112,23 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page) ([]model
 		}
 		return users, nil
 	}
-	err := db.Find(&users).Error
+	err = db.Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
 	return users, err
 }
 
+// AddUserRoleRepo ...
+func (u *userRepo) AddUserRoleRepo(userRole models.UserRole) error {
+	return u.Create(&userRole).Error
+}
 // GetUserByName 根据用户名获取用户
 func (u *userRepo) GetUserByName(name string)(models.User, error) {
 	var(
 		user models.User
 		err error
 	)
-	err = u.Where("user_name=?", name).First(&user).Error
+	err = u.Where("login_name=?", name).First(&user).Error
 	return user, err
 }
