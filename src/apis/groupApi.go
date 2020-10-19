@@ -100,7 +100,7 @@ func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
 		return
 	}
 
-	response(c, http.StatusOK, "成功", _buffer.Bytes(), true)
+	response(c, http.StatusOK, "成功", string(_buffer.Bytes()), false)
 	return
 }
 
@@ -208,7 +208,7 @@ func (g *groupAPI) GroupTreeQueryAPI(c *gin.Context) {
 		response(c, http.StatusBadRequest, "查询失败或结果为空", nil, false)
 		return
 	}
-	response(c, http.StatusOK, "成功", resp.TreeJson, true)
+	response(c, http.StatusOK, "成功", string(resp.TreeJson), false)
 	return
 }
 
