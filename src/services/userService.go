@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
@@ -77,7 +76,6 @@ func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.U
 		user.UserName = userPage.User.UserName
 	}
 	users, err := u.userRepo.GetUserListRepo(user, &page, nil)
-	fmt.Println(err)
 	if err != nil {
 		return c, err
 	}
