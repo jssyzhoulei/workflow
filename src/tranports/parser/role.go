@@ -13,6 +13,7 @@ func DecodeRoleProto(ctx context.Context, req interface{}) (interface{}, error) 
 		DataPermit: int(r.DataPermit),
 		Status:     int(r.Status),
 	}
+	role.ID = int(r.Id)
 	role.Remark = r.Remark
 	return role, nil
 }
@@ -20,6 +21,7 @@ func DecodeRoleProto(ctx context.Context, req interface{}) (interface{}, error) 
 func EncodeRoleProto(ctx context.Context, req interface{}) (interface{}, error) {
 	r := req.(models.Role)
 	return &pb_user_v1.RoleProto{
+		Id:         int64(r.ID),
 		Name:       r.Name,
 		DataPermit: int32(r.DataPermit),
 		Status:     int32(r.Status),
@@ -89,4 +91,13 @@ func EncodeCreateMenuPermRequest(ctx context.Context, req interface{}) (interfac
 		Remark:              r.Remark,
 		RoleMenuPermissions: *buildRoleMenuPermissionProto(&r.MenuPerms, ctx),
 	}, nil
+}
+
+func DecodeRolePageProto(ctx context.Context, req interface{}) (interface{}, error) {
+	r := req.(*pb_user_v1.RolePageRequestProto)
+	return r, nil
+}
+
+func EncodeRolePageProto(ctx context.Context, req interface{}) (interface{}, error) {
+	return req.(*pb_user_v1.RolePageRequestProto), nil
 }

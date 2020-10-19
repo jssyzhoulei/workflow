@@ -13,6 +13,7 @@ type RoleServiceEndpoint struct {
 	UpdateRoleEndpoint endpoint.Endpoint
 	DeleteRoleEndpoint endpoint.Endpoint
 	QueryRoleEndpoint  endpoint.Endpoint
+	QueryRolesEndpoint endpoint.Endpoint
 }
 
 func NewRoleEndpoint(service services.ServiceI) *RoleServiceEndpoint {
@@ -21,6 +22,7 @@ func NewRoleEndpoint(service services.ServiceI) *RoleServiceEndpoint {
 	roleServiceEndpoint.UpdateRoleEndpoint = MakeUpdateRoleEndpoint(service.GetRoleService())
 	roleServiceEndpoint.DeleteRoleEndpoint = MakeDeleteRoleEndpoint(service.GetRoleService())
 	roleServiceEndpoint.QueryRoleEndpoint = MakeQueryRoleEndpoint(service.GetRoleService())
+	roleServiceEndpoint.QueryRolesEndpoint = MakeQueryRolesEndpoint(service.GetRoleService())
 	return roleServiceEndpoint
 }
 
@@ -68,6 +70,17 @@ func MakeQueryRoleEndpoint(roleService services.RoleServiceI) endpoint.Endpoint 
 	}
 }
 
+func MakeQueryRolesEndpoint(roleService services.RoleServiceI) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		page, ok := request.(*pb_user_v1.RolePageRequestProto)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = roleService.QueryRolesSvc(ctx, page)
+		return
+	}
+}
+
 func (r *RoleServiceEndpoint) AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
 	res, err := r.AddRoleEndpoint(ctx, role)
 	if err != nil {
@@ -99,4 +112,12 @@ func (r *RoleServiceEndpoint) QueryRoleSvc(ctx context.Context, id int) (*models
 		return nil, err
 	}
 	return res.(*models.CreateMenuPermRequest), nil
+}
+
+func (r *RoleServiceEndpoint) QueryRolesSvc(ctx context.Context, page *pb_user_v1.RolePageRequestProto) (*pb_user_v1.RolePageRequestProto, error) {
+	res, err := r.QueryRolesEndpoint(ctx, page)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*pb_user_v1.RolePageRequestProto), nil
 }
