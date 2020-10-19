@@ -22,6 +22,7 @@ type GroupRepoInterface interface {
 	GroupQueryWithQuotaByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.GroupQueryWithQuotaScanRes, error)
 	GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB) error
 	QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB) error
+	GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB) ([]*models.Group, error)
 }
 
 type groupRepo struct {
@@ -49,7 +50,7 @@ func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 		db = tx
 	}
 
-	// 判定用户组是否存在
+	// 判定组是否存在
 	var count int64
 	err = db.Model(&models.Group{}).Where("name=?", data.Name).Count(&count).Error
 	if err != nil {
@@ -61,20 +62,27 @@ func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 
 	// 查询父级数据
 	var parentGroup = new(models.Group)
+	var parentIsNotExist = false
+	var levelPath string
 	err = db.Model(&models.Group{}).Where("id=?", data.ParentID).First(&parentGroup).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			parentGroup.LevelPath = "0-"
+			parentIsNotExist = true
+			levelPath = "0-"
 		} else {
 			return err
 		}
+	}
+
+	if !parentIsNotExist {
+		levelPath = parentGroup.LevelPath + strconv.FormatInt(int64(parentGroup.ID), 10) + "-"
 	}
 
 	// 创建新的组
 	newGroupRecord := &models.Group{
 		Name:      data.Name,
 		ParentID:  data.ParentID,
-		LevelPath: parentGroup.LevelPath,
+		LevelPath: levelPath,
 	}
 	if err = db.Create(newGroupRecord).Error; err != nil {
 		return err
@@ -223,6 +231,8 @@ func (g *groupRepo) GroupQueryWithQuotaByConditionRepo(condition *models.GroupQu
 		whereCondition += " and parent_id in @parent_ids "
 		conditionVal["parent_ids"] = condition.ParentID
 	}
+	// 过滤软删除的数据
+	whereCondition += " and status=0 "
 
 	sqlStr := `
 SELECT
@@ -337,4 +347,50 @@ func (g *groupRepo) QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB
 	}
 
 	return nil
+}
+
+// GroupDeleteRepo 组删除
+func (g *groupRepo) GroupDeleteRepo(id int64, tx *gorm.DB) error {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	err = db.Model(&models.Group{}).Where("id=?", id).Update("status", 1).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GroupListWithChangedLevelPathRepo 通过ID查询组及其下级组信息,查询结果的 levelPath 会从顶级组开始
+// 此方法被 services.GroupTreeQuerySvc 使用,用于生成 group 树形数据
+func (g *groupRepo) GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB) ([]*models.Group, error) {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+	if groupID == 0 {
+		return nil, err
+	}
+
+	sqlStr := `
+select id,name,parent_id,
+	-- 这里字符串截取path,截取起始位置为父级level_path长度+1 至末尾
+	substring(level_path,(select LENGTH(level_path) from ` + "`group`" + ` where id = ? and status = 0) + 1) as level_path
+from ` + "`group`" + ` where level_path like ? and status = 0 order by id;
+`
+	var lpStr = "%-"+strconv.Itoa(int(groupID)) + "-%"
+	var result = make([]*models.Group, 0)
+	err = db.Raw(sqlStr, groupID, lpStr).Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

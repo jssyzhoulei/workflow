@@ -43,7 +43,7 @@ func (r RequestMethod) String() string {
 
 type RoleMenuPermission struct {
 	BaseModel
-	Version      int `gorm:"column:version;type:int(10);comment:'版本号'" json:"version"`
+	Version      int `gorm:"column:version;type:int(10);comment:'版本号'" json:"-"`
 	RoleID       int `gorm:"column:role_id;type:int(10);comment:'角色id'" json:"role_id"`
 	MenuID       int `gorm:"column:menu_id;type:int(10);comment:'组件id'" json:"menu_id"`
 	PermissionID int `json:"permission_id"`
@@ -55,7 +55,7 @@ func (RoleMenuPermission) TableName() string {
 
 type CreateMenuPermRequest struct {
 	Role
-	MenuPerms []*RoleMenuPermission
+	MenuPerms []*RoleMenuPermission `json:"menu_perms"`
 }
 
 func (c CreateMenuPermRequest) Check() bool {
@@ -63,7 +63,13 @@ func (c CreateMenuPermRequest) Check() bool {
 	return len(c.MenuPerms) != 0 && c.Name != "" && (c.DataPermit == 1 || c.DataPermit == 2 || c.DataPermit == 3)
 }
 
+type Perm struct {
+	RoleID       int `gorm:"column:role_id;type:int(10);comment:'角色id'" json:"role_id"`
+	MenuID       int `gorm:"column:menu_id;type:int(10);comment:'组件id'" json:"menu_id"`
+	PermissionID int `json:"permission_id"`
+}
+
 type MenuPermResponse struct {
 	Role
-	RoleMenuPermission
+	Perm
 }

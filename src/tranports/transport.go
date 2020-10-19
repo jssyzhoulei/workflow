@@ -19,10 +19,6 @@ func (o *OrgTransport) RpcUpdateUser(c context.Context, proto *pb_user_v1.UserPr
 	panic("implement me")
 }
 
-//func (o *OrgTransport) RpcAddRole(ctx context.Context, proto *pb_user_v1.CreateMenuPermRequestProto) (*pb_user_v1.RoleProto, error) {
-//	panic("implement me")
-//}
-
 func NewTransport(ept *endpoints.OrgEndpoint) pb_user_v1.RpcOrgServiceServer {
 	return &OrgTransport{
 		userGrpcTransport: NewUserGrpcTransport(ept.UserServiceEndpoint),

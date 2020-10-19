@@ -97,6 +97,7 @@ func (o *OrgServiceClient) GetRoleService() services.RoleServiceI {
 	endpoints.AddRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeAddRoleEndpoint, RoleGrpcConn)
 	endpoints.UpdateRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeUpdateRoleEndpoint, RoleGrpcConn)
 	endpoints.DeleteRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeDeleteRoleEndpoint, RoleGrpcConn)
+	endpoints.QueryRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeQueryRoleEndpoint, RoleGrpcConn)
 	return endpoints
 }
 
@@ -128,6 +129,7 @@ func (o *OrgServiceClient) GetGroupService() services.GroupServiceInterface {
 		GroupQueryWithQuotaByConditionEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupQueryWithQuotaByConditionEndpoint, groupGrpcConn),
 		GroupUpdateEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupUpdateEndpoint, groupGrpcConn),
 		QuotaUpdateEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeQuotaUpdateEndpoint, groupGrpcConn),
+		GroupTreeQueryEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupTreeQueryEndpoint, groupGrpcConn),
 	}
 }
 

@@ -10,7 +10,8 @@ import (
 type RoleServiceI interface {
 	AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
 	UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
-	DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
+	DeleteRoleSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
+	QueryRoleSvc(ctx context.Context, id int) (*models.CreateMenuPermRequest, error)
 }
 
 type roleService struct {
@@ -47,8 +48,14 @@ func (r *roleService) UpdateRoleSvc(ctx context.Context, role models.CreateMenuP
 	return pb_user_v1.NullResponse{}, r.roleRepo.BatchCreateMenuPermRepo(&role.MenuPerms)
 }
 
-func (r *roleService) DeleteRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
-	err := r.roleRepo.DeleteMenuPermissionByRoleIDRepo(role.ID)
-	err = r.roleRepo.DeleteRoleRepo(&role.Role)
+func (r *roleService) DeleteRoleSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error) {
+	err := r.roleRepo.DeleteMenuPermissionByRoleIDRepo(id)
+	role := models.Role{}
+	role.ID = id
+	err = r.roleRepo.DeleteRoleRepo(&role)
 	return pb_user_v1.NullResponse{}, err
+}
+
+func (r *roleService) QueryRoleSvc(ctx context.Context, id int) (*models.CreateMenuPermRequest, error) {
+	return r.roleRepo.RoleDetailRepo(id, 0)
 }
