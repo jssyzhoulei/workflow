@@ -203,7 +203,7 @@ func (g *groupAPI) GroupTreeQueryAPI(c *gin.Context) {
 	resp, err := g.groupService.GroupTreeQuerySvc(context.Background(), d)
 	if err != nil {
 		log.Logger().Info("获取 组树失败: " + err.Error())
-		response(c, http.StatusBadRequest, "操作失败", nil, false)
+		response(c, http.StatusBadRequest, "查询失败或结果为空", nil, false)
 		return
 	}
 	response(c, http.StatusOK, "成功", resp.TreeJson, true)
