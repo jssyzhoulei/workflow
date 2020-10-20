@@ -47,6 +47,8 @@ func EncodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 		Password: r.Password,
 		Mobile: int64(r.Mobile),
 		Ststus: int64(r.Status),
+		GroupId: int64(r.GroupID),
+		UserType: int64(r.UserType),
 	}, nil
 }
 

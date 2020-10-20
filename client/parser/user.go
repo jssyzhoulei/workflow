@@ -46,6 +46,8 @@ func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) 
 		Password:  user.Password,
 		Mobile:    int(user.Mobile),
 		Status:    int(user.Ststus),
+		GroupID:   int(user.GroupId),
+		UserType:  int(user.UserType),
 	}, nil
 }
 
