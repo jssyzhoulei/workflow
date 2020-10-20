@@ -77,7 +77,7 @@ func MakeGetUserByIDEndpoint(userService services.UserServiceInterface) endpoint
 // MakeUpdataUserByIDEndpoint ...
 func MakeUpdataUserByIDEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		user, ok := request.(models.User)
+		user, ok := request.(models.UserRolesDTO)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
@@ -142,8 +142,8 @@ func (u *UserServiceEndpoint) GetUserByIDSvc(ctx context.Context, id int) (model
 }
 
 // UpdateUserByIDSvc ...
-func (u *UserServiceEndpoint) UpdateUserByIDSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error){
-	resp, err := u.UpdateUserByIDEndpoint(ctx, user)
+func (u *UserServiceEndpoint) UpdateUserByIDSvc(ctx context.Context, userProto models.UserRolesDTO) (pb_user_v1.NullResponse, error){
+	resp, err := u.UpdateUserByIDEndpoint(ctx, userProto)
 	if err != nil {
 		return pb_user_v1.NullResponse{}, err
 	}
