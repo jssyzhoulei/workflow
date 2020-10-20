@@ -25,6 +25,8 @@ type GroupRepoInterface interface {
 	QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB) error
 	GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB) ([]*models.Group, error)
 	GroupDeleteRepo(id int64, tx *gorm.DB) error
+	QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]int64, error)
+
 }
 
 type groupRepo struct {
@@ -403,4 +405,28 @@ from `, subQueryLevelPath) + "`group`" + ` where level_path like ? and status = 
 		return nil, err
 	}
 	return result, nil
+}
+
+// QueryGroupIDAndSubGroupsID 查询组下包含其子组的ID
+func (g *groupRepo) QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]int64, error) {
+	var err error
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	var groupIDs []int64
+	levelPath := "%" + strconv.FormatInt(groupID, 10) + "-%"
+	err = db.Model(&models.Group{}).Select("id").Where("level_path like ? or id=? and status=0", levelPath, groupID).Find(&groupIDs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(groupIDs) < 1 {
+		return nil, errors.New("组查询记录为空")
+	}
+
+	return groupIDs, nil
 }

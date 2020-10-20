@@ -17,6 +17,7 @@ type GroupServiceEndpoint struct {
 	QuotaUpdateEndpoint endpoint.Endpoint
 	GroupTreeQueryEndpoint endpoint.Endpoint
 	GroupDeleteEndpoint endpoint.Endpoint
+	QueryGroupAndSubGroupsUsersEndpoint endpoint.Endpoint
 }
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
@@ -28,6 +29,7 @@ func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 		QuotaUpdateEndpoint: MakeQuotaUpdateEndpoint(service.GetGroupService()),
 		GroupTreeQueryEndpoint: MakeGroupTreeQueryEndpoint(service.GetGroupService()),
 		GroupDeleteEndpoint: MakeGroupDeleteEndpoint(service.GetGroupService()),
+		QueryGroupAndSubGroupsUsersEndpoint: MakeQueryGroupAndSubGroupsUsersEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -160,4 +162,25 @@ func (g *GroupServiceEndpoint) GroupDeleteSvc(ctx context.Context, data *pb_user
 		return nil, err
 	}
 	return resp.(*pb_user_v1.GroupResponse), nil
+}
+
+// MakeQueryGroupAndSubGroupsUsersEndpoint ...
+func MakeQueryGroupAndSubGroupsUsersEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.GroupID)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = groupServiceInterface.QueryGroupAndSubGroupsUsersSvc(ctx, data)
+		return
+	}
+}
+
+// QueryGroupAndSubGroupsUsersSvc ...
+func (g *GroupServiceEndpoint) QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error) {
+	resp , err := g.QueryGroupAndSubGroupsUsersEndpoint(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.Users), nil
 }

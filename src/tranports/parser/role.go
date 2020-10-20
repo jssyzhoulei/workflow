@@ -79,7 +79,7 @@ func DecodeCreateMenuPermRequestProto(ctx context.Context, req interface{}) (int
 		MenuPerms: *buildRoleMenuPermission(&r.RoleMenuPermissions, ctx),
 	}
 	mpr.Remark = r.Remark
-	return mpr, nil
+	return &mpr, nil
 }
 
 func EncodeCreateMenuPermRequest(ctx context.Context, req interface{}) (interface{}, error) {

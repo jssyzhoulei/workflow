@@ -64,20 +64,23 @@ type GroupQueryByCondition struct {
 	ParentID []int64  `json:"parent_id"`
 }
 
+// QuotaResponse 配额
+type QuotaResponse struct {
+	IsShare              int64    `json:"is_share"`
+	ResourcesGroupId     string   `json:"resources_group_id"`
+	Gpu                  int64    `json:"gpu"`
+	Cpu                  int64    `json:"cpu"`
+	Memory               int64    `json:"memory"`
+}
+
 // GroupQueryWithQuota 查询组和配额结果
 type GroupQueryWithQuota struct {
-	ID          int64  `json:"id"`
-	Name        string `json:"name"`
-	ParentID    int64  `json:"parent_id"`
-	TopParentID int    `json:"top_parent_id"`
-	CreateTime  string `json:"create_time"`
-	Quotas      []struct {
-		IsShare     int    `json:"is_share"`
-		ResourcesID string `json:"resources_id"`
-		Type        int    `json:"type"`
-		Total       int    `json:"total"`
-		Used        int    `json:"used"`
-	} `json:"quotas"`
+	ID            int64            `json:"id"`
+	Name          string           `json:"name"`
+	ParentID      int64            `json:"parent_id"`
+	TopParentID   int64            `json:"top_parent_id"`
+	DiskQuotaSize int64            `json:"disk_quota_size"`
+	Quotas        []*QuotaResponse `json:"quotas"`
 }
 
 // GroupQueryWithQuotaScanRes 查询组和配额 SQL Scan 结构体
@@ -111,12 +114,19 @@ type QuotaUpdateRequest struct {
 	Used        int64  `json:"used"`
 }
 
-// Q
+// QueryGroupsUsersResponse 查询组下的下级用户
+type QueryGroupsUsersResponse struct {
+	ID        int64  `json:"id"`
+	UserName  string `json:"user_name"`
+	LoginName string `json:"login_name"`
+	GroupID   int64  `json:"group_id"`
+	UserType  int    `json:"user_type"`
+	Mobile    int    `json:"mobile"`
+}
 
 // GroupTreeNode 组树形结构节点
 type GroupTreeNode struct {
-	Name     string      `json:"name"`
-	ID       string      `json:"id"`
+	Name     string           `json:"name"`
+	ID       string           `json:"id"`
 	Children []*GroupTreeNode `json:"children"`
 }
-

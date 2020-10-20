@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
@@ -21,6 +20,7 @@ type groupAPIInterface interface {
 	QuotaUpdateAPI(c *gin.Context)
 	GroupTreeQueryAPI(c *gin.Context)
 	GroupDelete(c *gin.Context)
+	QueryGroupAndSubGroupsUsers(c *gin.Context)
 }
 
 type groupAPI struct {
@@ -91,16 +91,36 @@ func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
 		return
 	}
 
-	var _buffer bytes.Buffer
+	var result = make([]*models.GroupQueryWithQuota, 0)
+	for i := 0; i < len(res.Groups); i++ {
+		_data := res.Groups[i]
 
-	err = jsonpbMarshaler.Marshal(&_buffer, res)
-	if err != nil {
-		log.Logger().Info("序列化查询组和其配额信息错误: " + err.Error())
-		response(c, http.StatusBadRequest, "操作失败", nil, false)
-		return
+		var quotaResult = make([]*models.QuotaResponse, 0)
+
+		for i := 0; i < len(_data.Quotas); i++ {
+			q := _data.Quotas[i]
+			_tmp := &models.QuotaResponse{
+				IsShare:          q.IsShare,
+				ResourcesGroupId: q.ResourcesGroupId,
+				Cpu:              q.Cpu,
+				Gpu:              q.Gpu,
+				Memory:           q.Memory,
+			}
+			quotaResult = append(quotaResult, _tmp)
+		}
+
+		var _tmp = &models.GroupQueryWithQuota{
+			ID:            _data.Id,
+			Name:          _data.Name,
+			ParentID:      _data.ParentId,
+			TopParentID:   _data.TopParentId,
+			DiskQuotaSize: _data.DiskQuotaSize,
+			Quotas:        quotaResult,
+		}
+		result = append(result, _tmp)
 	}
 
-	response(c, http.StatusOK, "成功", string(_buffer.Bytes()), false)
+	response(c, http.StatusOK, "成功", result, false)
 	return
 }
 
@@ -238,5 +258,46 @@ func (g *groupAPI) GroupDelete(c *gin.Context) {
 	}
 	response(c, http.StatusOK, "成功", nil, false)
 	return
+}
 
+// QueryGroupAndSubGroupsUsers 查询组及其子组下的所有用户
+func (g *groupAPI) QueryGroupAndSubGroupsUsers(c *gin.Context) {
+	groupIDStr := c.DefaultQuery("group_id", "")
+	if groupIDStr == "" {
+		response(c, http.StatusBadRequest, "获取参数失败", nil, false)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(groupIDStr, 10, 64)
+	if err != nil {
+		response(c, http.StatusBadRequest, "参数解析失败", nil, false)
+		return
+	}
+
+	d := &pb_user_v1.GroupID{
+		Id: groupID,
+	}
+
+	resp, err := g.groupService.QueryGroupAndSubGroupsUsersSvc(context.Background(), d)
+	if err != nil {
+		log.Logger().Info("查询组及其子组下的所有用户 失败: " + err.Error())
+		response(c, http.StatusBadRequest, "查询失败", nil, false)
+		return
+	}
+
+	var result = make([]*models.QueryGroupsUsersResponse, 0)
+	for i := 0; i < len(resp.Users); i++ {
+		_user := resp.Users[i]
+		_tmp := &models.QueryGroupsUsersResponse{
+			ID:        _user.Id.Id,
+			UserName:  _user.UserName,
+			LoginName: _user.LoginName,
+			GroupID:   _user.GroupId,
+			UserType:  int(_user.UserType),
+			Mobile:    int(_user.Mobile),
+		}
+		result = append(result, _tmp)
+	}
+	response(c, http.StatusOK, "成功", result, false)
+	return
 }

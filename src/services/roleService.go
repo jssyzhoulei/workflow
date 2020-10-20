@@ -2,15 +2,14 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
 )
 
 type RoleServiceI interface {
-	AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
-	UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
+	AddRoleSvc(ctx context.Context, role *models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
+	UpdateRoleSvc(ctx context.Context, role *models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error)
 	DeleteRoleSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
 	QueryRoleSvc(ctx context.Context, id int) (*models.CreateMenuPermRequest, error)
 	QueryRolesSvc(ctx context.Context, page *pb_user_v1.RolePageRequestProto) (*pb_user_v1.RolePageRequestProto, error)
@@ -26,8 +25,8 @@ func NewRoleService(repos repositories.RepoI) RoleServiceI {
 	}
 }
 
-func (r *roleService) AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
-	err := r.roleRepo.AddRoleRepo(&role)
+func (r *roleService) AddRoleSvc(ctx context.Context, role *models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
+	err := r.roleRepo.AddRoleRepo(role)
 	if err != nil {
 		return pb_user_v1.NullResponse{}, err
 	}
@@ -37,7 +36,7 @@ func (r *roleService) AddRoleSvc(ctx context.Context, role models.CreateMenuPerm
 	return pb_user_v1.NullResponse{}, r.roleRepo.BatchCreateMenuPermRepo(&role.MenuPerms)
 }
 
-func (r *roleService) UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
+func (r *roleService) UpdateRoleSvc(ctx context.Context, role *models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
 	err := r.roleRepo.UpdateRoleRepo(&role.Role)
 	err = r.roleRepo.DeleteMenuPermissionByRoleIDRepo(role.ID)
 	if err != nil {
@@ -63,7 +62,5 @@ func (r *roleService) QueryRoleSvc(ctx context.Context, id int) (*models.CreateM
 }
 
 func (r *roleService) QueryRolesSvc(ctx context.Context, page *pb_user_v1.RolePageRequestProto) (*pb_user_v1.RolePageRequestProto, error) {
-	r1, e := r.roleRepo.ListRolesRepo(page, 0)
-	fmt.Printf("执行2", r1.Roles)
-	return r1, e
+	return r.roleRepo.ListRolesRepo(page, 0)
 }
