@@ -168,7 +168,19 @@ func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.U
 		userProto.Id = &pb_user_v1.Index{
 			Id:                   int64(user.ID),
 		}
+		userProto = pb_user_v1.UserProto{
+			UserName: user.UserName,
+			LoginName: user.LoginName,
+			Password: user.Password,
+			Mobile: int64(user.Mobile),
+			GroupId: int64(user.GroupID),
+			Ststus: int64(user.Status),
+			UserType: int64(user.UserType),
+		}
 
+		for _, v := range userProto.RoleIds {
+			userProto.RoleIds = append(userProto.RoleIds, v)
+		}
 		c.Users.Users = append(c.Users.Users, &userProto)
 	}
 	return c, nil

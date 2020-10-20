@@ -138,7 +138,7 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm
 	}
 	dbPage := *u.DB
 	db = u.Table("user").
-		Select("user_name, group_id, created_at, id, login_name, mobile, user_type")
+		Select("user_name, group_id, created_at, id, login_name, mobile, user_type, status")
 
 	if user.UserName != "" {
 		db = db.Where("user_name like ?", "%" + user.UserName + "%")
