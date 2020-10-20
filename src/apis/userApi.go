@@ -77,16 +77,18 @@ func (u *userApi) GetUserByIDApi(ctx *gin.Context){
 // UpdateUserByIDApi 修改用户API
 func (u *userApi) UpdateUserByIDApi(ctx *gin.Context) {
 
-	var data = new(models.User)
+	var (
+		userRoleDTO models.UserRolesDTO
+	)
 
-	err := ctx.BindJSON(&data)
+	err := ctx.BindJSON(&userRoleDTO)
 	//fmt.Printf("%+v",*data)
 	if err != nil {
 		log.Logger().Error(fmt.Sprintf("update user request param error : %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
-	_, err = u.userService.UpdateUserByIDSvc(context.Background(), *data)
+	_, err = u.userService.UpdateUserByIDSvc(context.Background(), userRoleDTO)
 	if err != nil {
 		log.Logger().Error("update user error: " + err.Error())
 		error_(ctx, 201, err)

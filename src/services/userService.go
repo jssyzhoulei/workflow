@@ -14,7 +14,7 @@ import (
 type UserServiceInterface interface {
 	AddUserSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error)
 	GetUserByIDSvc(ctx context.Context, id int) (models.User, error)
-	UpdateUserByIDSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error)
+	UpdateUserByIDSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error)
 	DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
 	AddUsersSvc(ctx context.Context, users *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error)
 	GetUserListSvc(ctx context.Context, user *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error)
@@ -44,9 +44,16 @@ func (u *userService) AddUserSvc(ctx context.Context, userRolesDTO models.UserRo
 	)
 
 	tx := u.userRepo.GetTx()
+	key, _ := u.config.GetString("passwordKey")
+	userRolesDTO.Password,_ = userRolesDTO.EncodePwd(key)
 	id, err := u.userRepo.AddUserRepo(userRolesDTO.User, tx)
 	if err != nil {
 		tx.Rollback()
+		return pb_user_v1.NullResponse{}, err
+	}
+	if id == 0 {
+		tx.Commit()
+		return pb_user_v1.NullResponse{}, nil
 	}
 	for _, roleId := range userRolesDTO.RoleIDs {
 		userRoles = append(userRoles, models.UserRole{
@@ -57,7 +64,6 @@ func (u *userService) AddUserSvc(ctx context.Context, userRolesDTO models.UserRo
 
 	err = u.userRepo.AddUserRolesRepo(userRoles, tx)
 	if err != nil {
-		fmt.Println(err.Error(), ">----------------")
 		tx.Rollback()
 	}
 	tx.Commit()
@@ -87,8 +93,33 @@ func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (models.User, 
 }
 
 // UpdateUserByIDSvc 根据ID编辑用户
-func (u *userService) UpdateUserByIDSvc(ctx context.Context, user models.User) (pb_user_v1.NullResponse, error) {
-	err := u.userRepo.UpdateUserByIDRepo(user, nil)
+func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error) {
+	//var (
+	//	userRoles    []models.UserRole
+	//)
+
+	tx := u.userRepo.GetTx()
+	err := u.userRepo.UpdateUserByIDRepo(userRolesDTO.User, tx)
+	if err != nil {
+		tx.Rollback()
+		return pb_user_v1.NullResponse{}, err
+	}
+	if userRolesDTO.ID == 0 {
+		tx.Commit()
+		return pb_user_v1.NullResponse{}, nil
+	}
+	//for _, roleId := range userRolesDTO.RoleIDs {
+	//	userRoles = append(userRoles, models.UserRole{
+	//		UserID: userRolesDTO.ID,
+	//		RoleID: int(roleId),
+	//	})
+	//}
+
+	err = u.userRepo.UpdateUserRolesRepo(userRolesDTO, tx)
+	if err != nil {
+		tx.Rollback()
+	}
+	tx.Commit()
 	return pb_user_v1.NullResponse{}, err
 }
 
@@ -97,7 +128,18 @@ func (u *userService) DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1
 	var (
 		err error
 	)
-	err = u.userRepo.DeleteUserByIDRepo(id)
+	tx := u.userRepo.GetTx()
+	err = u.userRepo.DeleteUserRolesById(id, tx)
+	if err != nil {
+		tx.Rollback()
+		return pb_user_v1.NullResponse{}, err
+	}
+
+	err = u.userRepo.DeleteUserByIDRepo(id, tx)
+	if err != nil {
+		tx.Rollback()
+	}
+	tx.Commit()
 	return pb_user_v1.NullResponse{}, err
 }
 
@@ -137,7 +179,18 @@ func (u *userService) BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_
 	var (
 		err error
 	)
-	err = u.userRepo.BatchDeleteUsersRepo(ids)
+	tx := u.userRepo.GetTx()
+	err = u.userRepo.DeleteUserRolesByUserIds(ids, tx)
+	if err != nil {
+		tx.Rollback()
+		return pb_user_v1.NullResponse{}, err
+	}
+
+	err = u.userRepo.BatchDeleteUsersRepo(ids, tx)
+	if err != nil {
+		tx.Rollback()
+	}
+	tx.Commit()
 	return pb_user_v1.NullResponse{}, err
 }
 
