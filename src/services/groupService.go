@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gitee.com/grandeep/device-plugin/client"
+	"gitee.com/grandeep/device-plugin/src/services"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/config"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // GroupServiceInterface 组服务接口
@@ -21,19 +25,27 @@ type GroupServiceInterface interface {
 	QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.QuotaUpdateRequest) (*pb_user_v1.GroupResponse, error)
 	GroupTreeQuerySvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupTreeResponse, error)
 	GroupDeleteSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupResponse, error)
+	QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
 type GroupService struct {
 	groupRepo repositories.GroupRepoInterface
 	userRepo  repositories.UserRepoInterface
+	kubernetesService services.KubernetesServiceI
+	cfg *config.Config
 }
 
 // NewGroupService GroupService 构造函数
-func NewGroupService(repos repositories.RepoI) GroupServiceInterface {
+func NewGroupService(repos repositories.RepoI, cfg *config.Config) GroupServiceInterface {
+	etcdHosts, _ := cfg.GetString("etcdHost")
+
+	deviceClient := client.NewDeviceClient(strings.Split(etcdHosts, ";"), 2, time.Second * 5)
 	return &GroupService{
-		groupRepo: repos.GetGroupRepo(),
-		userRepo:  repos.GetUserRepo(),
+		groupRepo:         repos.GetGroupRepo(),
+		userRepo:          repos.GetUserRepo(),
+		kubernetesService: deviceClient.GetKubernetesService(),
+		cfg:               cfg,
 	}
 }
 
@@ -54,11 +66,13 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 
 	err = g.groupRepo.GroupAddRepo(newGroup, tx)
 	if err != nil {
-		return &pb_user_v1.GroupResponse{Code: 1}, err
+		tx.Rollback()
+		return nil, err
 	}
 
 	group, err := g.groupRepo.GroupQueryByNameRepo(data.Name, tx)
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -119,7 +133,13 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 
 	err = g.groupRepo.QuotaAddRepo(result, tx)
 	if err != nil {
-		return &pb_user_v1.GroupResponse{Code: 1}, err
+		tx.Rollback()
+		return nil, err
+	}
+	_, err = g.kubernetesService.CreateNamespaceSvc(ctx, data.Name)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
 	}
 	tx.Commit()
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
@@ -285,7 +305,6 @@ func (g *GroupService) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.Grou
 		return nil, fmt.Errorf("无法删除组,包含下级组: %d 个", len(groups))
 	}
 
-
 	// 删除组
 	err = g.groupRepo.GroupDeleteRepo(data.Id, nil)
 	if err != nil {
@@ -385,4 +404,41 @@ func generateGroupTree(data []*models.Group, rootParentID int) []*models.GroupTr
 		}
 	}
 	return result
+}
+
+// QueryGroupAndSubGroupsUsersSvc 查询组及其子组下的所有用户
+func (g *GroupService) QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error) {
+
+	groupIDs, err := g.groupRepo.QueryGroupIDAndSubGroupsID(data.Id, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	users, err := g.userRepo.GetUserListRepo(models.User{}, nil, nil, groupIDs...)
+	if err != nil {
+		return nil, err
+	}
+
+
+	var result []*pb_user_v1.UserProto
+	l := len(users)
+	for i := 0; i < l; i++ {
+		user := users[i]
+
+		_user := &pb_user_v1.UserProto{
+			Id:                   &pb_user_v1.Index{Id: int64(user.ID)},
+			UserName:             user.UserName,
+			LoginName:            user.LoginName,
+			Mobile:               int64(user.Mobile),
+			GroupId:              int64(user.GroupID),
+			UserType:             int64(user.UserType),
+			RoleIds:              nil,
+		}
+		// TODO: 查询组及其子组下的所有用户 -> 添加roleIDs
+		result = append(result, _user)
+	}
+
+	return &pb_user_v1.Users{
+		Users:                result,
+	}, nil
 }

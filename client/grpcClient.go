@@ -121,6 +121,14 @@ func groupGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 			parser.DecodeGroupProto,
 			pb_user_v1.GroupResponse{},
 		).Endpoint(),
+		QueryGroupAndSubGroupsUsersEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RPCQueryGroupAndSubGroupsUsers",
+			parser.EncodeGroupIDProto,
+			parser.DecodeUsers,
+			pb_user_v1.Users{},
+		).Endpoint(),
 	}
 }
 

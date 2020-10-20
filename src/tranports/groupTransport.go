@@ -15,6 +15,7 @@ type groupGrpcTransport struct {
 	quotaUpdate transport.Handler
 	groupTreeQuery transport.Handler
 	groupDelete transport.Handler
+	queryGroupAndSubGroupsUsers transport.Handler
 }
 
 // NewGroupGrpcTransport ...
@@ -26,6 +27,7 @@ func NewGroupGrpcTransport(endpoint *endpoints.GroupServiceEndpoint) *groupGrpcT
 		quotaUpdate: transport.NewServer(endpoint.QuotaUpdateEndpoint, parser.DecodeQuotaUpdateProto, parser.EncodeGroupProto),
 		groupTreeQuery: transport.NewServer(endpoint.GroupTreeQueryEndpoint, parser.DecodeGroupIDProto, parser.EncodeGroupTreeQueryProto),
 		groupDelete: transport.NewServer(endpoint.GroupDeleteEndpoint, parser.DecodeGroupIDProto, parser.EncodeGroupProto),
+		queryGroupAndSubGroupsUsers: transport.NewServer(endpoint.QueryGroupAndSubGroupsUsersEndpoint, parser.DecodeGroupIDProto, parser.EncodeUsers),
 	}
 }
 
@@ -81,4 +83,13 @@ func (g *groupGrpcTransport) RPCGroupDelete(ctx context.Context, proto *pb_user_
 		return nil, err
 	}
 	return resp.(*pb_user_v1.GroupResponse), err
+}
+
+// RPCQueryGroupAndSubGroupsUsers ...
+func (g *groupGrpcTransport) RPCQueryGroupAndSubGroupsUsers(ctx context.Context, proto *pb_user_v1.GroupID) (*pb_user_v1.Users, error) {
+	_, resp, err := g.queryGroupAndSubGroupsUsers.ServeGRPC(ctx, proto)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.Users), err
 }

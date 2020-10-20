@@ -7,6 +7,7 @@ import (
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gorm.io/gorm"
 	"math"
+	"time"
 )
 
 // UserRepoI ...
@@ -14,15 +15,18 @@ type UserRepoInterface interface {
 	AddUserRepo(user models.User, tx *gorm.DB) (int, error)
 	GetUserByIDRepo(id int) (user models.User, err error)
 	UpdateUserByIDRepo(user models.User, tx *gorm.DB) error
-	DeleteUserByIDRepo(id int) error
+	DeleteUserByIDRepo(id int,tx *gorm.DB) error
 	AddUserRoleRepo(userRole models.UserRole) error
 	GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB, groupIds ...int64) ([]models.User, error)
-	BatchDeleteUsersRepo(ids []int64) error
+	BatchDeleteUsersRepo(ids []int64, tx *gorm.DB) error
 	GetTx() *gorm.DB
 	GetUsersByLoginNames([]string) ([]models.User, error)
 	AddUsersRepo(users []models.User, tx *gorm.DB) ([]int, error)
 	AddUserRolesRepo(roles []models.UserRole, tx *gorm.DB) error
 	DeleteUserRolesByUserId(ids []int, tx *gorm.DB) error
+	DeleteUserRolesById(id int, tx *gorm.DB) error
+	DeleteUserRolesByUserIds(ids []int64, tx *gorm.DB) error
+	UpdateUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *gorm.DB) error
 }
 
 type userRepo struct {
@@ -54,19 +58,19 @@ func (u *userRepo) AddUserRepo(user models.User, tx *gorm.DB) (int, error) {
 		db = tx
 	}
 
-	userRecord, err := u.GetUserByName(user.LoginName)
+	_, err := u.GetUserByName(user.LoginName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = db.Create(&user).Error
 			if err != nil {
 				fmt.Println("create user error: ", err.Error())
 			}
+			return user.ID, nil
 		} else {
 			fmt.Println(err.Error(), "=================")
 		}
 	}
-	fmt.Println("run  ---->")
-	return userRecord.ID, err
+	return 0, err
 }
 
 // GetUserByIDRepo 通过ID获取用户详情
@@ -91,15 +95,32 @@ func (u *userRepo) UpdateUserByIDRepo(user models.User, tx *gorm.DB) error {
 }
 
 // DeleteUserByIDRepo 根据ID删除用户
-func (u *userRepo) DeleteUserByIDRepo(id int) error {
-	var(
-		user models.User
-	)
-	if id != 0 {
-		user.ID = id
-		return u.Delete(&user).Error
+func (u *userRepo) DeleteUserByIDRepo(id int,tx *gorm.DB) error {
+	//var(
+	//	user models.User
+	//)
+	var db *gorm.DB
+	if tx == nil {
+		db = u.DB
+	} else {
+		db = tx
+	}
+	updateColumnMap := map[string]interface{} {
+		"status": 1,
+		"deleted_at": time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	err := db.Model(&models.User{}).Where("id=?", id).Updates(updateColumnMap).Error
+	if err != nil {
+		return err
 	}
 	return nil
+
+	//if id != 0 {
+	//	user.ID = id
+	//	return db.Delete(&user).Error
+	//}
+	//return nil
 }
 
 
@@ -163,8 +184,14 @@ func (u *userRepo) AddUserRoleRepo(userRole models.UserRole) error {
 }
 
 // BatchDeleteUsersRepo 批量删除用户
-func (u *userRepo) BatchDeleteUsersRepo(ids []int64) error {
-	return u.Model(&models.User{}).Where("id in ?", ids).Delete(&models.User{}).Error
+func (u *userRepo) BatchDeleteUsersRepo(ids []int64, tx *gorm.DB) error {
+	var db *gorm.DB
+	if tx == nil {
+		db = u.DB
+	} else {
+		db = tx
+	}
+	return db.Model(&models.User{}).Where("id in ?", ids).Delete(&models.User{}).Error
 }
 // GetUserByName 根据用户名获取用户
 func (u *userRepo) GetUserByName(name string)(models.User, error) {
@@ -228,4 +255,40 @@ func (u *userRepo) DeleteUserRolesByUserId(ids []int, tx *gorm.DB) error {
 		db = tx
 	}
 	return db.Table("user_role").Where("user_id IN ?", ids).Where("deleted_at is NULL").Delete(&models.UserRole{}).Error
+}
+
+func (u *userRepo) DeleteUserRolesById(id int, tx *gorm.DB) error {
+	var (
+		db = u.DB
+	)
+	if tx != nil {
+		db = tx
+	}
+	return db.Table("user_role").Where("user_id = ?", id).Where("deleted_at is NULL").Delete(&models.UserRole{}).Error
+}
+
+func (u *userRepo) DeleteUserRolesByUserIds(ids []int64, tx *gorm.DB) error {
+	var (
+		db = u.DB
+	)
+	if tx != nil {
+		db = tx
+	}
+	return db.Table("user_role").Where("user_id IN ?", ids).Where("deleted_at is NULL").Delete(&models.UserRole{}).Error
+}
+
+func (u *userRepo) UpdateUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *gorm.DB) error {
+	var(
+		db = u.DB
+		err error
+	)
+	if tx != nil {
+		db = tx
+	}
+
+	for _, roleId := range userRolesDTO.RoleIDs  {
+		db.Table("user_role").Where("user_id = ?", userRolesDTO.ID).Updates(map[string]interface{}{"user_id": userRolesDTO.ID, "role_id": roleId})
+	}
+
+	return err
 }
