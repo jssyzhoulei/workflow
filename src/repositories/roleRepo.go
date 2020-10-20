@@ -62,7 +62,7 @@ func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userI
 		limit int = 10
 		name  string
 		roles []models.Role
-		resp pb_user_v1.RolePageRequestProto
+		resp  pb_user_v1.RolePageRequestProto
 	)
 
 	resp.Page = new(pb_user_v1.Page)

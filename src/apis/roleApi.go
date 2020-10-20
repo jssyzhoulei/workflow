@@ -40,7 +40,7 @@ func (r *roleApi) AddRoleApi(c *gin.Context) {
 		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
-	_, err = r.roleService.AddRoleSvc(context.Background(), *data)
+	_, err = r.roleService.AddRoleSvc(context.Background(), data)
 	if err != nil {
 		log.Logger().Error("create role error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
@@ -59,7 +59,7 @@ func (r *roleApi) UpdateRoleApi(c *gin.Context) {
 		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
-	_, err = r.roleService.UpdateRoleSvc(context.Background(), *data)
+	_, err = r.roleService.UpdateRoleSvc(context.Background(), data)
 	if err != nil {
 		log.Logger().Error("update role error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)

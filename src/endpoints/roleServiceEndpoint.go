@@ -28,7 +28,7 @@ func NewRoleEndpoint(service services.ServiceI) *RoleServiceEndpoint {
 
 func MakeAddRoleEndpoint(roleService services.RoleServiceI) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		role, ok := request.(models.CreateMenuPermRequest)
+		role, ok := request.(*models.CreateMenuPermRequest)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
@@ -39,7 +39,7 @@ func MakeAddRoleEndpoint(roleService services.RoleServiceI) endpoint.Endpoint {
 
 func MakeUpdateRoleEndpoint(roleService services.RoleServiceI) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		role, ok := request.(models.CreateMenuPermRequest)
+		role, ok := request.(*models.CreateMenuPermRequest)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
@@ -81,7 +81,7 @@ func MakeQueryRolesEndpoint(roleService services.RoleServiceI) endpoint.Endpoint
 	}
 }
 
-func (r *RoleServiceEndpoint) AddRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
+func (r *RoleServiceEndpoint) AddRoleSvc(ctx context.Context, role *models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
 	res, err := r.AddRoleEndpoint(ctx, role)
 	if err != nil {
 		return pb_user_v1.NullResponse{}, err
@@ -90,7 +90,7 @@ func (r *RoleServiceEndpoint) AddRoleSvc(ctx context.Context, role models.Create
 
 }
 
-func (r *RoleServiceEndpoint) UpdateRoleSvc(ctx context.Context, role models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
+func (r *RoleServiceEndpoint) UpdateRoleSvc(ctx context.Context, role *models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
 	res, err := r.UpdateRoleEndpoint(ctx, role)
 	if err != nil {
 		return pb_user_v1.NullResponse{}, err
