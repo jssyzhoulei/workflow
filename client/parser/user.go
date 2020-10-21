@@ -92,3 +92,17 @@ func EncodeUserIDs(ctx context.Context, i interface{}) (request interface{}, err
 	return
 
 }
+
+func EncodeGroupAndUserId(ctx context.Context, i interface{}) (request interface{}, err error) {
+	r, ok := i.(models.GroupAndUserId)
+	if !ok {
+		return nil, errors.New("error type")
+	}
+	groupUserId := &pb_user_v1.GroupUserIds{
+		GroupId: int64(r.GroupId),
+	}
+	for _, v := range r.UserIds {
+		groupUserId.UserIds = append(groupUserId.UserIds, int64(v))
+	}
+	return groupUserId,nil
+}

@@ -100,13 +100,15 @@ func (u *userApi) UpdateUserByIDApi(ctx *gin.Context) {
 }
 
 func (u *userApi) ImportUsersByGroupIdApi(ctx *gin.Context){
-	id, err := strconv.Atoi(ctx.Param("id"))
+	var groupUsersId = models.GroupAndUserId{}
+	err := ctx.BindJSON(&groupUsersId)
+	fmt.Println(groupUsersId)
 	if err != nil {
 		log.Logger().Error(fmt.Sprintf("import users by groupid request param error: %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
-	_, err = u.userService.ImportUsersByGroupIdSvc(context.Background(), id)
+	_, err = u.userService.ImportUsersByGroupIdSvc(context.Background(), groupUsersId)
 	if err != nil {
 		log.Logger().Error("update user error: " + err.Error())
 		error_(ctx, 201, err)

@@ -27,7 +27,7 @@ type UserRepoInterface interface {
 	DeleteUserRolesById(id int, tx *gorm.DB) error
 	DeleteUserRolesByUserIds(ids []int64, tx *gorm.DB) error
 	UpdateUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *gorm.DB) error
-	ImportUsersByGroupIdRepo (id int) error
+	ImportUsersByGroupIdRepo (groupId int , userId []int) error
 }
 
 type userRepo struct {
@@ -95,9 +95,9 @@ func (u *userRepo) UpdateUserByIDRepo(user models.User, tx *gorm.DB) error {
 	return errors.New("user is exist")
 }
 
-func (u *userRepo) ImportUsersByGroupIdRepo (id int) error {
+func (u *userRepo) ImportUsersByGroupIdRepo (groupId int , userId []int) error {
 
-	err := u.Model(&models.User{}).Update("group_id", id)
+	err := u.Model(&models.User{}).Where("id in ?", userId).Update("group_id", groupId)
 	if err != nil {
 		return err.Error
 	}

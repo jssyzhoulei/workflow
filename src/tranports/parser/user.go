@@ -90,3 +90,20 @@ func DecodeUserIDsProto(c context.Context, req interface{}) (interface{}, error)
 	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
 }
 
+func DecodeGroupUserId(c context.Context, req interface{}) (interface{}, error) {
+	r, ok := req.(*pb_user_v1.GroupUserIds)
+	if !ok {
+		return models.User{}, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
+	}
+	groupUserIds := models.GroupAndUserId{
+		GroupId: int(r.GroupId),
+	}
+
+	if r.UserIds != nil {
+		for _, userId := range r.UserIds {
+			groupUserIds.UserIds = append(groupUserIds.UserIds, int(userId))
+		}
+	}
+	return groupUserIds, nil
+}
+

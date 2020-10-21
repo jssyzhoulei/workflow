@@ -72,6 +72,7 @@ func (o *OrgServiceClient) GetUserService() services.UserServiceInterface {
 	endpoints.AddUsersEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeAddUsersEndpoint, userGrpcConn)
 	endpoints.GetUserListEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeGetUserListEndpoint, userGrpcConn)
 	endpoints.BatchDeleteUsersEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeBatchDeleteUsersEndpoint, userGrpcConn)
+	endpoints.ImportUsersByGroupIdEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeImportUsersByGroupIdEndpoint, userGrpcConn)
 	return endpoints
 }
 

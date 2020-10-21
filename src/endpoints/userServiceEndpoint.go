@@ -90,7 +90,7 @@ func MakeUpdataUserByIDEndpoint(userService services.UserServiceInterface) endpo
 
 func MakeImportUsersByGroupIdEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		id, ok := request.(int)
+		id, ok := request.(models.GroupAndUserId)
 		if !ok {
 			return nil, RequestParamsTypeError
 		}
@@ -163,7 +163,7 @@ func (u *UserServiceEndpoint) UpdateUserByIDSvc(ctx context.Context, userProto m
 	return resp.(pb_user_v1.NullResponse), nil
 }
 
-func (u *UserServiceEndpoint) ImportUsersByGroupIdSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error){
+func (u *UserServiceEndpoint) ImportUsersByGroupIdSvc(ctx context.Context, id models.GroupAndUserId) (pb_user_v1.NullResponse, error){
 	resp, err := u.ImportUsersByGroupIdEndpoint(ctx, id)
 	if err != nil {
 		return pb_user_v1.NullResponse{}, err

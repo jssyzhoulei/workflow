@@ -11,7 +11,7 @@ service RpcOrgService {
   rpc RpcAddUser(UserProto) returns (NullResponse);
   rpc RpcUpdateUserByID(UserProto) returns (NullResponse);
   rpc RpcGetUserById(Index) returns (UserProto);
-  rpc RpcImportUsersByGroupId(Index) returns (NullResponse);
+  rpc RpcImportUsersByGroupId(GroupUserIds) returns (NullResponse);
   rpc RpcDeleteUserByID(Index) returns (NullResponse);
   rpc RpcGetUserList(UserPage) returns (UsersPage);
   rpc RpcBatchDeleteUsers(UserIDs) returns (NullResponse);

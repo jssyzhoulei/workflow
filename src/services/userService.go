@@ -19,7 +19,7 @@ type UserServiceInterface interface {
 	AddUsersSvc(ctx context.Context, users *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error)
 	GetUserListSvc(ctx context.Context, user *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error)
 	BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error)
-	ImportUsersByGroupIdSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
+	ImportUsersByGroupIdSvc(ctx context.Context, id models.GroupAndUserId) (pb_user_v1.NullResponse, error)
 }
 
 // UserService 用户服务，实现 UserServiceInterface
@@ -87,7 +87,7 @@ func (u *userService) AddUserSvc(ctx context.Context, userRolesDTO models.UserRo
 func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (models.User, error) {
 	var (
 		user models.User
-		err  error
+		err error
 	)
 	user, err = u.userRepo.GetUserByIDRepo(id)
 	return user, err
@@ -125,8 +125,8 @@ func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models
 }
 
 // ImportUsersByGroupIdSvc ...
-func (u *userService) ImportUsersByGroupIdSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error) {
-	err := u.userRepo.ImportUsersByGroupIdRepo(id)
+func (u *userService) ImportUsersByGroupIdSvc(ctx context.Context, id models.GroupAndUserId) (pb_user_v1.NullResponse, error) {
+	err := u.userRepo.ImportUsersByGroupIdRepo(id.GroupId, id.UserIds)
 	if err != nil {
 		return pb_user_v1.NullResponse{}, err
 	}

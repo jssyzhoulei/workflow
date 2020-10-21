@@ -13,5 +13,5 @@ func userApiRouters(g *gin.RouterGroup, api apis.IApis) {
 	g.GET("/user/list", api.GetUserApis().GetUserListApi)
 	g.POST("/user/import_user", api.GetUserApis().ImportUser)
 	g.POST("/user/batch_del",api.GetUserApis().BatchDeleteUsersApi)
-	g.PUT("/user/:id", api.GetUserApis().ImportUsersByGroupIdApi)
+	g.PUT("/user/by_group", api.GetUserApis().ImportUsersByGroupIdApi)
 }

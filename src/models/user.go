@@ -57,6 +57,11 @@ type UserRolesDTO struct {
 	RoleIDs []int `json:"role_ids"`
 }
 
+type GroupAndUserId struct {
+	GroupId int `json:"group_id"`
+	UserIds  []int `json:"user_ids"`
+}
+
 func (u User) EncodePwd(key string) (string, error) {
 	if u.Password != "" {
 		return md5.EncodeMD5(fmt.Sprintf("%s%s%s", key, md5.EncodeMD5(u.Password), key)), nil
