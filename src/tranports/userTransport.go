@@ -16,6 +16,7 @@ type userGrpcTransport struct {
 	getUserList    transport.Handler
 	batchDeleteUsers transport.Handler
 	addUsers       transport.Handler
+	importUsersByGroupId transport.Handler
 }
 
 func NewUserGrpcTransport(userEndpoint *endpoints.UserServiceEndpoint) *userGrpcTransport {
@@ -27,6 +28,7 @@ func NewUserGrpcTransport(userEndpoint *endpoints.UserServiceEndpoint) *userGrpc
 		deleteUserByIDServer = transport.NewServer(userEndpoint.DeleteUserByIDEndpoint, parser.DecodeIndexProto, parser.EncodeNullProto)
 		getUserListServer = transport.NewServer(userEndpoint.GetUserListEndpoint, parser.DecodeUserPageProto, parser.EncodeUsersPage)
 		batchDeleteUsersServer = transport.NewServer(userEndpoint.BatchDeleteUsersEndpoint, parser.DecodeUserIDsProto, parser.EncodeNullProto)
+		importUsersByGroupIdServer = transport.NewServer(userEndpoint.ImportUsersByGroupIdEndpoint, parser.DecodeIndexProto, parser.EncodeNullProto)
 	)
 	return &userGrpcTransport{
 		addUser:     addUserServer,
@@ -36,6 +38,7 @@ func NewUserGrpcTransport(userEndpoint *endpoints.UserServiceEndpoint) *userGrpc
 		getUserList: getUserListServer,
 		batchDeleteUsers: batchDeleteUsersServer,
 		addUsers: addUsersServer,
+		importUsersByGroupId: importUsersByGroupIdServer,
 	}
 }
 
@@ -58,6 +61,14 @@ func (u *userGrpcTransport) RpcGetUserById(c context.Context, index *pb_user_v1.
 
 func (u *userGrpcTransport) RpcUpdateUserByID(ctx context.Context, proto *pb_user_v1.UserProto) (*pb_user_v1.NullResponse, error) {
 	_, resp, err := u.updateUserByID.ServeGRPC(ctx, proto)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.NullResponse), nil
+}
+
+func (u *userGrpcTransport) RpcImportUsersByGroupId(ctx context.Context, index *pb_user_v1.Index) (*pb_user_v1.NullResponse, error) {
+	_, resp, err := u.importUsersByGroupId.ServeGRPC(ctx, index)
 	if err != nil {
 		return nil, err
 	}

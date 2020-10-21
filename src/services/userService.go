@@ -19,6 +19,7 @@ type UserServiceInterface interface {
 	AddUsersSvc(ctx context.Context, users *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error)
 	GetUserListSvc(ctx context.Context, user *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error)
 	BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error)
+	ImportUsersByGroupIdSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
 }
 
 // UserService 用户服务，实现 UserServiceInterface
@@ -123,6 +124,14 @@ func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models
 	return pb_user_v1.NullResponse{}, err
 }
 
+// ImportUsersByGroupIdSvc ...
+func (u *userService) ImportUsersByGroupIdSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error) {
+	err := u.userRepo.ImportUsersByGroupIdRepo(id)
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
+	}
+	return pb_user_v1.NullResponse{}, nil
+}
 // DeleteUserByID 根据ID删除用户信息
 func (u *userService) DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error) {
 	var (

@@ -20,6 +20,7 @@ type UserServiceEndpoint struct {
 	GetUserListEndpoint endpoint.Endpoint
 	BatchDeleteUsersEndpoint endpoint.Endpoint
 	AddUsersEndpoint endpoint.Endpoint
+	ImportUsersByGroupIdEndpoint endpoint.Endpoint
 }
 
 // NewUserEndpoint UserServiceEndpoint 的构造函数
@@ -32,6 +33,7 @@ func NewUserEndpoint(service services.ServiceI) *UserServiceEndpoint {
 	userServiceEndpoint.GetUserListEndpoint = MakeGetUserListEndpoint(service.GetUserService())
 	userServiceEndpoint.BatchDeleteUsersEndpoint = MakeBatchDeleteUsersEndpoint(service.GetUserService())
 	userServiceEndpoint.AddUsersEndpoint = MakeAddUsersEndpoint(service.GetUserService())
+	userServiceEndpoint.ImportUsersByGroupIdEndpoint = MakeImportUsersByGroupIdEndpoint(service.GetUserService())
 	return userServiceEndpoint
 }
 
@@ -82,6 +84,17 @@ func MakeUpdataUserByIDEndpoint(userService services.UserServiceInterface) endpo
 			return nil, RequestParamsTypeError
 		}
 		response, err = userService.UpdateUserByIDSvc(ctx, user)
+		return
+	}
+}
+
+func MakeImportUsersByGroupIdEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		id, ok := request.(int)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = userService.ImportUsersByGroupIdSvc(ctx, id)
 		return
 	}
 }
@@ -144,6 +157,14 @@ func (u *UserServiceEndpoint) GetUserByIDSvc(ctx context.Context, id int) (model
 // UpdateUserByIDSvc ...
 func (u *UserServiceEndpoint) UpdateUserByIDSvc(ctx context.Context, userProto models.UserRolesDTO) (pb_user_v1.NullResponse, error){
 	resp, err := u.UpdateUserByIDEndpoint(ctx, userProto)
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
+	}
+	return resp.(pb_user_v1.NullResponse), nil
+}
+
+func (u *UserServiceEndpoint) ImportUsersByGroupIdSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error){
+	resp, err := u.ImportUsersByGroupIdEndpoint(ctx, id)
 	if err != nil {
 		return pb_user_v1.NullResponse{}, err
 	}

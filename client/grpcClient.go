@@ -67,6 +67,15 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
 			).Endpoint(),
+		ImportUsersByGroupIdEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcImportUsersByGroupId",
+			parser.EncodeIndexProto,
+			parser.DecodeNullProto,
+			pb_user_v1.NullResponse{},
+			).Endpoint(),
+
 	}
 }
 

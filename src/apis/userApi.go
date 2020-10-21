@@ -22,6 +22,7 @@ type userApiInterface interface {
 	GetUserListApi(ctx *gin.Context)
 	ImportUser(ctx *gin.Context)
 	BatchDeleteUsersApi(ctx *gin.Context)
+	ImportUsersByGroupIdApi(ctx *gin.Context)
 }
 
 type userApi struct {
@@ -96,6 +97,22 @@ func (u *userApi) UpdateUserByIDApi(ctx *gin.Context) {
 	}
 	success_(ctx, nil)
 	return
+}
+
+func (u *userApi) ImportUsersByGroupIdApi(ctx *gin.Context){
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		log.Logger().Error(fmt.Sprintf("import users by groupid request param error: %s", err.Error()))
+		error_(ctx, 201, err)
+		return
+	}
+	_, err = u.userService.ImportUsersByGroupIdSvc(context.Background(), id)
+	if err != nil {
+		log.Logger().Error("update user error: " + err.Error())
+		error_(ctx, 201, err)
+		return
+	}
+	success_(ctx, nil)
 }
 
 // DeleteUserByIDApi 删除用户API
