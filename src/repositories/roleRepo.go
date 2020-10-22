@@ -66,7 +66,9 @@ func buildRoleProto(roles *[]roleUserIds) *[]*pb_user_v1.RoleProto {
 	var rolePbs []*pb_user_v1.RoleProto
 	for _, r := range *roles {
 		if pb, ok := roleUserIdMap[r.ID]; ok {
-			pb.Ids = append(pb.Ids, int64(r.UserID))
+			if r.UserID != 0{
+				pb.Ids = append(pb.Ids, int64(r.UserID))
+			}
 		} else {
 			one := pb_user_v1.RoleProto{
 				Name:       r.Name,
@@ -75,7 +77,10 @@ func buildRoleProto(roles *[]roleUserIds) *[]*pb_user_v1.RoleProto {
 				Status:     int32(r.Status),
 				Id:         int64(r.ID),
 				CreatedAt:  r.CreatedAt.Format("2006-01-02 15:04:05"),
-				Ids:        []int64{int64(r.UserID)},
+				Ids:        []int64{},
+			}
+			if r.UserID != 0{
+				one.Ids = append(one.Ids, int64(r.UserID))
 			}
 			roleUserIdMap[r.ID] = &one
 			rolePbs = append(rolePbs, &one)
@@ -110,7 +115,7 @@ func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userI
 	err := u.DB.Raw(`SELECT role.id, role.status, role.created_at,role.name,role.remark,
 				role.data_permit,user_role.user_id FROM role 
 				left join user_role on user_role.role_id = role.id  
-				WHERE role.deleted_at is null and user_role.deleted_at is null 
+				WHERE role.deleted_at is null and user_role.deleted_at is null
 				and role.name like ? LIMIT ? OFFSET ?`, "%"+name+"%", limit, limit*(page-1)).
 		Scan(&roles).Error
 
