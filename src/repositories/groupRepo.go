@@ -87,6 +87,7 @@ func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 		Name:      data.Name,
 		ParentID:  data.ParentID,
 		LevelPath: levelPath,
+		NameSpace: data.NameSpace,
 	}
 	if err = db.Create(newGroupRecord).Error; err != nil {
 		return err
