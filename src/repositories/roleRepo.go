@@ -56,12 +56,40 @@ func (u *roleRepo) ListRoleRepo(page, perPage, userId int) (*[]models.Role, erro
 		Scan(&roles).Error
 }
 
+type roleUserIds struct {
+	models.Role
+	UserID int `json:"user_id"`
+}
+
+func buildRoleProto(roles *[]roleUserIds) *[]*pb_user_v1.RoleProto {
+	roleUserIdMap := make(map[int]*pb_user_v1.RoleProto)
+	var rolePbs []*pb_user_v1.RoleProto
+	for _, r := range *roles {
+		if pb, ok := roleUserIdMap[r.ID]; ok {
+			pb.Ids = append(pb.Ids, int64(r.UserID))
+		} else {
+			one := pb_user_v1.RoleProto{
+				Name:       r.Name,
+				Remark:     r.Remark,
+				DataPermit: int32(r.DataPermit),
+				Status:     int32(r.Status),
+				Id:         int64(r.ID),
+				CreatedAt:  r.CreatedAt.Format("2006-01-02 15:04:05"),
+				Ids:        []int64{int64(r.UserID)},
+			}
+			roleUserIdMap[r.ID] = &one
+			rolePbs = append(rolePbs, &one)
+		}
+	}
+	return &rolePbs
+}
+
 func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userId int) (*pb_user_v1.RolePageRequestProto, error) {
 	var (
 		page  int = 1
 		limit int = 10
 		name  string
-		roles []models.Role
+		roles []roleUserIds
 		resp  pb_user_v1.RolePageRequestProto
 	)
 
@@ -74,25 +102,20 @@ func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userI
 		name = pageObj.Name
 	}
 
-	err := u.DB.Model(models.Role{}).
-		Where("deleted_at is null and name like ? ", "%"+name+"%").
-		Count(&resp.Page.Total).
-		Offset((page - 1) * limit).Limit(limit).
+	u.DB.Raw(`SELECT count(1) count from role left join user_role on user_role.role_id = role.id
+				WHERE role.deleted_at is null and user_role.deleted_at is null 
+				and role.name like ? `, "%"+name+"%").
+		Count(&resp.Page.Total)
+
+	err := u.DB.Raw(`SELECT role.id, role.status, role.created_at,role.name,role.remark,
+				role.data_permit,user_role.user_id FROM role 
+				left join user_role on user_role.role_id = role.id  
+				WHERE role.deleted_at is null and user_role.deleted_at is null 
+				and role.name like ? LIMIT ? OFFSET ?`, "%"+name+"%", limit, limit*(page-1)).
 		Scan(&roles).Error
 
 	if err == nil {
-		var rolesPbs []*pb_user_v1.RoleProto
-		for _, r := range roles {
-			rp := pb_user_v1.RoleProto{
-				Name:       r.Name,
-				Remark:     r.Remark,
-				DataPermit: int32(r.DataPermit),
-				Status:     int32(r.Status),
-				Id:         int64(r.ID),
-			}
-			rolesPbs = append(rolesPbs, &rp)
-		}
-		resp.Roles = rolesPbs
+		resp.Roles = *buildRoleProto(&roles)
 	}
 
 	return &resp, err

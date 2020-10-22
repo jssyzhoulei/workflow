@@ -114,7 +114,6 @@ func (r *roleApi) QueryRolesApi(c *gin.Context) {
 		return
 	}
 	resp, err := r.roleService.QueryRolesSvc(context.Background(), data)
-	fmt.Printf("%+v", *data)
 	if err != nil {
 		log.Logger().Error("query roles error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
