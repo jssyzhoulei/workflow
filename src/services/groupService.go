@@ -62,9 +62,10 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 	md5Str := md5.EncodeMD5(data.Name)
 
 	newGroup := &models.Group{
-		Name:      data.Name,
-		ParentID:  int(data.ParentId),
-		NameSpace: md5Str,
+		Name:        data.Name,
+		ParentID:    int(data.ParentId),
+		NameSpace:   md5Str,
+		Description: data.Description,
 	}
 
 	err = g.groupRepo.GroupAddRepo(newGroup, tx)

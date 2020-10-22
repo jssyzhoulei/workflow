@@ -19,11 +19,12 @@ func (q Quota) TableName() string {
 // Group 组表
 type Group struct {
 	BaseModel
-	Name      string `gorm:"column:name;type:varchar(50);comment:'组织名称'" json:"name"`
-	ParentID  int    `gorm:"column:parent_id;type:int(10);comment:'父级组织ID'" json:"parent_id"`
-	LevelPath string `gorm:"column:level_path;type:varchar(255);comment:'组织等级路径'" json:"level_path"`
-	NameSpace string `gorm:"column:name_space;type:varchar(128);comment:'命名空间'" json:"name_space"`
-	Status    int    `json:"status" gorm:"column:status;type:int(10);default:0;comment:'1 已删除 0 未删除'"`
+	Name        string `gorm:"column:name;type:varchar(50);comment:'组织名称'" json:"name"`
+	Description string `gorm:"column:description;type:varchar(1024);comment:'描述'" json:"description"`
+	ParentID    int    `gorm:"column:parent_id;type:int(10);comment:'父级组织ID'" json:"parent_id"`
+	LevelPath   string `gorm:"column:level_path;type:varchar(255);comment:'组织等级路径'" json:"level_path"`
+	NameSpace   string `gorm:"column:name_space;type:varchar(128);comment:'命名空间'" json:"name_space"`
+	Status      int    `json:"status" gorm:"column:status;type:int(10);default:0;comment:'1 已删除 0 未删除'"`
 }
 
 // TableName ...
@@ -67,11 +68,11 @@ type GroupQueryByCondition struct {
 
 // QuotaResponse 配额
 type QuotaResponse struct {
-	IsShare              int64    `json:"is_share"`
-	ResourcesGroupId     string   `json:"resources_group_id"`
-	Gpu                  int64    `json:"gpu"`
-	Cpu                  int64    `json:"cpu"`
-	Memory               int64    `json:"memory"`
+	IsShare          int64  `json:"is_share"`
+	ResourcesGroupId string `json:"resources_group_id"`
+	Gpu              int64  `json:"gpu"`
+	Cpu              int64  `json:"cpu"`
+	Memory           int64  `json:"memory"`
 }
 
 // GroupQueryWithQuota 查询组和配额结果

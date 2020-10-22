@@ -38,7 +38,8 @@ message GroupAddRequest {
   string name = 1;
   int64  parent_id = 2;
   int64  disk_quota_size = 3;
-  repeated Quota quotas = 4;
+  string description = 4;
+  repeated Quota quotas = 5;
 }
 
 // GroupQueryByConditionRequest 按条件查询组信息请求
