@@ -22,6 +22,7 @@ type Group struct {
 	Name      string `gorm:"column:name;type:varchar(50);comment:'组织名称'" json:"name"`
 	ParentID  int    `gorm:"column:parent_id;type:int(10);comment:'父级组织ID'" json:"parent_id"`
 	LevelPath string `gorm:"column:level_path;type:varchar(255);comment:'组织等级路径'" json:"level_path"`
+	NameSpace string `gorm:"column:name_space;type:varchar(128);comment:'命名空间'" json:"name_space"`
 	Status    int    `json:"status" gorm:"column:status;type:int(10);default:0;comment:'1 已删除 0 未删除'"`
 }
 

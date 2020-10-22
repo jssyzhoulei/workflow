@@ -84,13 +84,33 @@ func (u *userService) AddUserSvc(ctx context.Context, userRolesDTO models.UserRo
 }
 
 // GetUserByIDSvc 获取用户详情
-func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (models.User, error) {
+func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (models.User,  error) {
 	var (
 		user models.User
 		err error
 	)
 	user, err = u.userRepo.GetUserByIDRepo(id)
 	return user, err
+	//var user models.User
+	//var userProto pb_user_v1.UserProto
+	//user, err = u.userRepo.GetUserByIDRepo(id)
+	//if err != nil {
+	//	return c, err
+	//}
+	//c = &pb_user_v1.UserProto{}
+	//userProto.Id = &pb_user_v1.Index{
+	//	Id:          int64(user.ID),
+	//}
+	//userProto = pb_user_v1.UserProto{
+	//	UserName: user.UserName,
+	//	LoginName: user.LoginName,
+	//	Password: user.Password,
+	//	GroupId: int64(user.GroupID),
+	//	UserType: int64(user.UserType),
+	//	Ststus: int64(user.Status),
+	//	Mobile: int64(user.Mobile),
+	//}
+	//return c, nil
 }
 
 // UpdateUserByIDSvc 根据ID编辑用户

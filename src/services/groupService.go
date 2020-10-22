@@ -12,6 +12,7 @@ import (
 	"gitee.com/grandeep/org-svc/src/repositories"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/config"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
+	"gitee.com/grandeep/org-svc/utils/src/pkg/md5"
 	"strconv"
 	"strings"
 	"time"
@@ -30,17 +31,17 @@ type GroupServiceInterface interface {
 
 // GroupService 组服务,实现了 GroupServiceInterface
 type GroupService struct {
-	groupRepo repositories.GroupRepoInterface
-	userRepo  repositories.UserRepoInterface
+	groupRepo         repositories.GroupRepoInterface
+	userRepo          repositories.UserRepoInterface
 	kubernetesService services.KubernetesServiceI
-	cfg *config.Config
+	cfg               *config.Config
 }
 
 // NewGroupService GroupService 构造函数
 func NewGroupService(repos repositories.RepoI, cfg *config.Config) GroupServiceInterface {
 	etcdHosts, _ := cfg.GetString("etcdHost")
 
-	deviceClient := client.NewDeviceClient(strings.Split(etcdHosts, ";"), 2, time.Second * 5)
+	deviceClient := client.NewDeviceClient(strings.Split(etcdHosts, ";"), 2, time.Second*5)
 	return &GroupService{
 		groupRepo:         repos.GetGroupRepo(),
 		userRepo:          repos.GetUserRepo(),
@@ -58,10 +59,12 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			tx.Rollback()
 		}
 	}()
+	md5Str := md5.EncodeMD5(data.Name)
 
 	newGroup := &models.Group{
-		Name:     data.Name,
-		ParentID: int(data.ParentId),
+		Name:      data.Name,
+		ParentID:  int(data.ParentId),
+		NameSpace: md5Str,
 	}
 
 	err = g.groupRepo.GroupAddRepo(newGroup, tx)
@@ -136,7 +139,8 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		tx.Rollback()
 		return nil, err
 	}
-	_, err = g.kubernetesService.CreateNamespaceSvc(ctx, data.Name)
+
+	_, err = g.kubernetesService.CreateNamespaceSvc(ctx, md5Str)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -419,26 +423,25 @@ func (g *GroupService) QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data 
 		return nil, err
 	}
 
-
 	var result []*pb_user_v1.UserProto
 	l := len(users)
 	for i := 0; i < l; i++ {
 		user := users[i]
 
 		_user := &pb_user_v1.UserProto{
-			Id:                   &pb_user_v1.Index{Id: int64(user.ID)},
-			UserName:             user.UserName,
-			LoginName:            user.LoginName,
-			Mobile:               int64(user.Mobile),
-			GroupId:              int64(user.GroupID),
-			UserType:             int64(user.UserType),
-			RoleIds:              nil,
+			Id:        &pb_user_v1.Index{Id: int64(user.ID)},
+			UserName:  user.UserName,
+			LoginName: user.LoginName,
+			Mobile:    int64(user.Mobile),
+			GroupId:   int64(user.GroupID),
+			UserType:  int64(user.UserType),
+			RoleIds:   nil,
 		}
 		// TODO: 查询组及其子组下的所有用户 -> 添加roleIDs
 		result = append(result, _user)
 	}
 
 	return &pb_user_v1.Users{
-		Users:                result,
+		Users: result,
 	}, nil
 }
