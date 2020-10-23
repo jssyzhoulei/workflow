@@ -299,11 +299,23 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 		if err != nil {
 			return err
 		}
-		oldLevelPath := oldGroup.LevelPath
-		res := strings.Split(oldLevelPath, "-")
-		res[len(res) - 2] = strconv.FormatInt(*data.ParentID, 10)
-		newLevelPath := strings.Join(res, "-")
-		updateColumnMap["level_path"] = newLevelPath
+		if oldGroup.ID == 0 {
+			return errors.New("组信息被标记为删除或组不存在")
+		}
+		if oldGroup.ParentID == 0 {
+			oldLevelPath := oldGroup.LevelPath
+			updateColumnMap["level_path"] = oldLevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
+		} else {
+			oldLevelPath := oldGroup.LevelPath
+			res := strings.Split(oldLevelPath, "-")
+			res[len(res) - 2] = strconv.FormatInt(*data.ParentID, 10)
+			newLevelPath := strings.Join(res, "-")
+			updateColumnMap["level_path"] = newLevelPath
+		}
+	}
+
+	if data.Description != "" {
+		updateColumnMap["description"] = data.Description
 	}
 
 	err = db.Model(&models.Group{}).Where("id=?", data.ID).Updates(updateColumnMap).Error

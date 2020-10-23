@@ -249,8 +249,9 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
 
 	d := &models.GroupUpdateRequest{
-		ID:   data.Id,
-		Name: data.Name,
+		ID:          data.Id,
+		Name:        data.Name,
+		Description: data.Description,
 	}
 
 	if data.UseParentId {
@@ -259,7 +260,7 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 
 	err := g.groupRepo.GroupUpdateRepo(d, nil)
 	if err != nil {
-		return &pb_user_v1.GroupResponse{Code: 1}, err
+		return nil, err
 	}
 
 	return &pb_user_v1.GroupResponse{Code: 0}, nil

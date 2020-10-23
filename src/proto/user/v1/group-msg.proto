@@ -61,6 +61,7 @@ message GroupUpdateRequest {
   string name = 2;
   int64 parent_id = 3;
   bool use_parent_id = 4;
+  string description = 5;
 }
 
 // QuotaUpdateRequest 配额信息更新请求

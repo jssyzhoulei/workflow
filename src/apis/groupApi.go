@@ -150,6 +150,7 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		Name:        data.Name,
 		ParentId:    parentID,
 		UseParentId: useParentID,
+		Description: data.Description,
 	}
 	resp, err := g.groupService.GroupUpdateSvc(context.Background(), d)
 	if err != nil {

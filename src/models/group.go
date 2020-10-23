@@ -103,9 +103,10 @@ type GroupQueryWithQuotaScanRes struct {
 
 // GroupUpdateRequest 组信息更新请求
 type GroupUpdateRequest struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	ParentID *int64 `json:"parent_id"`
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	ParentID    *int64 `json:"parent_id"`
+	Description string `json:"description"`
 }
 
 // QuotaUpdateRequest 配额更新请求
