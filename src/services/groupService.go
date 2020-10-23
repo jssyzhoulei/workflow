@@ -61,7 +61,7 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 	}()
 	md5Str := md5.EncodeMD5(data.Name)
 	
-	k8sNameSpace := "org-svc_" + md5Str
+	k8sNameSpace := "org-svc-" + md5Str
 
 	newGroup := &models.Group{
 		Name:        data.Name,
