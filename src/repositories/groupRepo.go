@@ -304,13 +304,24 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 		}
 		if oldGroup.ParentID == 0 {
 			oldLevelPath := oldGroup.LevelPath
-			updateColumnMap["level_path"] = oldLevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
+			if *data.ParentID == 0 {
+				updateColumnMap["level_path"] = "0-"
+			} else {
+				res := strings.Split(oldLevelPath, "-")
+				res[len(res) - 1] = strconv.FormatInt(*data.ParentID, 10) + "-"
+				newLevelPath := strings.Join(res, "-")
+				updateColumnMap["level_path"] = newLevelPath
+			}
 		} else {
-			oldLevelPath := oldGroup.LevelPath
-			res := strings.Split(oldLevelPath, "-")
-			res[len(res) - 2] = strconv.FormatInt(*data.ParentID, 10)
-			newLevelPath := strings.Join(res, "-")
-			updateColumnMap["level_path"] = newLevelPath
+			if *data.ParentID == 0 {
+				updateColumnMap["level_path"] = "0-"
+			} else {
+				oldLevelPath := oldGroup.LevelPath
+				res := strings.Split(oldLevelPath, "-")
+				res[len(res)-2] = strconv.FormatInt(*data.ParentID, 10)
+				newLevelPath := strings.Join(res, "-")
+				updateColumnMap["level_path"] = newLevelPath
+			}
 		}
 	}
 
@@ -334,7 +345,7 @@ func (g *groupRepo) QuotaUpdateRepo(_data []*models.QuotaUpdateRequest, tx *gorm
 	} else {
 		db = tx
 	}
-	
+
 	l := len(_data)
 	for i := 0; i < l; i++ {
 		data := _data[i]

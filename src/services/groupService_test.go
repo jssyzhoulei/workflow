@@ -60,18 +60,11 @@ func testGroupAddSvc() error {
 			Cpu:                  234,
 			Memory:               345,
 		},
-		{
-			IsShare:              2,
-			ResourcesGroupId:     "10,20",
-			Gpu:                  456,
-			Cpu:                  567,
-			Memory:               678,
-		},
 	}
 
 	data := &pb_user_v1.GroupAddRequest{
-		Name:                 "张三",
-		ParentId:             12,
+		Name:                 "顶级组",
+		ParentId:             0,
 		DiskQuotaSize:        100,
 		Quotas:               quotas,
 	}
@@ -124,22 +117,24 @@ func testGroupUpdateSvc() error {
 	//
 	//fmt.Println("update resp: ", resp)
 
+	// []*pb_user_v1.Quota{
+	//	{
+	//		IsShare: 1,
+	//		ResourcesGroupId: "108",
+	//		Cpu: 10,
+	//		Gpu: 20,
+	//		Memory: 100,
+	//	},
+	//},
+
 	data2 := &pb_user_v1.GroupUpdateRequest{
 		Id:                   60,
 		Name:                 "60的新名字",
-		ParentId:             59,
-		UseParentId:          false,
+		ParentId:             62,
+		UseParentId:          true,
 		Description:          "60的新描述",
 		DiskQuotaSize: 100,
-		Quotas: []*pb_user_v1.Quota{
-			{
-				IsShare: 1,
-				ResourcesGroupId: "108",
-				Cpu: 10,
-				Gpu: 20,
-				Memory: 100,
-			},
-		},
+		Quotas: nil,
 	}
 
 	_, err := groupTestService.GroupUpdateSvc(groupCtx, data2)
