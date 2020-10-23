@@ -125,11 +125,21 @@ func testGroupUpdateSvc() error {
 	//fmt.Println("update resp: ", resp)
 
 	data2 := &pb_user_v1.GroupUpdateRequest{
-		Id:                   14,
-		Name:                 "14的新名字",
-		ParentId:             12,
-		UseParentId:          true,
-		Description:          "14的新描述",
+		Id:                   60,
+		Name:                 "60的新名字",
+		ParentId:             59,
+		UseParentId:          false,
+		Description:          "60的新描述",
+		DiskQuotaSize: 100,
+		Quotas: []*pb_user_v1.Quota{
+			{
+				IsShare: 1,
+				ResourcesGroupId: "108",
+				Cpu: 10,
+				Gpu: 20,
+				Memory: 100,
+			},
+		},
 	}
 
 	_, err := groupTestService.GroupUpdateSvc(groupCtx, data2)

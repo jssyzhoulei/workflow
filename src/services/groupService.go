@@ -323,7 +323,7 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 		Total:       data.DiskQuotaSize,
 	})
 
-
+	fmt.Println(quotasUpdateData, "<>-=-------------")
 	err = g.groupRepo.QuotaUpdateRepo(quotasUpdateData, tx)
 	if err != nil {
 		tx.Rollback()
