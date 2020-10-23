@@ -11,4 +11,5 @@ func roleApiRouters(g *gin.RouterGroup, api apis.IApis) {
 	g.DELETE("/role", api.GetRoleApis().DeleteRoleApi)
 	g.GET("/role", api.GetRoleApis().QueryRoleApi)
 	g.POST("/roles", api.GetRoleApis().QueryRolesApi)
+	g.GET("/role/permission/tree", api.GetRoleApis().GetMenuCascade)
 }

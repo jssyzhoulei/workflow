@@ -183,6 +183,14 @@ func RoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 			parser.DecodeRolePageProto,
 			pb_user_v1.RolePageRequestProto{},
 		).Endpoint(),
+		MenuTreeEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcMenuTree",
+			parser.EncodeMenuModule,
+			parser.DecodeCascadeProto,
+			pb_user_v1.Cascades{},
+		).Endpoint(),
 	}
 }
 

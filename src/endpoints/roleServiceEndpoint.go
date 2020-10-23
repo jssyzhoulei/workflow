@@ -14,6 +14,7 @@ type RoleServiceEndpoint struct {
 	DeleteRoleEndpoint endpoint.Endpoint
 	QueryRoleEndpoint  endpoint.Endpoint
 	QueryRolesEndpoint endpoint.Endpoint
+	MenuTreeEndpoint   endpoint.Endpoint
 }
 
 func NewRoleEndpoint(service services.ServiceI) *RoleServiceEndpoint {
@@ -23,6 +24,7 @@ func NewRoleEndpoint(service services.ServiceI) *RoleServiceEndpoint {
 	roleServiceEndpoint.DeleteRoleEndpoint = MakeDeleteRoleEndpoint(service.GetRoleService())
 	roleServiceEndpoint.QueryRoleEndpoint = MakeQueryRoleEndpoint(service.GetRoleService())
 	roleServiceEndpoint.QueryRolesEndpoint = MakeQueryRolesEndpoint(service.GetRoleService())
+	roleServiceEndpoint.MenuTreeEndpoint = MakeMenuTreeEndpoint(service.GetRoleService())
 	return roleServiceEndpoint
 }
 
@@ -81,6 +83,17 @@ func MakeQueryRolesEndpoint(roleService services.RoleServiceI) endpoint.Endpoint
 	}
 }
 
+func MakeMenuTreeEndpoint(roleService services.RoleServiceI) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		m, ok := request.(models.MenuModule)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = roleService.MenuTreeSvc(ctx, m)
+		return
+	}
+}
+
 func (r *RoleServiceEndpoint) AddRoleSvc(ctx context.Context, role *models.CreateMenuPermRequest) (pb_user_v1.NullResponse, error) {
 	res, err := r.AddRoleEndpoint(ctx, role)
 	if err != nil {
@@ -120,4 +133,12 @@ func (r *RoleServiceEndpoint) QueryRolesSvc(ctx context.Context, page *pb_user_v
 		return nil, err
 	}
 	return res.(*pb_user_v1.RolePageRequestProto), nil
+}
+
+func (r *RoleServiceEndpoint) MenuTreeSvc(ctx context.Context, m models.MenuModule) (*pb_user_v1.Cascades, error) {
+	res, err := r.MenuTreeEndpoint(ctx, m)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*pb_user_v1.Cascades), nil
 }
