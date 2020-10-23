@@ -62,9 +62,10 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 	md5Str := md5.EncodeMD5(data.Name)
 
 	newGroup := &models.Group{
-		Name:      data.Name,
-		ParentID:  int(data.ParentId),
-		NameSpace: md5Str,
+		Name:        data.Name,
+		ParentID:    int(data.ParentId),
+		NameSpace:   md5Str,
+		Description: data.Description,
 	}
 
 	err = g.groupRepo.GroupAddRepo(newGroup, tx)
@@ -174,6 +175,7 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 			groupData[r.ID].ParentId = r.ParentID
 			groupData[r.ID].Id = r.ID
 			groupData[r.ID].Name = r.Name
+			groupData[r.ID].Description = r.Description
 			groupData[r.ID].Quotas = make([]*pb_user_v1.Quota, 0)
 			levelPath := strings.Split(r.LevelPath, "-")
 			var topParent string
@@ -247,8 +249,9 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
 
 	d := &models.GroupUpdateRequest{
-		ID:   data.Id,
-		Name: data.Name,
+		ID:          data.Id,
+		Name:        data.Name,
+		Description: data.Description,
 	}
 
 	if data.UseParentId {
@@ -257,7 +260,7 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 
 	err := g.groupRepo.GroupUpdateRepo(d, nil)
 	if err != nil {
-		return &pb_user_v1.GroupResponse{Code: 1}, err
+		return nil, err
 	}
 
 	return &pb_user_v1.GroupResponse{Code: 0}, nil

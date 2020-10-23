@@ -115,6 +115,7 @@ func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
 			ParentID:      _data.ParentId,
 			TopParentID:   _data.TopParentId,
 			DiskQuotaSize: _data.DiskQuotaSize,
+			Description:   _data.Description,
 			Quotas:        quotaResult,
 		}
 		result = append(result, _tmp)
@@ -149,6 +150,7 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		Name:        data.Name,
 		ParentId:    parentID,
 		UseParentId: useParentID,
+		Description: data.Description,
 	}
 	resp, err := g.groupService.GroupUpdateSvc(context.Background(), d)
 	if err != nil {

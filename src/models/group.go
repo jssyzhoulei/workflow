@@ -19,11 +19,12 @@ func (q Quota) TableName() string {
 // Group 组表
 type Group struct {
 	BaseModel
-	Name      string `gorm:"column:name;type:varchar(50);comment:'组织名称'" json:"name"`
-	ParentID  int    `gorm:"column:parent_id;type:int(10);comment:'父级组织ID'" json:"parent_id"`
-	LevelPath string `gorm:"column:level_path;type:varchar(255);comment:'组织等级路径'" json:"level_path"`
-	NameSpace string `gorm:"column:name_space;type:varchar(128);comment:'命名空间'" json:"name_space"`
-	Status    int    `json:"status" gorm:"column:status;type:int(10);default:0;comment:'1 已删除 0 未删除'"`
+	Name        string `gorm:"column:name;type:varchar(50);comment:'组织名称'" json:"name"`
+	Description string `gorm:"column:description;type:varchar(1024);comment:'描述'" json:"description"`
+	ParentID    int    `gorm:"column:parent_id;type:int(10);comment:'父级组织ID'" json:"parent_id"`
+	LevelPath   string `gorm:"column:level_path;type:varchar(255);comment:'组织等级路径'" json:"level_path"`
+	NameSpace   string `gorm:"column:name_space;type:varchar(128);comment:'命名空间'" json:"name_space"`
+	Status      int    `json:"status" gorm:"column:status;type:int(10);default:0;comment:'1 已删除 0 未删除'"`
 }
 
 // TableName ...
@@ -67,11 +68,11 @@ type GroupQueryByCondition struct {
 
 // QuotaResponse 配额
 type QuotaResponse struct {
-	IsShare              int64    `json:"is_share"`
-	ResourcesGroupId     string   `json:"resources_group_id"`
-	Gpu                  int64    `json:"gpu"`
-	Cpu                  int64    `json:"cpu"`
-	Memory               int64    `json:"memory"`
+	IsShare          int64  `json:"is_share"`
+	ResourcesGroupId string `json:"resources_group_id"`
+	Gpu              int64  `json:"gpu"`
+	Cpu              int64  `json:"cpu"`
+	Memory           int64  `json:"memory"`
 }
 
 // GroupQueryWithQuota 查询组和配额结果
@@ -81,28 +82,31 @@ type GroupQueryWithQuota struct {
 	ParentID      int64            `json:"parent_id"`
 	TopParentID   int64            `json:"top_parent_id"`
 	DiskQuotaSize int64            `json:"disk_quota_size"`
+	Description   string           `json:"description"`
 	Quotas        []*QuotaResponse `json:"quotas"`
 }
 
 // GroupQueryWithQuotaScanRes 查询组和配额 SQL Scan 结构体
 type GroupQueryWithQuotaScanRes struct {
-	ID         int64  `gorm:"column:id" json:"id"`
-	Name       string `gorm:"column:name" json:"name"`
-	ParentID   int64  `gorm:"column:parent_id" json:"parent_id"`
-	LevelPath  string `gorm:"column:level_path" json:"level_path"`
-	CreateTime string `gorm:"column:id" json:"create_time"`
-	IsShare    int    `gorm:"column:is_share" json:"is_share"`
-	ResourceID string `gorm:"column:resources_id" json:"resources_id"`
-	Type       int    `gorm:"column:type" json:"type"`
-	Total      int    `gorm:"column:total" json:"total"`
-	Used       int    `gorm:"column:used" json:"used"`
+	ID          int64  `gorm:"column:id" json:"id"`
+	Name        string `gorm:"column:name" json:"name"`
+	ParentID    int64  `gorm:"column:parent_id" json:"parent_id"`
+	LevelPath   string `gorm:"column:level_path" json:"level_path"`
+	CreateTime  string `gorm:"column:id" json:"create_time"`
+	IsShare     int    `gorm:"column:is_share" json:"is_share"`
+	ResourceID  string `gorm:"column:resources_id" json:"resources_id"`
+	Type        int    `gorm:"column:type" json:"type"`
+	Total       int    `gorm:"column:total" json:"total"`
+	Used        int    `gorm:"column:used" json:"used"`
+	Description string `gorm:"column:description" json:"description"`
 }
 
 // GroupUpdateRequest 组信息更新请求
 type GroupUpdateRequest struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	ParentID *int64 `json:"parent_id"`
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	ParentID    *int64 `json:"parent_id"`
+	Description string `json:"description"`
 }
 
 // QuotaUpdateRequest 配额更新请求
