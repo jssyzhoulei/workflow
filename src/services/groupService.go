@@ -60,11 +60,13 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		}
 	}()
 	md5Str := md5.EncodeMD5(data.Name)
+	
+	k8sNameSpace := "org-svc_" + md5Str
 
 	newGroup := &models.Group{
 		Name:        data.Name,
 		ParentID:    int(data.ParentId),
-		NameSpace:   md5Str,
+		NameSpace:   k8sNameSpace,
 		Description: data.Description,
 	}
 
@@ -151,7 +153,7 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		return nil, err
 	}
 
-	_, err = g.kubernetesService.CreateNamespaceSvc(ctx, md5Str)
+	_, err = g.kubernetesService.CreateNamespaceSvc(ctx, k8sNameSpace)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
