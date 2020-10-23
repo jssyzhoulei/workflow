@@ -123,9 +123,15 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		}
 
 		for kind, val := range valMap {
+			var resourcesGroupID = q.ResourcesGroupId
+
+			if quotaTypeMap[kind] == models.ResourceDisk {
+				resourcesGroupID = ""
+			}
+
 			tmp := &models.Quota{
 				IsShare:    int(q.IsShare),
-				ResourceID: q.ResourcesGroupId,
+				ResourceID: resourcesGroupID,
 				Type:       quotaTypeMap[kind],
 				GroupID:    group.ID,
 				Total:      int(val),
