@@ -93,7 +93,6 @@ func (u *userRepo) GetRoleIdsById(id int) ([]int, error) {
 	for _, userRole := range userRoles {
 		roleIds = append(roleIds, userRole.RoleID)
 	}
-	fmt.Println("++++++++++++++", roleIds)
 	return roleIds, nil
 }
 

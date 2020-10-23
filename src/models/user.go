@@ -91,6 +91,17 @@ type UserListResult struct {
 	GroupId    int64   `gorm:"column:group_id" json:"group_id"`
 }
 
+type UserDetail struct {
+	Id         int64 `gorm:"column:id" json:"id"`
+	LoginName  string `gorm:"column:login_name" json:"login_name"`
+	Mobile     int64  `gorm:"column:mobile" json:"mobile"`
+	UserName   string `gorm:"column:user_name" json:"user_name"`
+	GroupName  string `gorm:"column:group_name" json:"group_name"`
+	RoleName   []string `gorm:"column:role_name" json:"role_name"`
+	RoleId     []int  `gorm:"column:role_id" json:"role_id"`
+	GroupId    int64   `gorm:"column:group_id" json:"group_id"`
+}
+
 func (u User) EncodePwd(key string) (string, error) {
 	if u.Password != "" {
 		return md5.EncodeMD5(fmt.Sprintf("%s%s%s", key, md5.EncodeMD5(u.Password), key)), nil

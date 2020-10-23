@@ -423,6 +423,5 @@ func (u *userService) GetUsersSvc(ctx context.Context, data *pb_user_v1.UserQuer
 		userQueryResponses.UserQueryResult = append(userQueryResponses.UserQueryResult, _temp)
 	}
 
-	fmt.Println("-------------------------", &userQueryResponses)
 	return &userQueryResponses, nil
 }
