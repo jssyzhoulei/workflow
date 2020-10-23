@@ -254,6 +254,14 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 // GroupUpdateSvc 组信息更新
 func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
 
+	var tx = g.groupRepo.GetTx()
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	d := &models.GroupUpdateRequest{
 		ID:          data.Id,
 		Name:        data.Name,
@@ -264,10 +272,49 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 		d.ParentID = &data.ParentId
 	}
 
-	err := g.groupRepo.GroupUpdateRepo(d, nil)
+	err := g.groupRepo.GroupUpdateRepo(d, tx)
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
+
+	quotaTypeMap := map[string]models.ResourceType{
+		"cpu":    models.ResourceCpu,
+		"gpu":    models.ResourceGpu,
+		"memory": models.ResourceMemory,
+		"disk":   models.ResourceDisk,
+	}
+
+	quotasLen := len(data.Quotas)
+	var quotasUpdateData = make([]*models.QuotaUpdateRequest, 0)
+	for i := 0; i < quotasLen; i++ {
+		q := data.Quotas[i]
+
+		valMap := map[string]int64{
+			"cpu":    q.Cpu,
+			"gpu":    q.Gpu,
+			"memory": q.Memory,
+			"disk":   data.DiskQuotaSize,
+		}
+
+		for kind, val := range valMap {
+			_tmp := &models.QuotaUpdateRequest{
+				GroupID:     data.Id,
+				IsShare:     q.IsShare,
+				ResourcesID: q.ResourcesGroupId,
+				QuotaType:   int64(quotaTypeMap[kind]),
+				Total:       val,
+			}
+			quotasUpdateData = append(quotasUpdateData, _tmp)
+		}
+	}
+	err = g.groupRepo.QuotaUpdateRepo(quotasUpdateData, tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
 
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
 }
@@ -285,9 +332,11 @@ func (g *GroupService) QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.Quot
 		Used:        data.Used,
 	}
 
-	err = g.groupRepo.QuotaUpdateRepo(d, nil)
+	_data := []*models.QuotaUpdateRequest{d}
+
+	err = g.groupRepo.QuotaUpdateRepo(_data, nil)
 	if err != nil {
-		return &pb_user_v1.GroupResponse{Code: 1}, nil
+		return nil, err
 	}
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
 }

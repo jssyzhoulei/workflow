@@ -22,7 +22,7 @@ type GroupRepoInterface interface {
 	QuotaQueryByConditionRepo(condition *models.QuotaQueryByCondition, tx *gorm.DB) ([]*models.Quota, error)
 	GroupQueryWithQuotaByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.GroupQueryWithQuotaScanRes, error)
 	GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB) error
-	QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB) error
+	QuotaUpdateRepo(data []*models.QuotaUpdateRequest, tx *gorm.DB) error
 	GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB) ([]*models.Group, error)
 	GroupDeleteRepo(id int64, tx *gorm.DB) error
 	QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]int64, error)
@@ -327,42 +327,45 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 }
 
 // QuotaUpdateRepo 配额信息更新
-func (g *groupRepo) QuotaUpdateRepo(data *models.QuotaUpdateRequest, tx *gorm.DB) error {
-	var err error
+func (g *groupRepo) QuotaUpdateRepo(_data []*models.QuotaUpdateRequest, tx *gorm.DB) error {
 	var db *gorm.DB
 	if tx == nil {
 		db = g.DB
 	} else {
 		db = tx
 	}
-
-	if data.GroupID == 0 || data.IsShare == 0 || data.ResourcesID == "" {
-		return errors.New("检测到空值: group_id, is_share, resources_id 全部为必传参数")
-	}
-
-	if !models.ResourceType.Auth(models.ResourceType(data.QuotaType)) {
-		return errors.New("资源类型不存在")
-	}
-
-	// 增加组信息校验,被删除的组,无法修改其配额数据
-	group, err := g.GroupQueryByIDRepo(data.GroupID, nil)
-	if err != nil {
-		return errors.New("查询组信息错误: " + err.Error())
-	}
 	
-	if group.Status == 1 {
-		return errors.New("组已删除,无法修改数据")
-	}
+	l := 0
+	for i := 0; i < l; i++ {
+		data := _data[i]
+		if data.GroupID == 0 || data.IsShare == 0 || (data.ResourcesID == "" && data.QuotaType != int64(models.ResourceDisk)) {
+			return errors.New("检测到空值: group_id, is_share, resources_id 全部为必传参数")
+		}
 
-	updateColumnMap := map[string]interface{} {
-		"total": data.Total,
-		"used": data.Used,
-	}
+		if !models.ResourceType.Auth(models.ResourceType(data.QuotaType)) {
+			return errors.New("资源类型不存在")
+		}
 
-	err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and resources_id=? and type=?", data.GroupID,
-		data.IsShare, data.ResourcesID, data.QuotaType).Updates(updateColumnMap).Error
-	if err != nil {
-		return err
+		// 增加组信息校验,被删除的组,无法修改其配额数据
+		group, err := g.GroupQueryByIDRepo(data.GroupID, nil)
+		if err != nil {
+			return errors.New("查询组信息错误: " + err.Error())
+		}
+
+		if group.Status == 1 {
+			return errors.New("组已删除,无法修改数据")
+		}
+
+		updateColumnMap := map[string]interface{} {
+			"total": data.Total,
+			//"used": data.Used,
+		}
+
+		err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and resources_id=? and type=?", data.GroupID,
+			data.IsShare, data.ResourcesID, data.QuotaType).Updates(updateColumnMap).Error
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
