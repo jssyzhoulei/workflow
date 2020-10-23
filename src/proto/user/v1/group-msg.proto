@@ -62,6 +62,8 @@ message GroupUpdateRequest {
   int64 parent_id = 3;
   bool use_parent_id = 4;
   string description = 5;
+  repeated Quota quotas = 6;
+  int64  disk_quota_size = 7;
 }
 
 // QuotaUpdateRequest 配额信息更新请求

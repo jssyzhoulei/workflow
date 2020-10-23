@@ -145,12 +145,26 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		useParentID = true
 	}
 
+	var pbQuotas = make([]*pb_user_v1.Quota, 0)
+	for _, v := range data.Quotas {
+		_t := &pb_user_v1.Quota{
+			IsShare:          v.IsShare,
+			ResourcesGroupId: v.ResourcesGroupId,
+			Gpu:              v.Gpu,
+			Cpu:              v.Cpu,
+			Memory:           v.Memory,
+		}
+		pbQuotas = append(pbQuotas, _t)
+	}
+
 	d := &pb_user_v1.GroupUpdateRequest{
-		Id:          data.ID,
-		Name:        data.Name,
-		ParentId:    parentID,
-		UseParentId: useParentID,
-		Description: data.Description,
+		Id:            data.ID,
+		Name:          data.Name,
+		ParentId:      parentID,
+		UseParentId:   useParentID,
+		Description:   data.Description,
+		DiskQuotaSize: data.DiskQuotaSize,
+		Quotas:        pbQuotas,
 	}
 	resp, err := g.groupService.GroupUpdateSvc(context.Background(), d)
 	if err != nil {
