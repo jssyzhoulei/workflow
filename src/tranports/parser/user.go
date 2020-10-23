@@ -37,8 +37,8 @@ func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 }
 
 func EncodeUserProto(ctx context.Context, req interface{}) (interface{}, error) {
-	r := req.(models.User)
-	return &pb_user_v1.UserProto{
+	r := req.(models.UserRolesDTO)
+	userProto :=  &pb_user_v1.UserProto{
 		Id: &pb_user_v1.Index{
 			Id:                   int64(r.ID),
 		},
@@ -49,7 +49,11 @@ func EncodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 		Ststus: int64(r.Status),
 		GroupId: int64(r.GroupID),
 		UserType: int64(r.UserType),
-	}, nil
+	}
+	for _, v := range r.RoleIDs {
+		userProto.RoleIds = append(userProto.RoleIds, &pb_user_v1.Index{Id: int64(v)})
+	}
+	return userProto, nil
 }
 
 func DecodeAddUsersRequest(ctx context.Context, req interface{}) (interface{}, error) {
@@ -76,9 +80,23 @@ func DecodeUserPageProto(c context.Context, req interface{}) (interface{}, error
 	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
 }
 
+func DecodeUserQueryCondition(c context.Context, req interface{}) (interface{}, error) {
+	if userCondition, ok := req.(*pb_user_v1.UserQueryCondition); ok {
+		return userCondition, nil
+	}
+	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
+}
+
 func EncodeUsersPage(c context.Context, res interface{}) (interface{}, error) {
 	if usersPage, ok := res.(*pb_user_v1.UsersPage); ok {
 		return usersPage, nil
+	}
+	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(res))
+}
+
+func EncodeUsersResponse(c context.Context, res interface{}) (interface{}, error) {
+	if userResponse, ok := res.(*pb_user_v1.UserQueryResponse); ok {
+		return userResponse, nil
 	}
 	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(res))
 }
