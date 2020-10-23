@@ -62,6 +62,35 @@ type GroupAndUserId struct {
 	UserIds  []int `json:"user_ids"`
 }
 
+type UserQueryByCondition struct {
+	ID         []int64    `json:"id"`
+	LoginName  []string   `json:"login_name"`
+	GroupId    []int64    `json:"group_id"`
+	PageNum    int64      `json:"page_num"`
+	PageSize   int64      `json:"page_size"`
+
+}
+
+type UserListScanResult struct {
+	Id         int64  `gorm:"column:id" json:"id"`
+	LoginName  string `gorm:"column:login_name" json:"login_name"`
+	CreatedAt  string `gorm:"column:created_at" json:"created_at"`
+	UserName   string `gorm:"column:user_name" json:"user_name"`
+	GroupName  string `gorm:"column:group_name" json:"group_name"`
+	RoleName   string `gorm:"column:role_name" json:"role_name"`
+	GroupId    int64  `gorm:"column:group_id" json:"group_id"`
+}
+
+type UserListResult struct {
+	Id         int64 `gorm:"column:id" json:"id"`
+	LoginName  string `gorm:"column:login_name" json:"login_name"`
+	CreatedAt  string `gorm:"column:created_at" json:"created_at"`
+	UserName   string `gorm:"column:user_name" json:"user_name"`
+	GroupName  string `gorm:"column:group_name" json:"group_name"`
+	RoleName   []string `gorm:"column:role_name" json:"role_name"`
+	GroupId    int64   `gorm:"column:group_id" json:"group_id"`
+}
+
 func (u User) EncodePwd(key string) (string, error) {
 	if u.Password != "" {
 		return md5.EncodeMD5(fmt.Sprintf("%s%s%s", key, md5.EncodeMD5(u.Password), key)), nil

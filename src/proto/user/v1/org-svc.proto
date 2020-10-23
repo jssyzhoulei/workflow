@@ -14,6 +14,7 @@ service RpcOrgService {
   rpc RpcImportUsersByGroupId(GroupUserIds) returns (NullResponse);
   rpc RpcDeleteUserByID(Index) returns (NullResponse);
   rpc RpcGetUserList(UserPage) returns (UsersPage);
+  rpc RpcGetUsers(UserQueryCondition) returns (UserQueryResponse);
   rpc RpcBatchDeleteUsers(UserIDs) returns (NullResponse);
   rpc RPCGroupAdd(GroupAddRequest) returns (GroupResponse);
   rpc RPCGroupQueryWithQuotaByCondition(GroupQueryWithQuotaByConditionRequest) returns (GroupQueryWithQuotaByConditionResponse);
