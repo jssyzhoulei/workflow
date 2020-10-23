@@ -3,6 +3,7 @@ package apis
 import (
 	"context"
 	"fmt"
+	"gitee.com/grandeep/org-svc/src/apis/code"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
@@ -18,6 +19,7 @@ type RoleApiInterface interface {
 	DeleteRoleApi(ctx *gin.Context)
 	QueryRoleApi(ctx *gin.Context)
 	QueryRolesApi(ctx *gin.Context)
+	GetMenuCascade(c *gin.Context)
 }
 
 type roleApi struct {
@@ -120,4 +122,20 @@ func (r *roleApi) QueryRolesApi(c *gin.Context) {
 		return
 	}
 	response(c, http.StatusOK, "success", resp, false)
+}
+
+func (r *roleApi) GetMenuCascade(c *gin.Context) {
+	module := c.Query("module")
+	m, err := strconv.Atoi(module)
+	if err != nil {
+		error_(c, code.PARAMS_ERROR)
+		return
+	}
+	cascades, err := r.roleService.MenuTreeSvc(context.Background(), models.MenuModule(m))
+	if err != nil {
+		error_(c, code.SVC_ERROR)
+		return
+	}
+	success_(c, cascades.Cascades)
+	return
 }

@@ -17,6 +17,7 @@ type RoleRepoI interface {
 	RoleDetailRepo(roleId, userId int) (*models.CreateMenuPermRequest, error)
 	DeleteMenuPermissionByRoleIDRepo(roleId int) error
 	ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userId int) (*pb_user_v1.RolePageRequestProto, error)
+	BuildPermissionTree(module int) ([]*pb_user_v1.Cascade, error)
 }
 
 type roleRepo struct {
@@ -66,7 +67,7 @@ func buildRoleProto(roles *[]roleUserIds) *[]*pb_user_v1.RoleProto {
 	var rolePbs []*pb_user_v1.RoleProto
 	for _, r := range *roles {
 		if pb, ok := roleUserIdMap[r.ID]; ok {
-			if r.UserID != 0{
+			if r.UserID != 0 {
 				pb.Ids = append(pb.Ids, int64(r.UserID))
 			}
 		} else {
@@ -79,7 +80,7 @@ func buildRoleProto(roles *[]roleUserIds) *[]*pb_user_v1.RoleProto {
 				CreatedAt:  r.CreatedAt.Format("2006-01-02 15:04:05"),
 				Ids:        []int64{},
 			}
-			if r.UserID != 0{
+			if r.UserID != 0 {
 				one.Ids = append(one.Ids, int64(r.UserID))
 			}
 			roleUserIdMap[r.ID] = &one
@@ -163,4 +164,76 @@ func (u *roleRepo) DeleteMenuPermissionByRoleIDRepo(roleId int) error {
 	return u.DB.Model(models.RoleMenuPermission{}).
 		Where("role_id = ? and deleted_at is null ", roleId).
 		Delete(rmp).Error
+}
+
+type MenuPermissionTree struct {
+	MenuID       int    `json:"menu_id"`
+	ParentID     int    `json:"parent_id"`
+	MenuName     string `json:"menu_name"`
+	PermissionID int    `json:"permission_id"`
+	UriName      string `json:"uri_name"`
+}
+
+func (u *roleRepo) BuildPermissionTree(module int) ([]*pb_user_v1.Cascade, error) {
+	var tree []MenuPermissionTree
+	u.Raw(`select m.id menu_id, m.name menu_name, m.parent_id, p.id permission_id, p.uri_name 
+				from menu m left join permission p on p.menu_id = m.id 
+				where m.deleted_at is null and p.deleted_at is null and m.module = ? `, module).Scan(&tree)
+	return buildCas(&tree)
+}
+
+func buildCas(tree *[]MenuPermissionTree) ([]*pb_user_v1.Cascade, error) {
+	// 顶层菜单
+	var cas []*pb_user_v1.Cascade
+	// menu id 和 Menu 的映射
+	menuIdCasMap := make(map[int]*pb_user_v1.Cascade)
+	// parent id 和 子Menu列表 的映射
+	parentIdCasMap := make(map[int][]*pb_user_v1.Cascade)
+	for _, i := range *tree {
+		if ca, ok := menuIdCasMap[i.MenuID]; ok {
+			// permission ca
+			ca.Child = append(ca.Child, &pb_user_v1.Cascade{
+				Label: i.UriName,
+				Value: int64(i.PermissionID),
+			})
+		} else {
+			// 这是menu ca
+			var ca pb_user_v1.Cascade
+			ca.Label = i.MenuName
+			ca.Value = int64(i.MenuID)
+			ca.Child = []*pb_user_v1.Cascade{
+				&pb_user_v1.Cascade{
+					Label: i.UriName,
+					Value: int64(i.PermissionID),
+				},
+			}
+			menuIdCasMap[i.MenuID] = &ca
+			if i.ParentID == -1 {
+				cas = append(cas, &ca)
+			}else {
+				if p, ok := parentIdCasMap[i.ParentID]; ok {
+					p = append(p, &ca)
+				} else {
+					parentIdCasMap[i.ParentID] = []*pb_user_v1.Cascade{&ca}
+				}
+			}
+		}
+	}
+
+	return cas, buildMenuChildren(cas, parentIdCasMap)
+}
+
+func buildMenuChildren(top []*pb_user_v1.Cascade, rel map[int][]*pb_user_v1.Cascade) error {
+	for _, ca := range top {
+		caL, ok := rel[int(ca.Value)]
+		if !ok {
+			continue
+		}
+		ca.Children = caL
+		err := buildMenuChildren(caL, rel)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
