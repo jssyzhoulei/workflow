@@ -30,7 +30,8 @@ message GroupWithQuota {
   int64 parent_id = 3;
   int64 top_parent_id = 4;
   int64 disk_quota_size = 5;
-  repeated Quota quotas = 6;
+  string description = 6;
+  repeated Quota quotas = 7;
 }
 
 // GroupAddRequest 用户组添加请求

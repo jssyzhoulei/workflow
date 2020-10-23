@@ -175,6 +175,7 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 			groupData[r.ID].ParentId = r.ParentID
 			groupData[r.ID].Id = r.ID
 			groupData[r.ID].Name = r.Name
+			groupData[r.ID].Description = r.Description
 			groupData[r.ID].Quotas = make([]*pb_user_v1.Quota, 0)
 			levelPath := strings.Split(r.LevelPath, "-")
 			var topParent string

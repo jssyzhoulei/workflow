@@ -246,6 +246,7 @@ SELECT
 	a.parent_id,
 	a.level_path,
 	a.created_at,
+	a.description,
 	b.is_share,
 	b.resources_id,
 	b.` + "`type`," + `
@@ -257,6 +258,7 @@ FROM (
 		name,
 		parent_id,
 		level_path,
+		description,
 		created_at
 	FROM ` + "`group`" + fmt.Sprintf(`%s) a
 	LEFT JOIN quota b ON a.id = b.group_id;

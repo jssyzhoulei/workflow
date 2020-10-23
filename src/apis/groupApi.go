@@ -115,6 +115,7 @@ func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
 			ParentID:      _data.ParentId,
 			TopParentID:   _data.TopParentId,
 			DiskQuotaSize: _data.DiskQuotaSize,
+			Description:   _data.Description,
 			Quotas:        quotaResult,
 		}
 		result = append(result, _tmp)
