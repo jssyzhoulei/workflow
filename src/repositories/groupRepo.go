@@ -338,7 +338,7 @@ func (g *groupRepo) QuotaUpdateRepo(_data []*models.QuotaUpdateRequest, tx *gorm
 	l := 0
 	for i := 0; i < l; i++ {
 		data := _data[i]
-		if data.GroupID == 0 || data.IsShare == 0 || (data.ResourcesID == "" && data.QuotaType != int64(models.ResourceDisk)) {
+		if data.GroupID == 0 || (data.IsShare == 0 && data.QuotaType != int64(models.ResourceDisk)) || (data.ResourcesID == "" && data.QuotaType != int64(models.ResourceDisk)) {
 			return errors.New("检测到空值: group_id, is_share, resources_id 全部为必传参数")
 		}
 

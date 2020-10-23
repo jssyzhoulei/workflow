@@ -119,15 +119,10 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			"cpu":    q.Cpu,
 			"gpu":    q.Gpu,
 			"memory": q.Memory,
-			"disk":   data.DiskQuotaSize,
 		}
 
 		for kind, val := range valMap {
 			var resourcesGroupID = q.ResourcesGroupId
-
-			if quotaTypeMap[kind] == models.ResourceDisk {
-				resourcesGroupID = ""
-			}
 
 			tmp := &models.Quota{
 				IsShare:    int(q.IsShare),
@@ -140,6 +135,15 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			result = append(result, tmp)
 		}
 	}
+	// 磁盘配额单独添加
+	result = append(result, &models.Quota{
+		IsShare:    0,
+		ResourceID: "",
+		Type:       models.ResourceDisk,
+		GroupID:    group.ID,
+		Total:      int(data.DiskQuotaSize),
+		Used:       0,
+	})
 
 	err = g.groupRepo.QuotaAddRepo(result, tx)
 	if err != nil {
@@ -294,7 +298,6 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 			"cpu":    q.Cpu,
 			"gpu":    q.Gpu,
 			"memory": q.Memory,
-			"disk":   data.DiskQuotaSize,
 		}
 
 		for kind, val := range valMap {
@@ -308,6 +311,17 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 			quotasUpdateData = append(quotasUpdateData, _tmp)
 		}
 	}
+
+	// 磁盘配额单独添加
+	quotasUpdateData = append(quotasUpdateData, &models.QuotaUpdateRequest{
+		GroupID:     data.Id,
+		IsShare:     0,
+		ResourcesID: "",
+		QuotaType:   int64(models.ResourceDisk),
+		Total:       data.DiskQuotaSize,
+	})
+
+
 	err = g.groupRepo.QuotaUpdateRepo(quotasUpdateData, tx)
 	if err != nil {
 		tx.Rollback()
