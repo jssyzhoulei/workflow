@@ -113,7 +113,7 @@ func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (c *pb_user_v1
 		GroupId: int64(user.GroupID),
 		UserType: int64(user.UserType),
 		Ststus: int64(user.Status),
-		Mobile: int64(user.Mobile),
+		Mobile: user.Mobile,
 	}
 	for _, roleId := range roleIds {
 		userProto.RoleIds = append(userProto.RoleIds, &pb_user_v1.Index{Id: int64(roleId)})
@@ -218,7 +218,7 @@ func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.U
 			UserName: user.UserName,
 			LoginName: user.LoginName,
 			Password: user.Password,
-			Mobile: int64(user.Mobile),
+			Mobile: user.Mobile,
 			GroupId: int64(user.GroupID),
 			Ststus: int64(user.Status),
 			UserType: int64(user.UserType),
@@ -300,7 +300,7 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 					LoginName: userReq.LoginName,
 					Password:  userReq.Password,
 					GroupID:   int(userReq.GroupId),
-					Mobile:    int(userReq.Mobile),
+					Mobile:    userReq.Mobile,
 				})
 				userIdsIsExist = append(userIdsIsExist, id)
 			} else {
@@ -309,7 +309,7 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 					LoginName: userReq.LoginName,
 					Password:  userReq.Password,
 					GroupID:   int(userReq.GroupId),
-					Mobile:    int(userReq.Mobile),
+					Mobile:    userReq.Mobile,
 				})
 			}
 			if roleIds == nil {
