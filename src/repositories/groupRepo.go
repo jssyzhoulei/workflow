@@ -393,7 +393,14 @@ func (g *groupRepo) GroupDeleteRepo(id int64, tx *gorm.DB) error {
 		db = tx
 	}
 
+	var group = new(models.Group)
+	err = db.Model(&models.Group{}).Where("id=?").First(&group).Error
+	if err != nil {
+		return err
+	}
+
 	updateColumnMap := map[string]interface{} {
+		"name": group.Name + "_" + strconv.FormatInt(time.Now().Unix(), 10) + "_deleted",
 		"status": 1,
 		"deleted_at": time.Now().Format("2006-01-02 15:04:05"),
 	}
