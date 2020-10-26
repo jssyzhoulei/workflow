@@ -64,7 +64,7 @@ message UsersProto {
 
 message UserQueryCondition {
   repeated int64 id = 1;
-  repeated string login_name = 2;
+  string login_name = 2;
   repeated int64 group_id = 3;
   int64 page_num = 4;
   int64 page_size = 5;

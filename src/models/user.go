@@ -64,7 +64,7 @@ type GroupAndUserId struct {
 
 type UserQueryByCondition struct {
 	ID         []int64    `json:"id"`
-	LoginName  []string   `json:"login_name"`
+	LoginName  string     `json:"login_name"`
 	GroupId    []int64    `json:"group_id"`
 	PageNum    int64      `json:"page_num"`
 	PageSize   int64      `json:"page_size"`
