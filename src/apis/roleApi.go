@@ -97,11 +97,12 @@ func (r *roleApi) QueryRoleApi(c *gin.Context) {
 		return
 	}
 	resp, err := r.roleService.QueryRoleSvc(context.Background(), id)
-	if err != nil {
-		log.Logger().Error("query role error: " + err.Error())
+	if err != nil || len(resp.MenuPerms) == 0 {
+		log.Logger().Error("query role error ")
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
+	resp.ID = resp.MenuPerms[0].RoleID
 	response(c, http.StatusOK, "success", resp, false)
 }
 
