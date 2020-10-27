@@ -59,9 +59,32 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			tx.Rollback()
 		}
 	}()
-	md5Str := md5.EncodeMD5(data.Name)
-	
-	k8sNameSpace := "org-svc-" + md5Str
+
+	// 非顶级父ID的组,查询其顶级父ID的namespace
+	var k8sNameSpace string
+	if data.ParentId != 0 {
+		// 通过父级查询顶级组信息
+		parentGroup, err := g.groupRepo.GroupQueryByIDRepo(data.ParentId, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		topGroupIDStr := strings.Split(parentGroup.LevelPath, "-")[1]
+		topGroupID, err := strconv.ParseInt(topGroupIDStr, 10, 64)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		topGroup, err := g.groupRepo.GroupQueryByIDRepo(topGroupID, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		k8sNameSpace = topGroup.NameSpace
+	} else {
+		md5Str := md5.EncodeMD5(data.Name)
+		k8sNameSpace = "org-svc-" + md5Str
+	}
 
 	newGroup := &models.Group{
 		Name:        data.Name,
@@ -153,10 +176,13 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		return nil, err
 	}
 
-	_, err = g.kubernetesService.CreateNamespaceSvc(ctx, k8sNameSpace)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
+	// 只有顶级的组才创建 namespace
+	if group.ParentID == 0 {
+		_, err = g.kubernetesService.CreateNamespaceSvc(ctx, k8sNameSpace)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 	}
 	tx.Commit()
 	return &pb_user_v1.GroupResponse{Code: 0}, nil

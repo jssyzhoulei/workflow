@@ -299,9 +299,44 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 		if err != nil {
 			return err
 		}
+
 		if oldGroup.ID == 0 {
 			return errors.New("组信息被标记为删除或组不存在")
 		}
+
+		// 不允许更新含有下级组的父级
+		res, err := g.QueryGroupIDAndSubGroupsID(data.ID, db)
+		if err != nil {
+			return err
+		}
+		if len(res) > 0 {
+			return errors.New("包含子级不允许更新父级信息")
+		}
+
+		// 获取新的父级组ID
+		newParentGroup, err := g.GroupQueryByIDRepo(*data.ParentID, db)
+		if err != nil {
+			return err
+		}
+
+
+		// 更新父级ID时,不允许跨越顶级组ID更新
+		if oldGroup.ParentID == 0 {
+			return errors.New("顶级组不允许执行变更父级操作")
+		} else {
+			// 获取顶级组ID
+			oriTopGroupID := strings.Split(oldGroup.LevelPath, "-")[1]
+
+			// 获取新的父级组的顶级组
+			newTopGroupID := strings.Split(newParentGroup.LevelPath, "-")[1]
+
+			// 判断是否跨越顶级组
+			if oriTopGroupID != newTopGroupID {
+				return errors.New("不允许跨越顶级组更新其父级ID")
+			}
+		}
+
+
 		if oldGroup.ParentID == 0 {
 			oldLevelPath := oldGroup.LevelPath
 			if *data.ParentID == 0 {
@@ -316,11 +351,7 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 			if *data.ParentID == 0 {
 				updateColumnMap["level_path"] = "0-"
 			} else {
-				oldLevelPath := oldGroup.LevelPath
-				res := strings.Split(oldLevelPath, "-")
-				res[len(res)-2] = strconv.FormatInt(*data.ParentID, 10)
-				newLevelPath := strings.Join(res, "-")
-				updateColumnMap["level_path"] = newLevelPath
+				updateColumnMap["level_path"] = newParentGroup.LevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
 			}
 		}
 	}
@@ -455,7 +486,13 @@ func (g *groupRepo) QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]in
 	}
 
 	var groupIDs []int64
-	levelPath := "%" + strconv.FormatInt(groupID, 10) + "-%"
+	var levelPath string
+	if groupID == 0 {
+		levelPath = "%" + strconv.FormatInt(groupID, 10) + "-%"
+	} else {
+		levelPath = "%-" + strconv.FormatInt(groupID, 10) + "-%"
+	}
+
 	err = db.Model(&models.Group{}).Select("id").Where("level_path like ? or id=? and status=0", levelPath, groupID).Find(&groupIDs).Error
 	if err != nil {
 		return nil, err
