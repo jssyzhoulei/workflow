@@ -68,7 +68,7 @@ func Routers(e *gin.Engine) {
 	es := strings.Split(*etcdHosts, ";")
 	o := client.NewOrgServiceClient(es, 2, time.Second)
 	api := apis.NewApis(o)
-	g := e.Group("/apis/v1/org")
+	g := e.Group("/apis/v1/org/")
 	userApiRouters(g, api)
 	permissionApiRouters(g, api)
 	groupAPIRouters(g, api)
