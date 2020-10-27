@@ -168,8 +168,8 @@ func (u *userRepo) GetUsersRepo(condition *models.UserQueryByCondition) ([]*mode
 		conditionVal["group_ids"] = condition.GroupId
 	}
 	if len(condition.LoginName) != 0 {
-		whereCondition += " and login_name in @login_names"
-		conditionVal["login_names"] = condition.LoginName
+		whereCondition += " and login_name like @login_names"
+		conditionVal["login_names"] = "%" + condition.LoginName + "%"
 	}
 
 	orderSql := " order by a.id desc "
