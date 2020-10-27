@@ -20,6 +20,7 @@ message RoleMenuPermissionProto {
 }
 
 message CreateMenuPermRequestProto {
+  int64 id = 6;
   string name = 1;
   string remark = 2;
   int32 data_permit = 3;

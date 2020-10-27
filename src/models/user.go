@@ -22,7 +22,7 @@ type User struct {
 	LoginName string `gorm:"column:login_name;type:varchar(50);comment:'登录名'" json:"login_name"`
 	Password  string `gorm:"column:password;type:varchar(50);comment:'密码'" json:"password"`
 	GroupID   int    `gorm:"column:group_id;type:int(10);comment:'所属组织'" json:"group_id"`
-	Mobile    int    `gorm:"column:mobile;type:int(10);comment:'手机号'" json:"mobile"`
+	Mobile    string `gorm:"column:mobile;type:varchar(32);comment:'手机号'" json:"mobile"`
 	UserType  int    `gorm:"column:user_type;type:int(10);comment:'用户类型0 普通用户 1 管理员 2超级管理员'" json:"user_type"`
 	Status    int   `json:"status" gorm:"column:status;type:int;default:0;comment:'1 已删除 0 未删除'"`
 }
@@ -64,7 +64,7 @@ type GroupAndUserId struct {
 
 type UserQueryByCondition struct {
 	ID         []int64    `json:"id"`
-	LoginName  []string   `json:"login_name"`
+	LoginName  string     `json:"login_name"`
 	GroupId    []int64    `json:"group_id"`
 	PageNum    int64      `json:"page_num"`
 	PageSize   int64      `json:"page_size"`

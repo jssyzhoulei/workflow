@@ -128,7 +128,7 @@ type QueryGroupsUsersResponse struct {
 	LoginName string `json:"login_name"`
 	GroupID   int64  `json:"group_id"`
 	UserType  int    `json:"user_type"`
-	Mobile    int    `json:"mobile"`
+	Mobile    string `json:"mobile"`
 }
 
 // GroupTreeNode 组树形结构节点

@@ -310,7 +310,7 @@ func (g *groupAPI) QueryGroupAndSubGroupsUsers(c *gin.Context) {
 			LoginName: _user.LoginName,
 			GroupID:   _user.GroupId,
 			UserType:  int(_user.UserType),
-			Mobile:    int(_user.Mobile),
+			Mobile:    _user.Mobile,
 		}
 		result = append(result, _tmp)
 	}

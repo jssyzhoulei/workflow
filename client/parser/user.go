@@ -18,7 +18,7 @@ func EncodeUserRoleDTO(ctx context.Context, req interface{}) (interface{}, error
 		UserName: r.UserName,
 		LoginName: r.LoginName,
 		Password: r.Password,
-		Mobile: int64(r.Mobile),
+		Mobile: r.Mobile,
 		GroupId: int64(r.GroupID),
 		UserType: int64(r.UserType),
 		Ststus: int64(r.Status),
@@ -57,7 +57,7 @@ func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) 
 			Password: userProto.Password,
 			GroupID: int(userProto.GroupId),
 			UserType: int(userProto.UserType),
-			Mobile: int(userProto.Mobile),
+			Mobile: userProto.Mobile,
 			Status: int(userProto.Ststus),
 		},
 	}

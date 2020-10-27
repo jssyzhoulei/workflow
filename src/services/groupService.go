@@ -531,7 +531,7 @@ func (g *GroupService) QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data 
 			Id:        &pb_user_v1.Index{Id: int64(user.ID)},
 			UserName:  user.UserName,
 			LoginName: user.LoginName,
-			Mobile:    int64(user.Mobile),
+			Mobile:    user.Mobile,
 			GroupId:   int64(user.GroupID),
 			UserType:  int64(user.UserType),
 			RoleIds:   nil,
