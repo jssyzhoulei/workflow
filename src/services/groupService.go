@@ -59,12 +59,38 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			tx.Rollback()
 		}
 	}()
-	md5Str := md5.EncodeMD5(data.Name)
+
+	// 非顶级父ID的组,查询其顶级父ID的namespace
+	var k8sNameSpace string
+	if data.ParentId != 0 {
+		// 通过父级查询顶级组信息
+		parentGroup, err := g.groupRepo.GroupQueryByIDRepo(data.ParentId, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		topGroupIDStr := strings.Split(parentGroup.LevelPath, "-")[1]
+		topGroupID, err := strconv.ParseInt(topGroupIDStr, 10, 64)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		topGroup, err := g.groupRepo.GroupQueryByIDRepo(topGroupID, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		k8sNameSpace = topGroup.NameSpace
+	} else {
+		md5Str := md5.EncodeMD5(data.Name)
+		k8sNameSpace = "org-svc-" + md5Str
+	}
 
 	newGroup := &models.Group{
-		Name:      data.Name,
-		ParentID:  int(data.ParentId),
-		NameSpace: md5Str,
+		Name:        data.Name,
+		ParentID:    int(data.ParentId),
+		NameSpace:   k8sNameSpace,
+		Description: data.Description,
 	}
 
 	err = g.groupRepo.GroupAddRepo(newGroup, tx)
@@ -118,13 +144,14 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			"cpu":    q.Cpu,
 			"gpu":    q.Gpu,
 			"memory": q.Memory,
-			"disk":   data.DiskQuotaSize,
 		}
 
 		for kind, val := range valMap {
+			var resourcesGroupID = q.ResourcesGroupId
+
 			tmp := &models.Quota{
 				IsShare:    int(q.IsShare),
-				ResourceID: q.ResourcesGroupId,
+				ResourceID: resourcesGroupID,
 				Type:       quotaTypeMap[kind],
 				GroupID:    group.ID,
 				Total:      int(val),
@@ -133,6 +160,15 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			result = append(result, tmp)
 		}
 	}
+	// 磁盘配额单独添加
+	result = append(result, &models.Quota{
+		IsShare:    0,
+		ResourceID: "",
+		Type:       models.ResourceDisk,
+		GroupID:    group.ID,
+		Total:      int(data.DiskQuotaSize),
+		Used:       0,
+	})
 
 	err = g.groupRepo.QuotaAddRepo(result, tx)
 	if err != nil {
@@ -140,10 +176,13 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		return nil, err
 	}
 
-	_, err = g.kubernetesService.CreateNamespaceSvc(ctx, md5Str)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
+	// 只有顶级的组才创建 namespace
+	if group.ParentID == 0 {
+		_, err = g.kubernetesService.CreateNamespaceSvc(ctx, k8sNameSpace)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 	}
 	tx.Commit()
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
@@ -174,6 +213,7 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 			groupData[r.ID].ParentId = r.ParentID
 			groupData[r.ID].Id = r.ID
 			groupData[r.ID].Name = r.Name
+			groupData[r.ID].Description = r.Description
 			groupData[r.ID].Quotas = make([]*pb_user_v1.Quota, 0)
 			levelPath := strings.Split(r.LevelPath, "-")
 			var topParent string
@@ -246,19 +286,76 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 // GroupUpdateSvc 组信息更新
 func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
 
+	var tx = g.groupRepo.GetTx()
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	d := &models.GroupUpdateRequest{
-		ID:   data.Id,
-		Name: data.Name,
+		ID:          data.Id,
+		Name:        data.Name,
+		Description: data.Description,
 	}
 
 	if data.UseParentId {
 		d.ParentID = &data.ParentId
 	}
 
-	err := g.groupRepo.GroupUpdateRepo(d, nil)
+	err := g.groupRepo.GroupUpdateRepo(d, tx)
 	if err != nil {
-		return &pb_user_v1.GroupResponse{Code: 1}, err
+		tx.Rollback()
+		return nil, err
 	}
+
+	quotaTypeMap := map[string]models.ResourceType{
+		"cpu":    models.ResourceCpu,
+		"gpu":    models.ResourceGpu,
+		"memory": models.ResourceMemory,
+		"disk":   models.ResourceDisk,
+	}
+
+	quotasLen := len(data.Quotas)
+	var quotasUpdateData = make([]*models.QuotaUpdateRequest, 0)
+	for i := 0; i < quotasLen; i++ {
+		q := data.Quotas[i]
+
+		valMap := map[string]int64{
+			"cpu":    q.Cpu,
+			"gpu":    q.Gpu,
+			"memory": q.Memory,
+		}
+
+		for kind, val := range valMap {
+			_tmp := &models.QuotaUpdateRequest{
+				GroupID:     data.Id,
+				IsShare:     q.IsShare,
+				ResourcesID: q.ResourcesGroupId,
+				QuotaType:   int64(quotaTypeMap[kind]),
+				Total:       val,
+			}
+			quotasUpdateData = append(quotasUpdateData, _tmp)
+		}
+	}
+
+	// 磁盘配额单独添加
+	quotasUpdateData = append(quotasUpdateData, &models.QuotaUpdateRequest{
+		GroupID:     data.Id,
+		IsShare:     0,
+		ResourcesID: "",
+		QuotaType:   int64(models.ResourceDisk),
+		Total:       data.DiskQuotaSize,
+	})
+
+	err = g.groupRepo.QuotaUpdateRepo(quotasUpdateData, tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
 
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
 }
@@ -276,9 +373,11 @@ func (g *GroupService) QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.Quot
 		Used:        data.Used,
 	}
 
-	err = g.groupRepo.QuotaUpdateRepo(d, nil)
+	_data := []*models.QuotaUpdateRequest{d}
+
+	err = g.groupRepo.QuotaUpdateRepo(_data, nil)
 	if err != nil {
-		return &pb_user_v1.GroupResponse{Code: 1}, nil
+		return nil, err
 	}
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
 }
@@ -432,7 +531,7 @@ func (g *GroupService) QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data 
 			Id:        &pb_user_v1.Index{Id: int64(user.ID)},
 			UserName:  user.UserName,
 			LoginName: user.LoginName,
-			Mobile:    int64(user.Mobile),
+			Mobile:    user.Mobile,
 			GroupId:   int64(user.GroupID),
 			UserType:  int64(user.UserType),
 			RoleIds:   nil,

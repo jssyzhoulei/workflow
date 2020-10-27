@@ -18,7 +18,7 @@ func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 		User: models.User{UserName: r.UserName,
 		LoginName: r.LoginName,
 		Password: r.Password,
-		Mobile: int(r.Mobile),
+		Mobile: r.Mobile,
 		GroupID: int(r.GroupId),
 		UserType: int(r.UserType),
 		Status: int(r.Ststus),},
@@ -37,19 +37,23 @@ func DecodeUserProto(ctx context.Context, req interface{}) (interface{}, error) 
 }
 
 func EncodeUserProto(ctx context.Context, req interface{}) (interface{}, error) {
-	r := req.(models.User)
-	return &pb_user_v1.UserProto{
+	r := req.(models.UserRolesDTO)
+	userProto :=  &pb_user_v1.UserProto{
 		Id: &pb_user_v1.Index{
 			Id:                   int64(r.ID),
 		},
 		UserName: r.UserName,
 		LoginName: r.LoginName,
 		Password: r.Password,
-		Mobile: int64(r.Mobile),
+		Mobile: r.Mobile,
 		Ststus: int64(r.Status),
 		GroupId: int64(r.GroupID),
 		UserType: int64(r.UserType),
-	}, nil
+	}
+	for _, v := range r.RoleIDs {
+		userProto.RoleIds = append(userProto.RoleIds, &pb_user_v1.Index{Id: int64(v)})
+	}
+	return userProto, nil
 }
 
 func DecodeAddUsersRequest(ctx context.Context, req interface{}) (interface{}, error) {
@@ -76,9 +80,23 @@ func DecodeUserPageProto(c context.Context, req interface{}) (interface{}, error
 	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
 }
 
+func DecodeUserQueryCondition(c context.Context, req interface{}) (interface{}, error) {
+	if userCondition, ok := req.(*pb_user_v1.UserQueryCondition); ok {
+		return userCondition, nil
+	}
+	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(req))
+}
+
 func EncodeUsersPage(c context.Context, res interface{}) (interface{}, error) {
 	if usersPage, ok := res.(*pb_user_v1.UsersPage); ok {
 		return usersPage, nil
+	}
+	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(res))
+}
+
+func EncodeUsersResponse(c context.Context, res interface{}) (interface{}, error) {
+	if userResponse, ok := res.(*pb_user_v1.UserQueryResponse); ok {
+		return userResponse, nil
 	}
 	return nil, fmt.Errorf(transportDecodeError, reflect.TypeOf(res))
 }

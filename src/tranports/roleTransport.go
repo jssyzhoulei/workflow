@@ -14,6 +14,7 @@ type roleGrpcTransport struct {
 	deleteRole transport.Handler
 	queryRole  transport.Handler
 	queryRoles transport.Handler
+	menuTree   transport.Handler
 }
 
 func NewRoleGrpcTransport(endpoint *endpoints.RoleServiceEndpoint) *roleGrpcTransport {
@@ -23,6 +24,7 @@ func NewRoleGrpcTransport(endpoint *endpoints.RoleServiceEndpoint) *roleGrpcTran
 		deleteRoleServer = transport.NewServer(endpoint.DeleteRoleEndpoint, parser.DecodeIndexProto, parser.EncodeNullProto)
 		queryRoleServer  = transport.NewServer(endpoint.QueryRoleEndpoint, parser.DecodeIndexProto, parser.EncodeCreateMenuPermRequest)
 		queryRolesServer = transport.NewServer(endpoint.QueryRolesEndpoint, parser.DecodeRolePageProto, parser.EncodeRolePageProto)
+		menuTreeServer   = transport.NewServer(endpoint.MenuTreeEndpoint, parser.DecodeModuleProto, parser.EncodeCascadeProto)
 	)
 	return &roleGrpcTransport{
 		addRole:    addRoleServer,
@@ -30,6 +32,7 @@ func NewRoleGrpcTransport(endpoint *endpoints.RoleServiceEndpoint) *roleGrpcTran
 		deleteRole: deleteRoleServer,
 		queryRole:  queryRoleServer,
 		queryRoles: queryRolesServer,
+		menuTree:   menuTreeServer,
 	}
 }
 
@@ -71,4 +74,12 @@ func (u *roleGrpcTransport) RpcQueryRoles(ctx context.Context, page *pb_user_v1.
 		return nil, err
 	}
 	return role.(*pb_user_v1.RolePageRequestProto), err
+}
+
+func (u *roleGrpcTransport) RpcMenuTree(ctx context.Context, module *pb_user_v1.MenuModule) (*pb_user_v1.Cascades, error) {
+	_, role, err := u.menuTree.ServeGRPC(ctx, module)
+	if err != nil {
+		return nil, err
+	}
+	return role.(*pb_user_v1.Cascades), err
 }

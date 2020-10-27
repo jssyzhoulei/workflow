@@ -21,6 +21,7 @@ type UserServiceEndpoint struct {
 	BatchDeleteUsersEndpoint endpoint.Endpoint
 	AddUsersEndpoint endpoint.Endpoint
 	ImportUsersByGroupIdEndpoint endpoint.Endpoint
+	GetUsersEndpoint endpoint.Endpoint
 }
 
 // NewUserEndpoint UserServiceEndpoint 的构造函数
@@ -34,6 +35,7 @@ func NewUserEndpoint(service services.ServiceI) *UserServiceEndpoint {
 	userServiceEndpoint.BatchDeleteUsersEndpoint = MakeBatchDeleteUsersEndpoint(service.GetUserService())
 	userServiceEndpoint.AddUsersEndpoint = MakeAddUsersEndpoint(service.GetUserService())
 	userServiceEndpoint.ImportUsersByGroupIdEndpoint = MakeImportUsersByGroupIdEndpoint(service.GetUserService())
+	userServiceEndpoint.GetUsersEndpoint = MakeGetUsersEndpoint(service.GetUserService())
 	return userServiceEndpoint
 }
 
@@ -132,7 +134,17 @@ func MakeBatchDeleteUsersEndpoint(userService services.UserServiceInterface) end
 			return nil, RequestParamsTypeError
 		}
 		response, err = userService.BatchDeleteUsersSvc(ctx, ids)
-		fmt.Println(response, err)
+		return
+	}
+}
+
+func MakeGetUsersEndpoint(userService services.UserServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		userQueryCondition, ok := request.(*pb_user_v1.UserQueryCondition)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = userService.GetUsersSvc(ctx, userQueryCondition)
 		return
 	}
 }
@@ -146,12 +158,12 @@ func (u *UserServiceEndpoint) AddUserSvc(ctx context.Context, userProto models.U
 	return resp.(pb_user_v1.NullResponse), nil
 }
 // GetUserByIDSvc ...
-func (u *UserServiceEndpoint) GetUserByIDSvc(ctx context.Context, id int) (models.User, error) {
+func (u *UserServiceEndpoint) GetUserByIDSvc(ctx context.Context, id int) (*pb_user_v1.UserProto, error) {
 	resp, err := u.GetUserByIDEndpoint(ctx, id)
 	if err != nil {
-		return models.User{}, err
+		return nil, err
 	}
-	return resp.(models.User), nil
+	return resp.(*pb_user_v1.UserProto), nil
 }
 
 // UpdateUserByIDSvc ...
@@ -203,4 +215,12 @@ func (u *UserServiceEndpoint) AddUsersSvc(ctx context.Context, users *pb_user_v1
 		return pb_user_v1.NullResponse{}, err
 	}
 	return resp.(pb_user_v1.NullResponse), nil
+}
+
+func (u *UserServiceEndpoint) GetUsersSvc(ctx context.Context, data *pb_user_v1.UserQueryCondition) (*pb_user_v1.UserQueryResponse, error){
+	resp, err := u.GetUsersEndpoint(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.UserQueryResponse), nil
 }

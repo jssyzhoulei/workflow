@@ -75,7 +75,14 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
 			).Endpoint(),
-
+		GetUsersEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcGetUsers",
+			parser.EncodeUserCondition,
+			parser.DecodeUserResponse,
+			pb_user_v1.UserQueryResponse{},
+			).Endpoint(),
 	}
 }
 
@@ -182,6 +189,14 @@ func RoleGrpcConn(conn *grpc.ClientConn) services.RoleServiceI {
 			parser.EncodeRolePageProto,
 			parser.DecodeRolePageProto,
 			pb_user_v1.RolePageRequestProto{},
+		).Endpoint(),
+		MenuTreeEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RpcMenuTree",
+			parser.EncodeMenuModule,
+			parser.DecodeCascadeProto,
+			pb_user_v1.Cascades{},
 		).Endpoint(),
 	}
 }

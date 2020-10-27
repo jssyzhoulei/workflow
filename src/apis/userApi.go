@@ -23,6 +23,7 @@ type userApiInterface interface {
 	ImportUser(ctx *gin.Context)
 	BatchDeleteUsersApi(ctx *gin.Context)
 	ImportUsersByGroupIdApi(ctx *gin.Context)
+	GetUsersApi(c *gin.Context)
 }
 
 type userApi struct {
@@ -222,7 +223,7 @@ func (u *userApi) ImportUser(ctx *gin.Context) {
 				user.UserName = row.Cells[0].Value
 				user.Password = row.Cells[2].Value
 				user.LoginName = row.Cells[1].Value
-				user.Mobile,_ = strconv.ParseInt(row.Cells[1].Value, 10, 64)
+				user.Mobile = row.Cells[1].Value
 				user.GroupId  = importUserRequest.GroupID
 				for _, v := range importUserRequest.RoleID {
 					user.RoleIds = append(user.RoleIds, &pb_user_v1.Index{Id: v})
@@ -239,5 +240,23 @@ func (u *userApi) ImportUser(ctx *gin.Context) {
 		return
 	}
 	success_(ctx, nil)
+}
+
+func (u *userApi) GetUsersApi(c *gin.Context) {
+	var data = new(pb_user_v1.UserQueryCondition)
+	err := c.BindJSON(data)
+	if err != nil {
+		log.Logger().Error(fmt.Sprintf("get users request param error : %s", err.Error()))
+		error_(c, 201, err)
+		return
+	}
+	users, err := u.userService.GetUsersSvc(context.Background(), data)
+	if err != nil {
+		log.Logger().Error("get users error: " + err.Error())
+		error_(c, 201, err)
+		return
+	}
+	success_(c, users)
+	return
 }
 

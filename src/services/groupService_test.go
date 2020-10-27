@@ -33,15 +33,20 @@ func TestMain(m *testing.M) {
 
 func TestStart(t *testing.T) {
 	var err error
-	err = testGroupAddSvc()
-	if err != nil {
-		t.Error(err)
-	}
+	//err = testGroupAddSvc()
+	//if err != nil {
+	//	t.Error(err)
+	//}
 
 	//err = testGroupTreeQuerySvc()
 	//if err != nil {
 	//	t.Error(err)
 	//}
+
+	err = testGroupUpdateSvc()
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 // testGroupAddSvc 测试添加组
@@ -55,18 +60,11 @@ func testGroupAddSvc() error {
 			Cpu:                  234,
 			Memory:               345,
 		},
-		{
-			IsShare:              2,
-			ResourcesGroupId:     "10,20",
-			Gpu:                  456,
-			Cpu:                  567,
-			Memory:               678,
-		},
 	}
 
 	data := &pb_user_v1.GroupAddRequest{
-		Name:                 "张三",
-		ParentId:             12,
+		Name:                 "临时顶级组",
+		ParentId:             0,
 		DiskQuotaSize:        100,
 		Quotas:               quotas,
 	}
@@ -97,6 +95,52 @@ func testGroupTreeQuerySvc() error {
 	}
 
 	fmt.Println("Group Tree: ", resp)
+
+	return nil
+}
+
+// testGroupUpdateSvc 测试组更新
+func testGroupUpdateSvc() error {
+
+	//data := &pb_user_v1.GroupUpdateRequest{
+	//	Id:                   28,
+	//	Name:                 "",
+	//	ParentId:             0,
+	//	UseParentId:          false,
+	//	Description:          "28描述",
+	//}
+	//
+	//resp, err := groupTestService.GroupUpdateSvc(groupCtx, data)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//fmt.Println("update resp: ", resp)
+
+	// []*pb_user_v1.Quota{
+	//	{
+	//		IsShare: 1,
+	//		ResourcesGroupId: "108",
+	//		Cpu: 10,
+	//		Gpu: 20,
+	//		Memory: 100,
+	//	},
+	//},
+
+	data2 := &pb_user_v1.GroupUpdateRequest{
+		Id:                   70,
+		Name:                 "70的新名字",
+		ParentId:             59,
+		UseParentId:          true,
+		Description:          "70的新描述",
+		DiskQuotaSize: 100,
+		Quotas: nil,
+	}
+
+	_, err := groupTestService.GroupUpdateSvc(groupCtx, data2)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

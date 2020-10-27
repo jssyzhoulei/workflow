@@ -13,13 +13,14 @@ import (
 // UserServiceI 用户服务接口
 type UserServiceInterface interface {
 	AddUserSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error)
-	GetUserByIDSvc(ctx context.Context, id int) (models.User, error)
+	GetUserByIDSvc(ctx context.Context, id int) (c *pb_user_v1.UserProto, err error)
 	UpdateUserByIDSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error)
 	DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
 	AddUsersSvc(ctx context.Context, users *pb_user_v1.AddUsersRequest) (pb_user_v1.NullResponse, error)
 	GetUserListSvc(ctx context.Context, user *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error)
 	BatchDeleteUsersSvc(ctx context.Context, ids []int64) (pb_user_v1.NullResponse, error)
 	ImportUsersByGroupIdSvc(ctx context.Context, id models.GroupAndUserId) (pb_user_v1.NullResponse, error)
+	GetUsersSvc(ctx context.Context, data *pb_user_v1.UserQueryCondition) (*pb_user_v1.UserQueryResponse, error)
 }
 
 // UserService 用户服务，实现 UserServiceInterface
@@ -84,33 +85,40 @@ func (u *userService) AddUserSvc(ctx context.Context, userRolesDTO models.UserRo
 }
 
 // GetUserByIDSvc 获取用户详情
-func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (models.User,  error) {
-	var (
-		user models.User
-		err error
-	)
-	user, err = u.userRepo.GetUserByIDRepo(id)
-	return user, err
-	//var user models.User
-	//var userProto pb_user_v1.UserProto
+func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (c *pb_user_v1.UserProto, err error) {
+	//var (
+	//	user models.User
+	//	err error
+	//)
 	//user, err = u.userRepo.GetUserByIDRepo(id)
-	//if err != nil {
-	//	return c, err
-	//}
-	//c = &pb_user_v1.UserProto{}
-	//userProto.Id = &pb_user_v1.Index{
-	//	Id:          int64(user.ID),
-	//}
-	//userProto = pb_user_v1.UserProto{
-	//	UserName: user.UserName,
-	//	LoginName: user.LoginName,
-	//	Password: user.Password,
-	//	GroupId: int64(user.GroupID),
-	//	UserType: int64(user.UserType),
-	//	Ststus: int64(user.Status),
-	//	Mobile: int64(user.Mobile),
-	//}
-	//return c, nil
+	//return user, err
+	var user models.User
+	var userProto pb_user_v1.UserProto
+	user, err = u.userRepo.GetUserByIDRepo(id)
+	if err != nil {
+		return c, err
+	}
+	roleIds, err := u.userRepo.GetRoleIdsById(id)
+	if err != nil {
+		return c, err
+	}
+	c = &pb_user_v1.UserProto{}
+	userProto.Id = &pb_user_v1.Index{
+		Id:          int64(user.ID),
+	}
+	userProto = pb_user_v1.UserProto{
+		UserName: user.UserName,
+		LoginName: user.LoginName,
+		Password: user.Password,
+		GroupId: int64(user.GroupID),
+		UserType: int64(user.UserType),
+		Ststus: int64(user.Status),
+		Mobile: user.Mobile,
+	}
+	for _, roleId := range roleIds {
+		userProto.RoleIds = append(userProto.RoleIds, &pb_user_v1.Index{Id: int64(roleId)})
+	}
+	return c, nil
 }
 
 // UpdateUserByIDSvc 根据ID编辑用户
@@ -120,6 +128,8 @@ func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models
 	//)
 
 	tx := u.userRepo.GetTx()
+	key, _ := u.config.GetString("passwordKey")
+	userRolesDTO.Password,_ = userRolesDTO.EncodePwd(key)
 	err := u.userRepo.UpdateUserByIDRepo(userRolesDTO.User, tx)
 	if err != nil {
 		tx.Rollback()
@@ -178,6 +188,7 @@ func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.U
 	var (
 		page models.Page
 		user models.User
+		userIds []int
 	)
 	if userPage.Page != nil {
 		page.PageSize = int(userPage.Page.PageSize)
@@ -190,25 +201,33 @@ func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.U
 	if err != nil {
 		return c, err
 	}
+	for _, user := range users {
+		userIds = append(userIds, user.ID)
+	}
+	reoleIds, err := u.userRepo.GetRoleIdsByUserIds(userIds)
+	if err != nil {
+		return nil, err
+	}
 	c = &pb_user_v1.UsersPage{}
 	c.Users = &pb_user_v1.Users{}
 	for _, user := range users {
 		var userProto pb_user_v1.UserProto
-		userProto.Id = &pb_user_v1.Index{
-			Id:                   int64(user.ID),
-		}
+		//userProto.Id = &pb_user_v1.Index{
+		//	Id:                   int64(user.ID),
+		//}
 		userProto = pb_user_v1.UserProto{
+			Id: &pb_user_v1.Index{Id: int64(user.ID)},
 			UserName: user.UserName,
 			LoginName: user.LoginName,
 			Password: user.Password,
-			Mobile: int64(user.Mobile),
+			Mobile: user.Mobile,
 			GroupId: int64(user.GroupID),
 			Ststus: int64(user.Status),
 			UserType: int64(user.UserType),
 		}
 
-		for _, v := range userProto.RoleIds {
-			userProto.RoleIds = append(userProto.RoleIds, v)
+		for _, v := range reoleIds {
+			userProto.RoleIds = append(userProto.RoleIds, &pb_user_v1.Index{Id: int64(v)})
 		}
 		c.Users.Users = append(c.Users.Users, &userProto)
 	}
@@ -283,7 +302,7 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 					LoginName: userReq.LoginName,
 					Password:  userReq.Password,
 					GroupID:   int(userReq.GroupId),
-					Mobile:    int(userReq.Mobile),
+					Mobile:    userReq.Mobile,
 				})
 				userIdsIsExist = append(userIdsIsExist, id)
 			} else {
@@ -292,7 +311,7 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 					LoginName: userReq.LoginName,
 					Password:  userReq.Password,
 					GroupID:   int(userReq.GroupId),
-					Mobile:    int(userReq.Mobile),
+					Mobile:    userReq.Mobile,
 				})
 			}
 			if roleIds == nil {
@@ -371,4 +390,40 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 	}
 
 	return pb_user_v1.NullResponse{}, nil
+}
+
+func (u *userService) GetUsersSvc(ctx context.Context, data *pb_user_v1.UserQueryCondition) (*pb_user_v1.UserQueryResponse, error) {
+
+	var userQueryResponses pb_user_v1.UserQueryResponse
+	condition := &models.UserQueryByCondition{
+		ID: data.Id,
+		LoginName: data.LoginName,
+		GroupId: data.GroupId,
+		PageNum: data.PageNum,
+		PageSize: data.PageSize,
+	}
+
+	querySlices,total, err := u.userRepo.GetUsersRepo(condition)
+	if err != nil {
+		return nil, err
+	}
+	userQueryResponses = pb_user_v1.UserQueryResponse{
+		Total: total,
+		PageNum: condition.PageNum,
+		PageSize: condition.PageSize,
+	}
+	for _, val := range querySlices {
+		_temp := &pb_user_v1.UserQueryResult{
+			Id:          val.Id,
+			LoginName:   val.LoginName,
+			CreatedAt:   val.CreatedAt,
+			UserName:    val.UserName,
+			GroupName:   val.GroupName,
+			GroupId:     val.GroupId,
+			RoleName:    val.RoleName,
+		}
+		userQueryResponses.UserQueryResult = append(userQueryResponses.UserQueryResult, _temp)
+	}
+
+	return &userQueryResponses, nil
 }

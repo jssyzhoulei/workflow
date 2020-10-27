@@ -55,8 +55,8 @@ func NewOrgServiceClient(addr []string, retry int, timeOut time.Duration) *OrgSe
 		return nil
 	}
 	o := &OrgServiceClient{
-		instance: instance,
-		retryMax: retry,
+		instance:     instance,
+		retryMax:     retry,
 		retryTimeout: timeOut,
 	}
 
@@ -73,6 +73,7 @@ func (o *OrgServiceClient) GetUserService() services.UserServiceInterface {
 	endpoints.GetUserListEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeGetUserListEndpoint, userGrpcConn)
 	endpoints.BatchDeleteUsersEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeBatchDeleteUsersEndpoint, userGrpcConn)
 	endpoints.ImportUsersByGroupIdEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeImportUsersByGroupIdEndpoint, userGrpcConn)
+	endpoints.GetUsersEndpoint = o.getRetryUserEndpoint(org_endpoints.MakeGetUsersEndpoint, userGrpcConn)
 	return endpoints
 }
 
@@ -102,6 +103,7 @@ func (o *OrgServiceClient) GetRoleService() services.RoleServiceI {
 	endpoints.DeleteRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeDeleteRoleEndpoint, RoleGrpcConn)
 	endpoints.QueryRoleEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeQueryRoleEndpoint, RoleGrpcConn)
 	endpoints.QueryRolesEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeQueryRolesEndpoint, RoleGrpcConn)
+	endpoints.MenuTreeEndpoint = o.getRetryRoleEndpoint(org_endpoints.MakeMenuTreeEndpoint, RoleGrpcConn)
 	return endpoints
 }
 
@@ -129,16 +131,15 @@ func (o *OrgServiceClient) getRetryRoleEndpoint(ept MakeRoleEndpointFunc, conn G
 // GetGroupService  ...
 func (o *OrgServiceClient) GetGroupService() services.GroupServiceInterface {
 	return &org_endpoints.GroupServiceEndpoint{
-		GroupAddEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupGrpcConn),
+		GroupAddEndpoint:                       o.getGroupRetryEndpoint(org_endpoints.MakeGroupAddEndpoint, groupGrpcConn),
 		GroupQueryWithQuotaByConditionEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupQueryWithQuotaByConditionEndpoint, groupGrpcConn),
-		GroupUpdateEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupUpdateEndpoint, groupGrpcConn),
-		QuotaUpdateEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeQuotaUpdateEndpoint, groupGrpcConn),
-		GroupTreeQueryEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupTreeQueryEndpoint, groupGrpcConn),
-		GroupDeleteEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeGroupDeleteEndpoint, groupGrpcConn),
-		QueryGroupAndSubGroupsUsersEndpoint: o.getGroupRetryEndpoint(org_endpoints.MakeQueryGroupAndSubGroupsUsersEndpoint, groupGrpcConn),
+		GroupUpdateEndpoint:                    o.getGroupRetryEndpoint(org_endpoints.MakeGroupUpdateEndpoint, groupGrpcConn),
+		QuotaUpdateEndpoint:                    o.getGroupRetryEndpoint(org_endpoints.MakeQuotaUpdateEndpoint, groupGrpcConn),
+		GroupTreeQueryEndpoint:                 o.getGroupRetryEndpoint(org_endpoints.MakeGroupTreeQueryEndpoint, groupGrpcConn),
+		GroupDeleteEndpoint:                    o.getGroupRetryEndpoint(org_endpoints.MakeGroupDeleteEndpoint, groupGrpcConn),
+		QueryGroupAndSubGroupsUsersEndpoint:    o.getGroupRetryEndpoint(org_endpoints.MakeQueryGroupAndSubGroupsUsersEndpoint, groupGrpcConn),
 	}
 }
-
 
 func (o *OrgServiceClient) getGroupRetryEndpoint(ept MakeGroupEndpointFunc, conn GrpcGroupConnFunc) endpoint.Endpoint {
 	factory := o.factoryGroupFor(ept, conn)
@@ -159,7 +160,6 @@ func (o *OrgServiceClient) factoryGroupFor(makeEndpoint MakeGroupEndpointFunc, c
 	}
 }
 
-
 func (o *OrgServiceClient) GetPermissionService() services.PermissionServiceInterface {
 	endpoints := &org_endpoints.PermissionServiceEndpoint{}
 	endpoints.AddPermissionEndpoint = o.getPermissionRetryEndpoint(org_endpoints.MakeAddPermissionEndpoint, permissionGrpcConn)
@@ -170,7 +170,6 @@ func (o *OrgServiceClient) GetPermissionService() services.PermissionServiceInte
 	endpoints.UpdatePermissionByIDEndpoint = o.getPermissionRetryEndpoint(org_endpoints.MakeUpdatePermissionByIDEndpoint, permissionGrpcConn)
 	return endpoints
 }
-
 
 func (o *OrgServiceClient) getPermissionRetryEndpoint(ept MakePermissionEndpointFunc, conn GrpcPermissionConnFunc) endpoint.Endpoint {
 	factory := o.factoryPermissionFor(ept, conn)

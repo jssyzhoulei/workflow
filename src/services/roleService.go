@@ -13,6 +13,7 @@ type RoleServiceI interface {
 	DeleteRoleSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error)
 	QueryRoleSvc(ctx context.Context, id int) (*models.CreateMenuPermRequest, error)
 	QueryRolesSvc(ctx context.Context, page *pb_user_v1.RolePageRequestProto) (*pb_user_v1.RolePageRequestProto, error)
+	MenuTreeSvc(ctx context.Context, module models.MenuModule) (*pb_user_v1.Cascades, error)
 }
 
 type roleService struct {
@@ -63,4 +64,13 @@ func (r *roleService) QueryRoleSvc(ctx context.Context, id int) (*models.CreateM
 
 func (r *roleService) QueryRolesSvc(ctx context.Context, page *pb_user_v1.RolePageRequestProto) (*pb_user_v1.RolePageRequestProto, error) {
 	return r.roleRepo.ListRolesRepo(page, 0)
+}
+
+func (r *roleService) MenuTreeSvc(ctx context.Context, module models.MenuModule) (*pb_user_v1.Cascades, error) {
+	res, err := r.roleRepo.BuildPermissionTree(int(module))
+	if err != nil{
+		return nil, err
+	}
+	cas := pb_user_v1.Cascades{Cascades:res}
+	return &cas, nil
 }

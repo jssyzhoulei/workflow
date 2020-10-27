@@ -18,7 +18,7 @@ func EncodeUserRoleDTO(ctx context.Context, req interface{}) (interface{}, error
 		UserName: r.UserName,
 		LoginName: r.LoginName,
 		Password: r.Password,
-		Mobile: int64(r.Mobile),
+		Mobile: r.Mobile,
 		GroupId: int64(r.GroupID),
 		UserType: int64(r.UserType),
 		Ststus: int64(r.Status),
@@ -33,22 +33,43 @@ func EncodeUserRoleDTO(ctx context.Context, req interface{}) (interface{}, error
 }
 
 func DecodeUserModel(ctx context.Context, res interface{}) (interface{}, error) {
-	user, ok := res.(*pb_user_v1.UserProto)
+	userProto, ok := res.(*pb_user_v1.UserProto)
 	if !ok {
 		return nil, errors.New("error type")
 	}
-	return models.User{
-		BaseModel: models.BaseModel{
-			ID: int(user.Id.Id),
+	user :=  models.UserRolesDTO{
+		//BaseModel: models.BaseModel{
+		//	ID: int(userProto.Id.Id),
+		//},
+		//UserName:  user.UserName,
+		//LoginName: user.LoginName,
+		//Password:  user.Password,
+		//Mobile:    int(user.Mobile),
+		//Status:    int(user.Ststus),
+		//GroupID:   int(user.GroupId),
+		//UserType:  int(user.UserType),
+		User : models.User{
+			BaseModel : models.BaseModel{
+				ID: int(userProto.Id.Id),
+			},
+			UserName: userProto.UserName,
+			LoginName: userProto.LoginName,
+			Password: userProto.Password,
+			GroupID: int(userProto.GroupId),
+			UserType: int(userProto.UserType),
+			Mobile: userProto.Mobile,
+			Status: int(userProto.Ststus),
 		},
-		UserName:  user.UserName,
-		LoginName: user.LoginName,
-		Password:  user.Password,
-		Mobile:    int(user.Mobile),
-		Status:    int(user.Ststus),
-		GroupID:   int(user.GroupId),
-		UserType:  int(user.UserType),
-	}, nil
+	}
+	if userProto.Id != nil {
+		user.ID = int(userProto.Id.Id)
+	}
+	if userProto.RoleIds != nil {
+		for _, v := range userProto.RoleIds {
+			user.RoleIDs = append(user.RoleIDs, int(v.Id))
+		}
+	}
+	return user, nil
 }
 
 func EncodeAddUsersRequest(ctx context.Context, req interface{}) (interface{}, error) {
@@ -74,11 +95,27 @@ func EncodeUserPage(ctx context.Context, i interface{}) (request interface{}, er
 	return
 }
 
+func EncodeUserCondition(ctx context.Context, i interface{}) (request interface{}, err error) {
+	if userCondition, ok := i.(*pb_user_v1.UserQueryCondition); ok{
+		return userCondition, nil
+	}
+	err = fmt.Errorf(clientEncodeErr, reflect.TypeOf(i))
+	return
+}
+
 func DecodeUsersPage(ctx context.Context, i interface{}) (response interface{}, err error) {
 	if usersPage, ok := i.(*pb_user_v1.UsersPage); ok {
 		return usersPage, nil
 	}
 	 err= fmt.Errorf(clientEncodeErr, reflect.TypeOf(i))
+	return
+}
+
+func DecodeUserResponse(ctx context.Context, i interface{}) (response interface{}, err error) {
+	if userResponse, ok := i.(*pb_user_v1.UserQueryResponse); ok {
+		return userResponse, nil
+	}
+	err= fmt.Errorf(clientEncodeErr, reflect.TypeOf(i))
 	return
 }
 

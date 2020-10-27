@@ -115,6 +115,7 @@ func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
 			ParentID:      _data.ParentId,
 			TopParentID:   _data.TopParentId,
 			DiskQuotaSize: _data.DiskQuotaSize,
+			Description:   _data.Description,
 			Quotas:        quotaResult,
 		}
 		result = append(result, _tmp)
@@ -144,11 +145,26 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		useParentID = true
 	}
 
+	var pbQuotas = make([]*pb_user_v1.Quota, 0)
+	for _, v := range data.Quotas {
+		_t := &pb_user_v1.Quota{
+			IsShare:          v.IsShare,
+			ResourcesGroupId: v.ResourcesGroupId,
+			Gpu:              v.Gpu,
+			Cpu:              v.Cpu,
+			Memory:           v.Memory,
+		}
+		pbQuotas = append(pbQuotas, _t)
+	}
+
 	d := &pb_user_v1.GroupUpdateRequest{
-		Id:          data.ID,
-		Name:        data.Name,
-		ParentId:    parentID,
-		UseParentId: useParentID,
+		Id:            data.ID,
+		Name:          data.Name,
+		ParentId:      parentID,
+		UseParentId:   useParentID,
+		Description:   data.Description,
+		DiskQuotaSize: data.DiskQuotaSize,
+		Quotas:        pbQuotas,
 	}
 	resp, err := g.groupService.GroupUpdateSvc(context.Background(), d)
 	if err != nil {
@@ -294,7 +310,7 @@ func (g *groupAPI) QueryGroupAndSubGroupsUsers(c *gin.Context) {
 			LoginName: _user.LoginName,
 			GroupID:   _user.GroupId,
 			UserType:  int(_user.UserType),
-			Mobile:    int(_user.Mobile),
+			Mobile:    _user.Mobile,
 		}
 		result = append(result, _tmp)
 	}
