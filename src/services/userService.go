@@ -128,6 +128,8 @@ func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models
 	//)
 
 	tx := u.userRepo.GetTx()
+	key, _ := u.config.GetString("passwordKey")
+	userRolesDTO.Password,_ = userRolesDTO.EncodePwd(key)
 	err := u.userRepo.UpdateUserByIDRepo(userRolesDTO.User, tx)
 	if err != nil {
 		tx.Rollback()
