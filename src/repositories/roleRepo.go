@@ -43,7 +43,7 @@ func (u *roleRepo) BatchCreateMenuPermRepo(mps *[]*models.RoleMenuPermission) er
 }
 
 func (u *roleRepo) UpdateRoleRepo(role *models.Role) error {
-	return u.DB.Model(models.Role{}).Updates(role).Error
+	return u.DB.Model(models.Role{}).Where("id = ?", role.ID).Updates(role).Error
 }
 
 func (u *roleRepo) DeleteRoleRepo(role *models.Role) error {

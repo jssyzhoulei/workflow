@@ -79,12 +79,14 @@ func DecodeCreateMenuPermRequestProto(ctx context.Context, req interface{}) (int
 		MenuPerms: *buildRoleMenuPermission(&r.RoleMenuPermissions, ctx),
 	}
 	mpr.Remark = r.Remark
+	mpr.ID = int(r.Id)
 	return &mpr, nil
 }
 
 func EncodeCreateMenuPermRequest(ctx context.Context, req interface{}) (interface{}, error) {
 	r := req.(*models.CreateMenuPermRequest)
 	return &pb_user_v1.CreateMenuPermRequestProto{
+		Id:                  int64(r.ID),
 		Name:                r.Name,
 		DataPermit:          int32(r.DataPermit),
 		Status:              int32(r.Status),
