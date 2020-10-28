@@ -157,7 +157,7 @@ func (u *userRepo) GetUsersRepo(condition *models.UserQueryByCondition) ([]*mode
 	db := u.DB
 
 
-	whereCondition := " where 1=1 and a.deleted_at IS NULL"
+	whereCondition := " where 1=1 and a.deleted_at IS NULL and b.deleted_at IS NULL "
 	var conditionVal = make(map[string]interface{})
 
 	if len(condition.ID) != 0 {
