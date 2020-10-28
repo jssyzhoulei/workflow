@@ -31,6 +31,7 @@ type UserRepoInterface interface {
 	GetRoleIdsById(id int) ([]int, error)
 	GetRoleIdsByUserIds (ids []int) ([]int, error)
 	GetUsersRepo(condition *models.UserQueryByCondition) ([]*models.UserListResult, int64, error)
+	DeleteUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *gorm.DB) error
 }
 
 type userRepo struct {
@@ -434,4 +435,19 @@ func (u *userRepo) UpdateUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *go
 	}
 
 	return err
+}
+
+func (u *userRepo) DeleteUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *gorm.DB) error {
+	var(
+		db = u.DB
+		err error
+	)
+	if tx != nil {
+		db = tx
+	}
+	err = db.Table("user_role").Where("user_id = ?", userRolesDTO.ID).Delete(&models.UserRole{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
