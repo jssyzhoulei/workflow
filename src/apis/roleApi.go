@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type RoleApiInterface interface {
@@ -80,6 +81,10 @@ func (r *roleApi) DeleteRoleApi(c *gin.Context) {
 	}
 	_, err = r.roleService.DeleteRoleSvc(context.Background(), id)
 	if err != nil {
+		if strings.Contains(err.Error(), "relation user"){
+			response(c, 201, "请先解除绑定用户角色", "", false)
+			return
+		}
 		log.Logger().Error("delete role error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return

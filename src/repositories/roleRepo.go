@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
@@ -47,6 +48,11 @@ func (u *roleRepo) UpdateRoleRepo(role *models.Role) error {
 }
 
 func (u *roleRepo) DeleteRoleRepo(role *models.Role) error {
+	var count int64
+	u.Model(models.UserRole{}).Where("role_id = ? and deleted_at is null ", role.ID).Count(&count)
+	if count != 0{
+		return errors.New("relation user")
+	}
 	return u.DB.Model(models.Role{}).Delete(role).Error
 }
 
@@ -59,34 +65,26 @@ func (u *roleRepo) ListRoleRepo(page, perPage, userId int) (*[]models.Role, erro
 
 type roleUserIds struct {
 	models.Role
-	UserID int `json:"user_id"`
+	UserID int    `json:"user_id"`
+	IDs    string `json:"ids"`
 }
 
 func buildRoleProto(roles *[]roleUserIds) *[]*pb_user_v1.RoleProto {
-	roleUserIdMap := make(map[int]*pb_user_v1.RoleProto)
+
 	var rolePbs []*pb_user_v1.RoleProto
 	for _, r := range *roles {
-		if pb, ok := roleUserIdMap[r.ID]; ok {
-			if r.UserID != 0 {
-				pb.Ids = append(pb.Ids, int64(r.UserID))
-			}
-		} else {
-			one := pb_user_v1.RoleProto{
-				Name:       r.Name,
-				Remark:     r.Remark,
-				DataPermit: int32(r.DataPermit),
-				Status:     int32(r.Status),
-				Id:         int64(r.ID),
-				CreatedAt:  r.CreatedAt.Format("2006-01-02 15:04:05"),
-				Ids:        []int64{},
-			}
-			if r.UserID != 0 {
-				one.Ids = append(one.Ids, int64(r.UserID))
-			}
-			roleUserIdMap[r.ID] = &one
-			rolePbs = append(rolePbs, &one)
+		one := pb_user_v1.RoleProto{
+			Name:       r.Name,
+			Remark:     r.Remark,
+			DataPermit: int32(r.DataPermit),
+			Status:     int32(r.Status),
+			Id:         int64(r.ID),
+			CreatedAt:  r.CreatedAt.Format("2006-01-02 15:04:05"),
+			Ids:        r.IDs,
 		}
+		rolePbs = append(rolePbs, &one)
 	}
+
 	return &rolePbs
 }
 
@@ -108,16 +106,17 @@ func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userI
 		name = pageObj.Name
 	}
 
-	u.DB.Raw(`SELECT count(1) count from role left join user_role on user_role.role_id = role.id
-				WHERE role.deleted_at is null and user_role.deleted_at is null 
+	u.DB.Raw(`SELECT count(1) count from role WHERE role.deleted_at is null
 				and role.name like ? `, "%"+name+"%").
 		Count(&resp.Page.Total)
 
-	err := u.DB.Raw(`SELECT role.id, role.status, role.created_at,role.name,role.remark,
-				role.data_permit,user_role.user_id FROM role 
-				left join user_role on user_role.role_id = role.id  
-				WHERE role.deleted_at is null and user_role.deleted_at is null
-				and role.name like ? LIMIT ? OFFSET ?`, "%"+name+"%", limit, limit*(page-1)).
+	err := u.DB.Raw(`SELECT role.id, role.status, role.created_at, role.name, role.remark,
+						role.data_permit, group_concat(DISTINCT(user_role.user_id)) ids FROM role 
+						left join user_role on user_role.role_id = role.id and user_role.deleted_at is null 
+						WHERE role.deleted_at is null 
+						and role.name like ?  
+						group by role.id 
+						LIMIT ? OFFSET ?`, "%"+name+"%", limit, limit*(page-1)).
 		Scan(&roles).Error
 
 	if err == nil {
@@ -210,7 +209,7 @@ func buildCas(tree *[]MenuPermissionTree) ([]*pb_user_v1.Cascade, error) {
 			menuIdCasMap[i.MenuID] = &ca
 			if i.ParentID == -1 {
 				cas = append(cas, &ca)
-			}else {
+			} else {
 				if p, ok := parentIdCasMap[i.ParentID]; ok {
 					p = append(p, &ca)
 				} else {

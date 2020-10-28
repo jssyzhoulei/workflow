@@ -10,7 +10,7 @@ message RoleProto {
   int32 status = 4;
   int64 id = 5;
   string created_at = 6;
-  repeated int64 ids = 7;
+  string ids = 7;
 }
 
 message RoleMenuPermissionProto {
