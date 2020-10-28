@@ -21,6 +21,7 @@ type groupAPIInterface interface {
 	GroupTreeQueryAPI(c *gin.Context)
 	GroupDelete(c *gin.Context)
 	QueryGroupAndSubGroupsUsers(c *gin.Context)
+	SetGroupQuotaUsed(c *gin.Context)
 }
 
 type groupAPI struct {
@@ -191,12 +192,6 @@ func (g *groupAPI) QuotaUpdateAPI(c *gin.Context) {
 		return
 	}
 
-	if data.GroupID == 0 || data.ResourcesID == "" || data.IsShare == 0 || data.QuotaType == 0 {
-		log.Logger().Info("检测到空值: group_id, is_share, resources_id, quota_type 全部为必传参数")
-		response(c, http.StatusBadRequest, "参数错误", nil, false)
-		return
-	}
-
 	d := &pb_user_v1.QuotaUpdateRequest{
 		GroupId:     data.GroupID,
 		IsShare:     data.IsShare,
@@ -316,4 +311,34 @@ func (g *groupAPI) QueryGroupAndSubGroupsUsers(c *gin.Context) {
 	}
 	response(c, http.StatusOK, "成功", result, false)
 	return
+}
+
+// SetGroupQuotaUsed 设置组配额已使用
+func (g *groupAPI) SetGroupQuotaUsed(c *gin.Context) {
+
+	var data = &models.SetGroupQuotaRequest{}
+
+	err := c.BindJSON(&data)
+	if err != nil {
+		log.Logger().Info("SetGroupQuotaUsed 解析参数失败: " + err.Error())
+		response(c, http.StatusBadRequest, "解析参数失败", nil, false)
+		return
+	}
+
+	var d = &pb_user_v1.SetGroupQuotaUsedRequest{
+		GroupId:              data.GroupID,
+		IsShare:              data.IsShare,
+		QuotaType:            data.QuotaType,
+		Used:                 data.Used,
+	}
+
+	_, err = g.groupService.SetGroupQuotaUsedSvc(context.Background(), d)
+	if err != nil {
+		log.Logger().Error("SetGroupQuotaUsed 操作失败: " + err.Error())
+		response(c, http.StatusBadRequest, "操作失败", nil, false)
+		return
+	}
+	response(c, http.StatusOK, "成功", nil, false)
+	return
+
 }

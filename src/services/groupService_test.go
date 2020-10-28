@@ -43,10 +43,16 @@ func TestStart(t *testing.T) {
 	//	t.Error(err)
 	//}
 
-	err = testGroupUpdateSvc()
+	//err = testGroupUpdateSvc()
+	//if err != nil {
+	//	t.Error(err)
+	//}
+
+	err = testSetGroupQuotaUsedSvc()
 	if err != nil {
 		t.Error(err)
 	}
+
 }
 
 // testGroupAddSvc 测试添加组
@@ -63,7 +69,7 @@ func testGroupAddSvc() error {
 	}
 
 	data := &pb_user_v1.GroupAddRequest{
-		Name:                 "顶级组",
+		Name:                 "临时顶级组",
 		ParentId:             0,
 		DiskQuotaSize:        100,
 		Quotas:               quotas,
@@ -128,11 +134,11 @@ func testGroupUpdateSvc() error {
 	//},
 
 	data2 := &pb_user_v1.GroupUpdateRequest{
-		Id:                   60,
-		Name:                 "60的新名字",
-		ParentId:             62,
+		Id:                   70,
+		Name:                 "70的新名字",
+		ParentId:             59,
 		UseParentId:          true,
-		Description:          "60的新描述",
+		Description:          "70的新描述",
 		DiskQuotaSize: 100,
 		Quotas: nil,
 	}
@@ -142,6 +148,22 @@ func testGroupUpdateSvc() error {
 		return err
 	}
 
+	return nil
+}
+
+func testSetGroupQuotaUsedSvc() error {
+
+	var d = &pb_user_v1.SetGroupQuotaUsedRequest{
+		GroupId:              71,
+		IsShare:              1,
+		QuotaType:            5,
+		Used:                 10,
+	}
+
+	_, err := groupTestService.SetGroupQuotaUsedSvc(context.Background(), d)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

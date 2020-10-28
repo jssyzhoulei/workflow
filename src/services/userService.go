@@ -123,11 +123,13 @@ func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (c *pb_user_v1
 
 // UpdateUserByIDSvc 根据ID编辑用户
 func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error) {
-	//var (
-	//	userRoles    []models.UserRole
-	//)
+	var (
+		userRoles    []models.UserRole
+	)
 
 	tx := u.userRepo.GetTx()
+	key, _ := u.config.GetString("passwordKey")
+	userRolesDTO.Password,_ = userRolesDTO.EncodePwd(key)
 	err := u.userRepo.UpdateUserByIDRepo(userRolesDTO.User, tx)
 	if err != nil {
 		tx.Rollback()
@@ -143,10 +145,23 @@ func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models
 	//		RoleID: int(roleId),
 	//	})
 	//}
-
-	err = u.userRepo.UpdateUserRolesRepo(userRolesDTO, tx)
+	err = u.userRepo.DeleteUserRolesRepo(userRolesDTO, tx)
 	if err != nil {
 		tx.Rollback()
+		return pb_user_v1.NullResponse{}, err
+	}
+
+	for _, roleId := range userRolesDTO.RoleIDs {
+		userRoles = append(userRoles, models.UserRole{
+			UserID: userRolesDTO.ID,
+			RoleID: int(roleId),
+		})
+	}
+	err = u.userRepo.AddUserRolesRepo(userRoles, tx)
+	if err != nil {
+		fmt.Println("==================",err)
+		tx.Rollback()
+		return pb_user_v1.NullResponse{}, err
 	}
 	tx.Commit()
 	return pb_user_v1.NullResponse{}, err

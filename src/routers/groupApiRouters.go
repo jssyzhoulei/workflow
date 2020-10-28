@@ -13,4 +13,5 @@ func groupAPIRouters(g *gin.RouterGroup, api apis.IApis) {
 	g.GET("/group/tree", api.GetGroupApis().GroupTreeQueryAPI)
 	g.GET("/group/user", api.GetGroupApis().QueryGroupAndSubGroupsUsers)
 	g.PUT("/quota", api.GetGroupApis().QuotaUpdateAPI)
+	g.PUT("/quota/used", api.GetGroupApis().SetGroupQuotaUsed)
 }

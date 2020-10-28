@@ -27,6 +27,7 @@ type GroupServiceInterface interface {
 	GroupTreeQuerySvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupTreeResponse, error)
 	GroupDeleteSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupResponse, error)
 	QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error)
+	SetGroupQuotaUsedSvc(_ context.Context, data *pb_user_v1.SetGroupQuotaUsedRequest) (*pb_user_v1.GroupResponse, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -59,9 +60,32 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			tx.Rollback()
 		}
 	}()
-	md5Str := md5.EncodeMD5(data.Name)
-	
-	k8sNameSpace := "org-svc-" + md5Str
+
+	// 非顶级父ID的组,查询其顶级父ID的namespace
+	var k8sNameSpace string
+	if data.ParentId != 0 {
+		// 通过父级查询顶级组信息
+		parentGroup, err := g.groupRepo.GroupQueryByIDRepo(data.ParentId, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		topGroupIDStr := strings.Split(parentGroup.LevelPath, "-")[1]
+		topGroupID, err := strconv.ParseInt(topGroupIDStr, 10, 64)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		topGroup, err := g.groupRepo.GroupQueryByIDRepo(topGroupID, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		k8sNameSpace = topGroup.NameSpace
+	} else {
+		md5Str := md5.EncodeMD5(data.Name)
+		k8sNameSpace = "org-svc-" + md5Str
+	}
 
 	newGroup := &models.Group{
 		Name:        data.Name,
@@ -82,26 +106,23 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		return nil, err
 	}
 
-	// 相同配额类型,资源组校验不允许重复
-	var _share int64
-	var _nonShare int64
-	var _shareResourcesID string
-	var _nonShareResourcesID string
+	// 相同配额类型不允许重复
+	var _share = false
+	var _nonShare = false
+
 	for i := 0; i < len(data.Quotas); i++ {
 		q := data.Quotas[i]
 
 		if q.IsShare == 1 {
-			if _share == q.IsShare && _shareResourcesID == q.ResourcesGroupId {
-				return &pb_user_v1.GroupResponse{Code: 1}, errors.New("共享配额类型,重复划分相同资源组")
+			if _share {
+				return nil, errors.New("不允许重复添加相同的共享类型(share=1)")
 			}
-			_share = q.IsShare
-			_shareResourcesID = q.ResourcesGroupId
+			_share = true
 		} else if q.IsShare == 2 {
-			if _nonShare == q.IsShare && _nonShareResourcesID == q.ResourcesGroupId {
-				return &pb_user_v1.GroupResponse{Code: 1}, errors.New("独享配额类型,重复划分相同资源组")
+			if _nonShare {
+				return nil, errors.New("不允许重复添加相同的共享类型(share=2)")
 			}
-			_nonShare = q.IsShare
-			_nonShareResourcesID = q.ResourcesGroupId
+			_nonShare = true
 		}
 	}
 
@@ -153,10 +174,13 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		return nil, err
 	}
 
-	_, err = g.kubernetesService.CreateNamespaceSvc(ctx, k8sNameSpace)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
+	// 只有顶级的组才创建 namespace
+	if group.ParentID == 0 {
+		_, err = g.kubernetesService.CreateNamespaceSvc(ctx, k8sNameSpace)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 	}
 	tx.Commit()
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
@@ -517,4 +541,21 @@ func (g *GroupService) QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data 
 	return &pb_user_v1.Users{
 		Users: result,
 	}, nil
+}
+
+// SetGroupQuotaUsedSvc 设置组配额已使用数值
+func (g *GroupService) SetGroupQuotaUsedSvc(_ context.Context, data *pb_user_v1.SetGroupQuotaUsedRequest) (*pb_user_v1.GroupResponse, error) {
+	var err error
+	d := &models.SetGroupQuotaRequest{
+		GroupID:     data.GroupId,
+		IsShare:     data.IsShare,
+		QuotaType:   data.QuotaType,
+		Used:        data.Used,
+	}
+
+	err = g.groupRepo.SetGroupQuotaUsedRepo(d, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &pb_user_v1.GroupResponse{Code: 0}, nil
 }
