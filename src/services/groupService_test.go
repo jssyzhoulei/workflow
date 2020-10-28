@@ -43,15 +43,15 @@ func TestStart(t *testing.T) {
 	//	t.Error(err)
 	//}
 
-	//err = testGroupUpdateSvc()
-	//if err != nil {
-	//	t.Error(err)
-	//}
-
-	err = testSetGroupQuotaUsedSvc()
+	err = testGroupUpdateSvc()
 	if err != nil {
 		t.Error(err)
 	}
+
+	//err = testSetGroupQuotaUsedSvc()
+	//if err != nil {
+	//	t.Error(err)
+	//}
 
 }
 
@@ -134,8 +134,8 @@ func testGroupUpdateSvc() error {
 	//},
 
 	data2 := &pb_user_v1.GroupUpdateRequest{
-		Id:                   70,
-		Name:                 "70的新名字",
+		Id:                   73,
+		Name:                 "73的新名字",
 		ParentId:             59,
 		UseParentId:          true,
 		Description:          "70的新描述",
