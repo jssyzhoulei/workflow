@@ -310,7 +310,7 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 		if err != nil {
 			return err
 		}
-		if len(res) > 0 {
+		if len(res) > 1 {
 			return errors.New("包含子级不允许更新父级信息")
 		}
 
