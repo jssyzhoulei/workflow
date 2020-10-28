@@ -2,6 +2,7 @@ package endpoints
 
 import (
 	"context"
+	"fmt"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
 	"github.com/go-kit/kit/endpoint"
@@ -18,6 +19,7 @@ type GroupServiceEndpoint struct {
 	GroupTreeQueryEndpoint endpoint.Endpoint
 	GroupDeleteEndpoint endpoint.Endpoint
 	QueryGroupAndSubGroupsUsersEndpoint endpoint.Endpoint
+	SetGroupQuotaUsedEndpoint endpoint.Endpoint
 }
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
@@ -30,6 +32,7 @@ func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 		GroupTreeQueryEndpoint: MakeGroupTreeQueryEndpoint(service.GetGroupService()),
 		GroupDeleteEndpoint: MakeGroupDeleteEndpoint(service.GetGroupService()),
 		QueryGroupAndSubGroupsUsersEndpoint: MakeQueryGroupAndSubGroupsUsersEndpoint(service.GetGroupService()),
+		SetGroupQuotaUsedEndpoint: MakeSetGroupQuotaUsedEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -183,4 +186,25 @@ func (g *GroupServiceEndpoint) QueryGroupAndSubGroupsUsersSvc(ctx context.Contex
 		return nil, err
 	}
 	return resp.(*pb_user_v1.Users), nil
+}
+
+// MakeSetGroupQuotaUsedEndpoint ...
+func MakeSetGroupQuotaUsedEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.SetGroupQuotaUsedRequest)
+		if !ok {
+			return nil, fmt.Errorf("MakeSetGroupQuotaUsedEndpoint 请求参数错误")
+		}
+		response, err = groupServiceInterface.SetGroupQuotaUsedSvc(ctx, data)
+		return
+	}
+}
+
+// SetGroupQuotaUsedSvc ...
+func (g *GroupServiceEndpoint) SetGroupQuotaUsedSvc(ctx context.Context, data *pb_user_v1.SetGroupQuotaUsedRequest) (*pb_user_v1.GroupResponse, error) {
+	resp , err := g.SetGroupQuotaUsedEndpoint(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupResponse), nil
 }

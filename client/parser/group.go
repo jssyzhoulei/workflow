@@ -85,3 +85,11 @@ func EncodeGroupIDProto(ctx context.Context, request interface{}) (interface{}, 
 	return r, nil
 }
 
+// EncodeSetGroupQuotaUsedProto ...
+func EncodeSetGroupQuotaUsedProto(ctx context.Context, request interface{}) (interface{}, error) {
+	r, ok := request.(*pb_user_v1.SetGroupQuotaUsedRequest)
+	if !ok {
+		return nil, errors.New("DecodeSetGroupQuotaUsedProto 失败")
+	}
+	return r, nil
+}

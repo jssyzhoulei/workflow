@@ -43,10 +43,16 @@ func TestStart(t *testing.T) {
 	//	t.Error(err)
 	//}
 
-	err = testGroupUpdateSvc()
+	//err = testGroupUpdateSvc()
+	//if err != nil {
+	//	t.Error(err)
+	//}
+
+	err = testSetGroupQuotaUsedSvc()
 	if err != nil {
 		t.Error(err)
 	}
+
 }
 
 // testGroupAddSvc 测试添加组
@@ -142,6 +148,22 @@ func testGroupUpdateSvc() error {
 		return err
 	}
 
+	return nil
+}
+
+func testSetGroupQuotaUsedSvc() error {
+
+	var d = &pb_user_v1.SetGroupQuotaUsedRequest{
+		GroupId:              71,
+		IsShare:              1,
+		QuotaType:            5,
+		Used:                 10,
+	}
+
+	_, err := groupTestService.SetGroupQuotaUsedSvc(context.Background(), d)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

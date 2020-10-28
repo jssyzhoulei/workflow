@@ -137,3 +137,11 @@ type GroupTreeNode struct {
 	ID       string           `json:"id"`
 	Children []*GroupTreeNode `json:"children"`
 }
+
+// SetGroupQuotaRequest 设置组已使用配额
+type SetGroupQuotaRequest struct {
+	GroupID     int64  `json:"group_id"`
+	IsShare     int64  `json:"is_share"`
+	QuotaType   int64  `json:"quota_type"`
+	Used        int64  `json:"used"`
+}

@@ -76,6 +76,14 @@ message QuotaUpdateRequest {
   int64 used = 6;
 }
 
+// SetGroupQuotaRequest 配额信息更新请求
+message SetGroupQuotaUsedRequest {
+  int64 group_id = 1;
+  int64 is_share = 2;
+  int64 quota_type = 3;
+  int64 used = 4;
+}
+
 // GroupTreeResponse 组树查询响应
 message GroupTreeResponse {
   bytes tree_json = 1;

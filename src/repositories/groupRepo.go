@@ -26,6 +26,7 @@ type GroupRepoInterface interface {
 	GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB) ([]*models.Group, error)
 	GroupDeleteRepo(id int64, tx *gorm.DB) error
 	QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]int64, error)
+	SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx *gorm.DB) error
 
 }
 
@@ -337,23 +338,25 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 		}
 
 
-		if oldGroup.ParentID == 0 {
-			oldLevelPath := oldGroup.LevelPath
-			if *data.ParentID == 0 {
-				updateColumnMap["level_path"] = "0-"
-			} else {
-				res := strings.Split(oldLevelPath, "-")
-				res[len(res) - 1] = strconv.FormatInt(*data.ParentID, 10) + "-"
-				newLevelPath := strings.Join(res, "-")
-				updateColumnMap["level_path"] = newLevelPath
-			}
+		//if oldGroup.ParentID == 0 {
+		//	oldLevelPath := oldGroup.LevelPath
+		//	if *data.ParentID == 0 {
+		//		updateColumnMap["level_path"] = "0-"
+		//	} else {
+		//		res := strings.Split(oldLevelPath, "-")
+		//		res[len(res) - 1] = strconv.FormatInt(*data.ParentID, 10) + "-"
+		//		newLevelPath := strings.Join(res, "-")
+		//		updateColumnMap["level_path"] = newLevelPath
+		//	}
+		//} else {
+
+		if *data.ParentID == 0 {
+			updateColumnMap["level_path"] = "0-"
 		} else {
-			if *data.ParentID == 0 {
-				updateColumnMap["level_path"] = "0-"
-			} else {
-				updateColumnMap["level_path"] = newParentGroup.LevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
-			}
+			updateColumnMap["level_path"] = newParentGroup.LevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
 		}
+
+		//}
 	}
 
 	if data.Description != "" {
@@ -381,8 +384,8 @@ func (g *groupRepo) QuotaUpdateRepo(_data []*models.QuotaUpdateRequest, tx *gorm
 	for i := 0; i < l; i++ {
 		data := _data[i]
 
-		if data.GroupID == 0 || (data.IsShare == 0 && data.QuotaType != int64(models.ResourceDisk)) || (data.ResourcesID == "" && data.QuotaType != int64(models.ResourceDisk)) {
-			return errors.New("检测到空值: group_id, is_share, resources_id 全部为必传参数")
+		if data.GroupID == 0 || (data.IsShare == 0 && data.QuotaType != int64(models.ResourceDisk)) {
+			return errors.New("检测到空值: group_id, is_share 全部为必传参数")
 		}
 
 		if !models.ResourceType.Auth(models.ResourceType(data.QuotaType)) {
@@ -404,8 +407,8 @@ func (g *groupRepo) QuotaUpdateRepo(_data []*models.QuotaUpdateRequest, tx *gorm
 			//"used": data.Used,
 		}
 
-		err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and resources_id=? and type=?", data.GroupID,
-			data.IsShare, data.ResourcesID, data.QuotaType).Updates(updateColumnMap).Error
+		err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and type=?", data.GroupID,
+			data.IsShare, data.QuotaType).Updates(updateColumnMap).Error
 		if err != nil {
 			return err
 		}
@@ -503,4 +506,44 @@ func (g *groupRepo) QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]in
 	}
 
 	return groupIDs, nil
+}
+
+// SetGroupQuotaUsed 设置组已使用配额
+func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx *gorm.DB) error {
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	if data.GroupID == 0 || (data.IsShare == 0 && data.QuotaType != int64(models.ResourceDisk)) {
+		return errors.New("检测到空值: group_id, is_share 全部为必传参数")
+	}
+
+	if !models.ResourceType.Auth(models.ResourceType(data.QuotaType)) {
+		return errors.New("资源类型不存在")
+	}
+
+	// 增加组信息校验,被删除的组,无法修改其配额数据
+	group, err := g.GroupQueryByIDRepo(data.GroupID, nil)
+	if err != nil {
+		return errors.New("查询组信息错误: " + err.Error())
+	}
+
+	if group.Status == 1 {
+		return errors.New("组已删除,无法修改数据")
+	}
+
+	updateColumnMap := map[string]interface{} {
+		"used": data.Used,
+	}
+
+	err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and type=?", data.GroupID,
+		data.IsShare, data.QuotaType).Updates(updateColumnMap).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
