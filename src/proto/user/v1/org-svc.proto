@@ -22,6 +22,7 @@ service RpcOrgService {
   rpc RPCGroupTreeQuery(GroupID) returns (GroupTreeResponse);
   rpc RPCGroupDelete(GroupID) returns (GroupResponse);
   rpc RPCQueryGroupAndSubGroupsUsers(GroupID) returns (Users);
+  rpc RPCQueryGroupIDAndSubGroupsID(GroupID) returns (GroupIDsResponse);
   rpc RPCSetGroupQuotaUsed(SetGroupQuotaUsedRequest) returns (GroupResponse);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (NullResponse);
   rpc RpcUpdateRole(CreateMenuPermRequestProto) returns (NullResponse);

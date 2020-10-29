@@ -88,3 +88,8 @@ message SetGroupQuotaUsedRequest {
 message GroupTreeResponse {
   bytes tree_json = 1;
 }
+
+// GroupIDsResponse 组ID
+message GroupIDsResponse {
+  repeated int64 ids = 1;
+}

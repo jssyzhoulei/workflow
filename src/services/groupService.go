@@ -28,6 +28,7 @@ type GroupServiceInterface interface {
 	GroupDeleteSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupResponse, error)
 	QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error)
 	SetGroupQuotaUsedSvc(_ context.Context, data *pb_user_v1.SetGroupQuotaUsedRequest) (*pb_user_v1.GroupResponse, error)
+	QueryGroupIDAndSubGroupsIDSvc(_ context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupIDsResponse, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -547,10 +548,10 @@ func (g *GroupService) QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data 
 func (g *GroupService) SetGroupQuotaUsedSvc(_ context.Context, data *pb_user_v1.SetGroupQuotaUsedRequest) (*pb_user_v1.GroupResponse, error) {
 	var err error
 	d := &models.SetGroupQuotaRequest{
-		GroupID:     data.GroupId,
-		IsShare:     data.IsShare,
-		QuotaType:   data.QuotaType,
-		Used:        data.Used,
+		GroupID:   data.GroupId,
+		IsShare:   data.IsShare,
+		QuotaType: data.QuotaType,
+		Used:      data.Used,
 	}
 
 	err = g.groupRepo.SetGroupQuotaUsedRepo(d, nil)
@@ -558,4 +559,17 @@ func (g *GroupService) SetGroupQuotaUsedSvc(_ context.Context, data *pb_user_v1.
 		return nil, err
 	}
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
+}
+
+// QueryGroupIDAndSubGroupsIDSvc 查询组及其子组ID
+func (g *GroupService) QueryGroupIDAndSubGroupsIDSvc(_ context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupIDsResponse, error) {
+
+	groupIDs, err := g.groupRepo.QueryGroupIDAndSubGroupsID(data.Id, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb_user_v1.GroupIDsResponse{
+		Ids: groupIDs,
+	}, nil
 }
