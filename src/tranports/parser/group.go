@@ -102,3 +102,21 @@ func EncodeGroupIDsResponse(ctx context.Context, request interface{}) (interface
 	}
 	return r, nil
 }
+
+// DecodeQueryQuotaByCondition ...
+func DecodeQueryQuotaByCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	r, ok := request.(*pb_user_v1.QueryQuotaByCondition)
+	if !ok {
+		return nil, errors.New("DecodeQueryQuotaByCondition 失败")
+	}
+	return r, nil
+}
+
+// EncodeQueryQuotaByConditionResponse
+func EncodeQueryQuotaByConditionResponse(ctx context.Context, request interface{}) (interface{}, error) {
+	r, ok := request.(*pb_user_v1.QueryQuotaByConditionResponse)
+	if !ok {
+		return nil, errors.New("EncodeQueryQuotaByConditionResponse 失败")
+	}
+	return r, nil
+}

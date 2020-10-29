@@ -547,3 +547,4 @@ func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx 
 
 	return nil
 }
+
