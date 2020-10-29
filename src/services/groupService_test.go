@@ -58,7 +58,12 @@ func TestStart(t *testing.T) {
 	//	t.Error(err)
 	//}
 
-	err = testGroupDeleteSvc()
+	//err = testGroupDeleteSvc()
+	//if err != nil {
+	//	t.Error(err)
+	//}
+
+	err = testQueryQuotaByConditionSvc()
 	if err != nil {
 		t.Error(err)
 	}
@@ -204,5 +209,17 @@ func testGroupDeleteSvc() error {
 	return nil
 }
 
+func testQueryQuotaByConditionSvc() error {
 
+	data := &pb_user_v1.QueryQuotaByCondition{
+		GroupId:              59,
+	}
+
+	resp, err := groupTestService.QueryQuotaByConditionSvc(context.Background(), data)
+	if err != nil {
+		return err
+	}
+	fmt.Println("配额查询结果: ", resp.Records)
+	return nil
+}
 

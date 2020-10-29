@@ -205,7 +205,7 @@ func (g *groupRepo) QuotaQueryByConditionRepo(condition *models.QuotaQueryByCond
 	}
 
 	var result = make([]*models.Quota, 0)
-	err = db.Find(result).Error
+	err = db.Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
