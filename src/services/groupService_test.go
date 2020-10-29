@@ -53,7 +53,12 @@ func TestStart(t *testing.T) {
 	//	t.Error(err)
 	//}
 
-	err = testQueryGroupIDAndSubGroupsIDSvc()
+	//err = testQueryGroupIDAndSubGroupsIDSvc()
+	//if err != nil {
+	//	t.Error(err)
+	//}
+
+	err = testGroupDeleteSvc()
 	if err != nil {
 		t.Error(err)
 	}
@@ -187,6 +192,17 @@ func testQueryGroupIDAndSubGroupsIDSvc() error {
 
 }
 
+
+func testGroupDeleteSvc() error {
+	data := &pb_user_v1.GroupID{
+		Id:                   85,
+	}
+	_, err := groupTestService.GroupDeleteSvc(context.Background(), data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 
 

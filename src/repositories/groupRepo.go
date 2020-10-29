@@ -428,7 +428,7 @@ func (g *groupRepo) GroupDeleteRepo(id int64, tx *gorm.DB) error {
 	}
 
 	var group = new(models.Group)
-	err = db.Model(&models.Group{}).Where("id=?").First(&group).Error
+	err = db.Model(&models.Group{}).Where("id=?", id).First(&group).Error
 	if err != nil {
 		return err
 	}
