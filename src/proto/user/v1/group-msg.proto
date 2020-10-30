@@ -88,3 +88,30 @@ message SetGroupQuotaUsedRequest {
 message GroupTreeResponse {
   bytes tree_json = 1;
 }
+
+// GroupIDsResponse 组ID
+message GroupIDsResponse {
+  repeated int64 ids = 1;
+}
+
+// QuotaRecord 配额表记录
+message QuotaRecord {
+  int64 is_share = 1;
+  string resource_id = 2;
+  int64 type = 3;
+  int64 group_id = 4;
+  int64 total = 5;
+  int64 used = 6;
+}
+
+// QueryQuotaByCondition 通过条件查询配额
+message QueryQuotaByCondition {
+  int64 group_id = 1;
+  int64 type = 2;
+  string resource_id = 3;
+  int64 is_share = 4;
+}
+
+message QueryQuotaByConditionResponse {
+  repeated QuotaRecord records = 1;
+}

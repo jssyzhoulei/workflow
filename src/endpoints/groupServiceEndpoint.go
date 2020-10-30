@@ -20,6 +20,8 @@ type GroupServiceEndpoint struct {
 	GroupDeleteEndpoint endpoint.Endpoint
 	QueryGroupAndSubGroupsUsersEndpoint endpoint.Endpoint
 	SetGroupQuotaUsedEndpoint endpoint.Endpoint
+	QueryGroupIDAndSubGroupsIDEndpoint endpoint.Endpoint
+	QueryQuotaByConditionEndpoint endpoint.Endpoint
 }
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
@@ -33,6 +35,8 @@ func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 		GroupDeleteEndpoint: MakeGroupDeleteEndpoint(service.GetGroupService()),
 		QueryGroupAndSubGroupsUsersEndpoint: MakeQueryGroupAndSubGroupsUsersEndpoint(service.GetGroupService()),
 		SetGroupQuotaUsedEndpoint: MakeSetGroupQuotaUsedEndpoint(service.GetGroupService()),
+		QueryGroupIDAndSubGroupsIDEndpoint: MakeQueryGroupIDAndSubGroupsIDEndpoint(service.GetGroupService()),
+		QueryQuotaByConditionEndpoint: MakeQueryQuotaByConditionEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -207,4 +211,47 @@ func (g *GroupServiceEndpoint) SetGroupQuotaUsedSvc(ctx context.Context, data *p
 		return nil, err
 	}
 	return resp.(*pb_user_v1.GroupResponse), nil
+}
+
+
+// MakeSetGroupQuotaUsedEndpoint ...
+func MakeQueryGroupIDAndSubGroupsIDEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.GroupID)
+		if !ok {
+			return nil, fmt.Errorf("MakeQueryGroupIDAndSubGroupsIDEndpoint 请求参数错误")
+		}
+		response, err = groupServiceInterface.QueryGroupIDAndSubGroupsIDSvc(ctx, data)
+		return
+	}
+}
+
+// SetGroupQuotaUsedSvc ...
+func (g *GroupServiceEndpoint) QueryGroupIDAndSubGroupsIDSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupIDsResponse, error) {
+	resp , err := g.QueryGroupIDAndSubGroupsIDEndpoint(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupIDsResponse), nil
+}
+
+// MakeQueryQuotaByConditionEndpoint ...
+func MakeQueryQuotaByConditionEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.QueryQuotaByCondition)
+		if !ok {
+			return nil, fmt.Errorf("MakeQueryQuotaByConditionEndpoint 请求参数错误")
+		}
+		response, err = groupServiceInterface.QueryQuotaByConditionSvc(ctx, data)
+		return
+	}
+}
+
+// QueryQuotaByConditionSvc ...
+func (g *GroupServiceEndpoint) QueryQuotaByConditionSvc(ctx context.Context, data *pb_user_v1.QueryQuotaByCondition) (*pb_user_v1.QueryQuotaByConditionResponse, error) {
+	resp , err := g.QueryQuotaByConditionEndpoint(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.QueryQuotaByConditionResponse), nil
 }

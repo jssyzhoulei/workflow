@@ -205,7 +205,7 @@ func (g *groupRepo) QuotaQueryByConditionRepo(condition *models.QuotaQueryByCond
 	}
 
 	var result = make([]*models.Quota, 0)
-	err = db.Find(result).Error
+	err = db.Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +428,7 @@ func (g *groupRepo) GroupDeleteRepo(id int64, tx *gorm.DB) error {
 	}
 
 	var group = new(models.Group)
-	err = db.Model(&models.Group{}).Where("id=?").First(&group).Error
+	err = db.Model(&models.Group{}).Where("id=?", id).First(&group).Error
 	if err != nil {
 		return err
 	}
@@ -547,3 +547,4 @@ func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx 
 
 	return nil
 }
+

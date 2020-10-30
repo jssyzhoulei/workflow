@@ -28,6 +28,8 @@ type GroupServiceInterface interface {
 	GroupDeleteSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupResponse, error)
 	QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error)
 	SetGroupQuotaUsedSvc(_ context.Context, data *pb_user_v1.SetGroupQuotaUsedRequest) (*pb_user_v1.GroupResponse, error)
+	QueryGroupIDAndSubGroupsIDSvc(_ context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupIDsResponse, error)
+	QueryQuotaByConditionSvc(_ context.Context, data *pb_user_v1.QueryQuotaByCondition) (*pb_user_v1.QueryQuotaByConditionResponse, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -547,10 +549,10 @@ func (g *GroupService) QueryGroupAndSubGroupsUsersSvc(ctx context.Context, data 
 func (g *GroupService) SetGroupQuotaUsedSvc(_ context.Context, data *pb_user_v1.SetGroupQuotaUsedRequest) (*pb_user_v1.GroupResponse, error) {
 	var err error
 	d := &models.SetGroupQuotaRequest{
-		GroupID:     data.GroupId,
-		IsShare:     data.IsShare,
-		QuotaType:   data.QuotaType,
-		Used:        data.Used,
+		GroupID:   data.GroupId,
+		IsShare:   data.IsShare,
+		QuotaType: data.QuotaType,
+		Used:      data.Used,
 	}
 
 	err = g.groupRepo.SetGroupQuotaUsedRepo(d, nil)
@@ -558,4 +560,51 @@ func (g *GroupService) SetGroupQuotaUsedSvc(_ context.Context, data *pb_user_v1.
 		return nil, err
 	}
 	return &pb_user_v1.GroupResponse{Code: 0}, nil
+}
+
+// QueryGroupIDAndSubGroupsIDSvc 查询组及其子组ID
+func (g *GroupService) QueryGroupIDAndSubGroupsIDSvc(_ context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupIDsResponse, error) {
+
+	groupIDs, err := g.groupRepo.QueryGroupIDAndSubGroupsID(data.Id, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb_user_v1.GroupIDsResponse{
+		Ids: groupIDs,
+	}, nil
+}
+
+// QueryQuotaByCondition 通过条件查询配额详情
+func (g *GroupService) QueryQuotaByConditionSvc(_ context.Context, data *pb_user_v1.QueryQuotaByCondition) (*pb_user_v1.QueryQuotaByConditionResponse, error) {
+
+	d := &models.QuotaQueryByCondition{
+		GroupID:    data.GroupId,
+		Type:       int(data.Type),
+		ResourceID: data.ResourceId,
+		IsShare:    int(data.IsShare),
+	}
+
+	resp, err := g.groupRepo.QuotaQueryByConditionRepo(d, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = make([]*pb_user_v1.QuotaRecord, 0)
+	l := len(resp)
+	for i:=0;i<l;i++ {
+		_item := resp[i]
+
+		_tmp := &pb_user_v1.QuotaRecord{
+			IsShare:              int64(_item.IsShare),
+			ResourceId:           _item.ResourceID,
+			Type:                 int64(_item.Type),
+			GroupId:              int64(_item.GroupID),
+			Total:                int64(_item.Total),
+			Used:                 int64(_item.Used),
+		}
+		result = append(result, _tmp)
+	}
+
+	return &pb_user_v1.QueryQuotaByConditionResponse{Records: result}, nil
 }

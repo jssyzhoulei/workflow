@@ -19,7 +19,7 @@ var (
 
 func initTest() {
 	groupCtx = context.Background()
-	configPath := "/Users/demo/Code/go/org-svc/resources/config/config.yaml"
+	configPath := "/Users/demo/Code.localized/go/org-svc/resources/config/config.yaml"
 	e := engine.NewEngine(configPath)
 	groupTestRepo = repositories.NewRepoI(e.DB)
 	groupTestService = NewGroupService(groupTestRepo, e.Config)
@@ -43,15 +43,30 @@ func TestStart(t *testing.T) {
 	//	t.Error(err)
 	//}
 
-	err = testGroupUpdateSvc()
-	if err != nil {
-		t.Error(err)
-	}
+	//err = testGroupUpdateSvc()
+	//if err != nil {
+	//	t.Error(err)
+	//}
 
 	//err = testSetGroupQuotaUsedSvc()
 	//if err != nil {
 	//	t.Error(err)
 	//}
+
+	//err = testQueryGroupIDAndSubGroupsIDSvc()
+	//if err != nil {
+	//	t.Error(err)
+	//}
+
+	//err = testGroupDeleteSvc()
+	//if err != nil {
+	//	t.Error(err)
+	//}
+
+	err = testQueryQuotaByConditionSvc()
+	if err != nil {
+		t.Error(err)
+	}
 
 }
 
@@ -167,8 +182,44 @@ func testSetGroupQuotaUsedSvc() error {
 	return nil
 }
 
+func testQueryGroupIDAndSubGroupsIDSvc() error {
+
+	data := &pb_user_v1.GroupID{
+		Id:                   59,
+	}
+
+	groupIDs, err := groupTestService.QueryGroupIDAndSubGroupsIDSvc(context.Background(), data)
+	if err != nil {
+		return err
+	}
+	fmt.Println(groupIDs, "<---------")
+	return nil
+
+}
 
 
+func testGroupDeleteSvc() error {
+	data := &pb_user_v1.GroupID{
+		Id:                   85,
+	}
+	_, err := groupTestService.GroupDeleteSvc(context.Background(), data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+func testQueryQuotaByConditionSvc() error {
 
+	data := &pb_user_v1.QueryQuotaByCondition{
+		GroupId:              59,
+	}
+
+	resp, err := groupTestService.QueryQuotaByConditionSvc(context.Background(), data)
+	if err != nil {
+		return err
+	}
+	fmt.Println("配额查询结果: ", resp.Records)
+	return nil
+}
 

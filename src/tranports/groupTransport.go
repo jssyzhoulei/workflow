@@ -17,6 +17,8 @@ type groupGrpcTransport struct {
 	groupDelete transport.Handler
 	queryGroupAndSubGroupsUsers transport.Handler
 	setGroupQuotaUsed transport.Handler
+	queryGroupIDAndSubGroupsID transport.Handler
+	queryQuotaByCondition transport.Handler
 }
 
 // NewGroupGrpcTransport ...
@@ -30,6 +32,8 @@ func NewGroupGrpcTransport(endpoint *endpoints.GroupServiceEndpoint) *groupGrpcT
 		groupDelete: transport.NewServer(endpoint.GroupDeleteEndpoint, parser.DecodeGroupIDProto, parser.EncodeGroupProto),
 		queryGroupAndSubGroupsUsers: transport.NewServer(endpoint.QueryGroupAndSubGroupsUsersEndpoint, parser.DecodeGroupIDProto, parser.EncodeUsers),
 		setGroupQuotaUsed: transport.NewServer(endpoint.SetGroupQuotaUsedEndpoint, parser.DecodeSetGroupQuotaUsedProto, parser.EncodeGroupProto),
+		queryGroupIDAndSubGroupsID: transport.NewServer(endpoint.QueryGroupIDAndSubGroupsIDEndpoint, parser.DecodeGroupIDProto, parser.EncodeGroupIDsResponse),
+		queryQuotaByCondition: transport.NewServer(endpoint.QueryQuotaByConditionEndpoint, parser.DecodeQueryQuotaByCondition, parser.EncodeQueryQuotaByConditionResponse),
 	}
 }
 
@@ -103,4 +107,22 @@ func (g *groupGrpcTransport) RPCSetGroupQuotaUsed(ctx context.Context, proto *pb
 		return nil, err
 	}
 	return resp.(*pb_user_v1.GroupResponse), err
+}
+
+// RPCSetGroupQuotaUsed ...
+func (g *groupGrpcTransport) RPCQueryGroupIDAndSubGroupsID(ctx context.Context, proto *pb_user_v1.GroupID) (*pb_user_v1.GroupIDsResponse, error) {
+	_, resp, err := g.queryGroupIDAndSubGroupsID.ServeGRPC(ctx, proto)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupIDsResponse), err
+}
+
+// RPCQueryQuotaByCondition ...
+func (g *groupGrpcTransport) RPCQueryQuotaByCondition(ctx context.Context, proto *pb_user_v1.QueryQuotaByCondition) (*pb_user_v1.QueryQuotaByConditionResponse, error) {
+	_, resp, err := g.queryQuotaByCondition.ServeGRPC(ctx, proto)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.QueryQuotaByConditionResponse), err
 }
