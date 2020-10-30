@@ -161,7 +161,9 @@ func (u *roleRepo) RoleDetailRepo(roleId, userId int) (*models.CreateMenuPermReq
 func (u *roleRepo) DeleteMenuPermissionByRoleIDRepo(roleId int) error {
 	rmp := new(models.RoleMenuPermission)
 	return u.DB.Model(models.RoleMenuPermission{}).
-		Where("role_id = ? and deleted_at is null ", roleId).
+		Unscoped().
+		//Where("role_id = ? and deleted_at is null ", roleId).
+		Where("role_id = ? ", roleId).
 		Delete(rmp).Error
 }
 
