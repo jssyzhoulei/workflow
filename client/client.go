@@ -141,6 +141,7 @@ func (o *OrgServiceClient) GetGroupService() services.GroupServiceInterface {
 		SetGroupQuotaUsedEndpoint:              o.getGroupRetryEndpoint(org_endpoints.MakeSetGroupQuotaUsedEndpoint, groupGrpcConn),
 		QueryGroupIDAndSubGroupsIDEndpoint:     o.getGroupRetryEndpoint(org_endpoints.MakeQueryGroupIDAndSubGroupsIDEndpoint, groupGrpcConn),
 		QuerySubGroupsUsersEndpoint:            o.getGroupRetryEndpoint(org_endpoints.MakeQuerySubGroupsUsersEndpoint, groupGrpcConn),
+		QueryQuotaByConditionEndpoint:          o.getGroupRetryEndpoint(org_endpoints.MakeQueryQuotaByConditionEndpoint, groupGrpcConn),
 	}
 }
 

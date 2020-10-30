@@ -112,7 +112,7 @@ func DecodeQueryQuotaByCondition(ctx context.Context, request interface{}) (inte
 	return r, nil
 }
 
-// EncodeQueryQuotaByConditionResponse
+// EncodeQueryQuotaByConditionResponse ...
 func EncodeQueryQuotaByConditionResponse(ctx context.Context, request interface{}) (interface{}, error) {
 	r, ok := request.(*pb_user_v1.QueryQuotaByConditionResponse)
 	if !ok {
