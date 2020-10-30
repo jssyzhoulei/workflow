@@ -3,14 +3,15 @@ package apis
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 type groupAPIInterface interface {
@@ -49,7 +50,7 @@ func (g *groupAPI) GroupAddAPI(c *gin.Context) {
 	}
 
 	if data.Name == "" || len(data.Quotas) == 0 {
-		log.Logger().Info(fmt.Sprintf("GroupAdd 必传参数缺失: name: %d quotas: %v", data.Name, data.Quotas))
+		log.Logger().Info(fmt.Sprintf("GroupAdd 必传参数缺失: name: %s quotas: %v", data.Name, data.Quotas))
 		response(c, http.StatusBadRequest, "参数不合法", nil, false)
 		return
 	}
@@ -327,10 +328,10 @@ func (g *groupAPI) SetGroupQuotaUsed(c *gin.Context) {
 	}
 
 	var d = &pb_user_v1.SetGroupQuotaUsedRequest{
-		GroupId:              data.GroupID,
-		IsShare:              data.IsShare,
-		QuotaType:            data.QuotaType,
-		Used:                 data.Used,
+		GroupId:   data.GroupID,
+		IsShare:   data.IsShare,
+		QuotaType: data.QuotaType,
+		Used:      data.Used,
 	}
 
 	_, err = g.groupService.SetGroupQuotaUsedSvc(context.Background(), d)
