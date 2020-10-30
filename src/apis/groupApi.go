@@ -22,6 +22,7 @@ type groupAPIInterface interface {
 	GroupDelete(c *gin.Context)
 	QueryGroupAndSubGroupsUsers(c *gin.Context)
 	SetGroupQuotaUsed(c *gin.Context)
+	QuerySubGroupsUsers(c *gin.Context)
 }
 
 type groupAPI struct {
@@ -341,4 +342,46 @@ func (g *groupAPI) SetGroupQuotaUsed(c *gin.Context) {
 	response(c, http.StatusOK, "成功", nil, false)
 	return
 
+}
+
+// QuerySubGroupsUsers 查询子组下的用户
+func (g *groupAPI) QuerySubGroupsUsers(c *gin.Context) {
+	groupIDStr := c.DefaultQuery("group_id", "")
+	if groupIDStr == "" {
+		response(c, http.StatusBadRequest, "获取参数失败", nil, false)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(groupIDStr, 10, 64)
+	if err != nil {
+		response(c, http.StatusBadRequest, "参数解析失败", nil, false)
+		return
+	}
+
+	d := &pb_user_v1.GroupID{
+		Id: groupID,
+	}
+
+	resp, err := g.groupService.QuerySubGroupsUsersSvc(context.Background(), d)
+	if err != nil {
+		log.Logger().Info("查询子组下的用户 失败: " + err.Error())
+		response(c, http.StatusBadRequest, "查询失败", nil, false)
+		return
+	}
+
+	var result = make([]*models.QueryGroupsUsersResponse, 0)
+	for i := 0; i < len(resp.Users); i++ {
+		_user := resp.Users[i]
+		_tmp := &models.QueryGroupsUsersResponse{
+			ID:        _user.Id.Id,
+			UserName:  _user.UserName,
+			LoginName: _user.LoginName,
+			GroupID:   _user.GroupId,
+			UserType:  int(_user.UserType),
+			Mobile:    _user.Mobile,
+		}
+		result = append(result, _tmp)
+	}
+	response(c, http.StatusOK, "成功", result, false)
+	return
 }

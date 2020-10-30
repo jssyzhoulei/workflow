@@ -30,6 +30,7 @@ type GroupServiceInterface interface {
 	SetGroupQuotaUsedSvc(_ context.Context, data *pb_user_v1.SetGroupQuotaUsedRequest) (*pb_user_v1.GroupResponse, error)
 	QueryGroupIDAndSubGroupsIDSvc(_ context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupIDsResponse, error)
 	QueryQuotaByConditionSvc(_ context.Context, data *pb_user_v1.QueryQuotaByCondition) (*pb_user_v1.QueryQuotaByConditionResponse, error)
+	QuerySubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -607,4 +608,48 @@ func (g *GroupService) QueryQuotaByConditionSvc(_ context.Context, data *pb_user
 	}
 
 	return &pb_user_v1.QueryQuotaByConditionResponse{Records: result}, nil
+}
+
+// QuerySubGroupsUsersSvc 查询子组下的用户
+func (g *GroupService) QuerySubGroupsUsersSvc(_ context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error) {
+	groupIDs, err := g.groupRepo.QueryGroupIDAndSubGroupsID(data.Id, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var groupIDSlice = make([]int64, 0, len(groupIDs)-1)
+
+	for _, v := range groupIDs {
+		if v == data.Id {
+			 continue
+		}
+		groupIDSlice = append(groupIDSlice, v)
+	}
+
+	users, err := g.userRepo.GetUserListRepo(models.User{}, nil, nil, groupIDSlice...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pb_user_v1.UserProto
+	l := len(users)
+	for i := 0; i < l; i++ {
+		user := users[i]
+
+		_user := &pb_user_v1.UserProto{
+			Id:        &pb_user_v1.Index{Id: int64(user.ID)},
+			UserName:  user.UserName,
+			LoginName: user.LoginName,
+			Mobile:    user.Mobile,
+			GroupId:   int64(user.GroupID),
+			UserType:  int64(user.UserType),
+			RoleIds:   nil,
+		}
+		// TODO: 查询子组下的用户 -> 添加roleIDs
+		result = append(result, _user)
+	}
+
+	return &pb_user_v1.Users{
+		Users: result,
+	}, nil
 }

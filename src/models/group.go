@@ -7,8 +7,8 @@ type Quota struct {
 	ResourceID string       `gorm:"column:resources_id;type:varchar(255);comment:'资源组ID'" json:"resources_id"`
 	Type       ResourceType `json:"type" gorm:"column:type;type:int(10);comment:'资源类型'"` // 枚举字段 ResourceType
 	GroupID    int          `gorm:"column:group_id;type:int(10);comment:'组织ID'" json:"group_id"`
-	Total      int          `json:"total" gorm:"column:total;type:int(10);comment:'资源总数'"`
-	Used       int          `json:"used" gorm:"column:used;type:int(10);comment:'已经使用'"`
+	Total      int          `json:"total" gorm:"column:total;type:int(10);comment:'资源总数: 磁盘单位: TB, 内存等为 GB'"`
+	Used       int          `json:"used" gorm:"column:used;type:int(10);comment:'已经使用 单位: B'"`
 }
 
 // TableName ...
