@@ -541,7 +541,7 @@ func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx 
 
 	fullSql := fmt.Sprintf(sqlStr, quotaTableName, data.Used, data.GroupID, data.IsShare, data.QuotaType)
 
-	err = db.Raw(fullSql).Error
+	err = db.Exec(fullSql).Error
 	if err != nil {
 		return err
 	}
