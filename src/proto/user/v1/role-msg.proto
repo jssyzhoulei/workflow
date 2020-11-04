@@ -32,4 +32,5 @@ message RolePageRequestProto {
   string name = 1;
   Page page = 2;
   repeated RoleProto roles = 3;
+  bool disable = 4;
 }
