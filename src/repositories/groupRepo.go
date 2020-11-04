@@ -535,16 +535,16 @@ func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx 
 		return errors.New("组已删除,无法修改数据")
 	}
 
-	updateColumnMap := map[string]interface{} {
-		"used": data.Used,
-	}
+	quotaTableName := models.Quota{}.TableName()
 
-	err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and type=?", data.GroupID,
-		data.IsShare, data.QuotaType).Updates(updateColumnMap).Error
+	sqlStr := "update %s set used=used+%d where group_id=%d and is_share=%d and type=%d"
+
+	fullSql := fmt.Sprintf(sqlStr, quotaTableName, data.Used, data.GroupID, data.IsShare, data.QuotaType)
+
+	err = db.Exec(fullSql).Error
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
