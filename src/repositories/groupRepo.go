@@ -322,7 +322,7 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 
 
 		// 更新父级ID时,不允许跨越顶级组ID更新
-		if oldGroup.ParentID == 0 {
+		if oldGroup.ParentID == 0 && int64(oldGroup.ParentID) != *data.ParentID {
 			return errors.New("顶级组不允许执行变更父级操作")
 		} else {
 			// 获取顶级组ID
