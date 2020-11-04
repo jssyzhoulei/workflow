@@ -293,38 +293,36 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 		updateColumnMap["name"] = data.Name
 	}
 
-	if data.ParentID != nil {
-		updateColumnMap["parent_id"] = data.ParentID
+	// 获取组原本的信息
+	oldGroup, err := g.GroupQueryByIDRepo(data.ID, nil)
+	if err != nil {
+		return err
+	}
 
-		oldGroup, err := g.GroupQueryByIDRepo(data.ID, nil)
-		if err != nil {
-			return err
-		}
+	if oldGroup.ID == 0 {
+		return errors.New("组信息被标记为删除或组不存在")
+	}
 
-		if oldGroup.ID == 0 {
-			return errors.New("组信息被标记为删除或组不存在")
-		}
+	// 获取新的父级组ID
+	newParentGroup, err := g.GroupQueryByIDRepo(*data.ParentID, db)
+	if err != nil {
+		return err
+	}
 
-		// 不允许更新含有下级组的父级
-		res, err := g.QueryGroupIDAndSubGroupsID(data.ID, db)
-		if err != nil {
-			return err
-		}
-		if len(res) > 1 {
-			return errors.New("包含子级不允许更新父级信息")
-		}
-
-		// 获取新的父级组ID
-		newParentGroup, err := g.GroupQueryByIDRepo(*data.ParentID, db)
-		if err != nil {
-			return err
-		}
-
-
+	if data.ParentID != nil && int64(oldGroup.ParentID) != *data.ParentID{
 		// 更新父级ID时,不允许跨越顶级组ID更新
-		if oldGroup.ParentID == 0 && int64(oldGroup.ParentID) != *data.ParentID {
+		if oldGroup.ParentID == 0 {
 			return errors.New("顶级组不允许执行变更父级操作")
 		} else {
+			// 不允许更新含有下级组的父级
+			res, err := g.QueryGroupIDAndSubGroupsID(data.ID, db)
+			if err != nil {
+				return err
+			}
+			if len(res) > 1 {
+				return errors.New("包含子级不允许更新父级信息")
+			}
+
 			// 获取顶级组ID
 			oriTopGroupID := strings.Split(oldGroup.LevelPath, "-")[1]
 
@@ -335,6 +333,14 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 			if oriTopGroupID != newTopGroupID {
 				return errors.New("不允许跨越顶级组更新其父级ID")
 			}
+
+			if *data.ParentID == 0 {
+				updateColumnMap["level_path"] = "0-"
+			} else {
+				updateColumnMap["level_path"] = newParentGroup.LevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
+			}
+
+			updateColumnMap["parent_id"] = data.ParentID
 		}
 
 
@@ -350,11 +356,6 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 		//	}
 		//} else {
 
-		if *data.ParentID == 0 {
-			updateColumnMap["level_path"] = "0-"
-		} else {
-			updateColumnMap["level_path"] = newParentGroup.LevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
-		}
 
 		//}
 	}
