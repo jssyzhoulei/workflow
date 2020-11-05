@@ -23,6 +23,7 @@ type GroupServiceEndpoint struct {
 	QueryGroupIDAndSubGroupsIDEndpoint endpoint.Endpoint
 	QueryQuotaByConditionEndpoint endpoint.Endpoint
 	QuerySubGroupsUsersEndpoint endpoint.Endpoint
+	GetAllGroupsEndpoint endpoint.Endpoint
 }
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
@@ -39,6 +40,18 @@ func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 		QueryGroupIDAndSubGroupsIDEndpoint: MakeQueryGroupIDAndSubGroupsIDEndpoint(service.GetGroupService()),
 		QueryQuotaByConditionEndpoint: MakeQueryQuotaByConditionEndpoint(service.GetGroupService()),
 		QuerySubGroupsUsersEndpoint: MakeQuerySubGroupsUsersEndpoint(service.GetGroupService()),
+		GetAllGroupsEndpoint: MakeGetAllGroupEndpoint(service.GetGroupService()),
+	}
+}
+
+func MakeGetAllGroupEndpoint(groupService services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.GroupID)
+		if !ok {
+			return nil, RequestParamsTypeError
+		}
+		response, err = groupService.GetAllGroup(ctx, data)
+		return
 	}
 }
 
@@ -215,7 +228,6 @@ func (g *GroupServiceEndpoint) SetGroupQuotaUsedSvc(ctx context.Context, data *p
 	return resp.(*pb_user_v1.GroupResponse), nil
 }
 
-
 // MakeSetGroupQuotaUsedEndpoint ...
 func MakeQueryGroupIDAndSubGroupsIDEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
@@ -227,6 +239,7 @@ func MakeQueryGroupIDAndSubGroupsIDEndpoint(groupServiceInterface services.Group
 		return
 	}
 }
+
 
 // SetGroupQuotaUsedSvc ...
 func (g *GroupServiceEndpoint) QueryGroupIDAndSubGroupsIDSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupIDsResponse, error) {
@@ -277,4 +290,12 @@ func (g *GroupServiceEndpoint) QuerySubGroupsUsersSvc(ctx context.Context, data 
 		return nil, err
 	}
 	return resp.(*pb_user_v1.Users), nil
+}
+
+func (g *GroupServiceEndpoint) GetAllGroup(ctx context.Context, groupId *pb_user_v1.GroupID) (*pb_user_v1.Groups, error) {
+	resp, err := g.GetAllGroupsEndpoint(ctx, groupId)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.Groups), nil
 }

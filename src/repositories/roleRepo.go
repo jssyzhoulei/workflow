@@ -44,13 +44,17 @@ func (u *roleRepo) BatchCreateMenuPermRepo(mps *[]*models.RoleMenuPermission) er
 }
 
 func (u *roleRepo) UpdateRoleRepo(role *models.Role) error {
-	return u.DB.Model(models.Role{}).Where("id = ?", role.ID).Updates(role).Error
+	return u.DB.Model(models.Role{}).
+		Where("id = ?", role.ID).
+		Updates(role).
+		Update("status", role.Status).
+		Error
 }
 
 func (u *roleRepo) DeleteRoleRepo(role *models.Role) error {
 	var count int64
 	u.Model(models.UserRole{}).Where("role_id = ? and deleted_at is null ", role.ID).Count(&count)
-	if count != 0{
+	if count != 0 {
 		return errors.New("relation user")
 	}
 	return u.DB.Model(models.Role{}).Delete(role).Error
@@ -90,13 +94,14 @@ func buildRoleProto(roles *[]roleUserIds) *[]*pb_user_v1.RoleProto {
 
 func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userId int) (*pb_user_v1.RolePageRequestProto, error) {
 	var (
-		page  int = 1
-		limit int = 10
+		page  = 1
+		limit = 10
 		name  string
 		roles []roleUserIds
 		resp  pb_user_v1.RolePageRequestProto
 	)
 
+	disable := false
 	resp.Page = new(pb_user_v1.Page)
 	if pageObj != nil {
 		if pageObj.Page.PageNum != 0 {
@@ -104,19 +109,25 @@ func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userI
 			limit = int(pageObj.Page.PageSize)
 		}
 		name = pageObj.Name
+		disable = pageObj.Disable
 	}
 
-	u.DB.Raw(`SELECT count(1) count from role WHERE role.deleted_at is null
-				and role.name like ? `, "%"+name+"%").
+	countSql := `SELECT count(1) count from role WHERE role.deleted_at is null
+				and role.name like ? `
+
+	querySql := `SELECT role.id, role.status, role.created_at, role.name, role.remark,
+				role.data_permit, group_concat(DISTINCT(user_role.user_id)) ids FROM role 
+				left join user_role on user_role.role_id = role.id and user_role.deleted_at is null 
+				WHERE role.deleted_at is null 
+				and role.name like ? `
+	if disable {
+		countSql += "and role.status = 0 "
+		querySql += "and role.status = 0 "
+	}
+	u.DB.Raw(countSql, "%"+name+"%").
 		Count(&resp.Page.Total)
 
-	err := u.DB.Raw(`SELECT role.id, role.status, role.created_at, role.name, role.remark,
-						role.data_permit, group_concat(DISTINCT(user_role.user_id)) ids FROM role 
-						left join user_role on user_role.role_id = role.id and user_role.deleted_at is null 
-						WHERE role.deleted_at is null 
-						and role.name like ?  
-						group by role.id 
-						LIMIT ? OFFSET ?`, "%"+name+"%", limit, limit*(page-1)).
+	err := u.DB.Raw(querySql+`group by role.id LIMIT ? OFFSET ?`, "%"+name+"%", limit, limit*(page-1)).
 		Scan(&roles).Error
 
 	if err == nil {

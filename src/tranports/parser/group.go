@@ -120,3 +120,10 @@ func EncodeQueryQuotaByConditionResponse(ctx context.Context, request interface{
 	}
 	return r, nil
 }
+
+func EncodeGroupsProto(_ context.Context, res interface{}) (interface{}, error) {
+	if _,ok := res.(*pb_user_v1.Groups);ok {
+		return res, nil
+	}
+	return nil, errors.New("EncodeGroupsProto 失败")
+}

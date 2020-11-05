@@ -27,6 +27,7 @@ type GroupRepoInterface interface {
 	GroupDeleteRepo(id int64, tx *gorm.DB) error
 	QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]int64, error)
 	SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx *gorm.DB) error
+	GetAllGroup() []models.Group
 
 }
 
@@ -543,5 +544,13 @@ func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx 
 		return err
 	}
 	return nil
+}
+
+func (g *groupRepo) GetAllGroup() []models.Group {
+	var (
+		groups []models.Group
+	)
+	g.Find(&groups)
+	return groups
 }
 

@@ -10,8 +10,8 @@ import (
 	"gitee.com/grandeep/org-svc/src/services"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
-	"strconv"
 	"github.com/tealeg/xlsx"
+	"strconv"
 )
 
 type userApiInterface interface {
@@ -49,6 +49,10 @@ func (u *userApi) AddUserApi(ctx *gin.Context) {
 	}
 	_, err = u.userService.AddUserSvc(context.Background(), userRoleDTO)
 	if err != nil {
+		//if strings.Contains(err.Error(), "already exist"){
+		//	response(ctx, 201, "用户名已存在", nil, false)
+		//	return
+		//}
 		log.Logger().Error("add user error: " + err.Error())
 		error_(ctx, 201, err)
 		return

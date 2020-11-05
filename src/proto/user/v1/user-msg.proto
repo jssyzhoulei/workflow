@@ -76,6 +76,7 @@ message UserQueryResult {
   string  created_at = 3;
   string  user_name = 4;
   string  group_name = 5;
+  string  mobile = 8;
   int64   group_id = 6;
   repeated string role_name = 7;
 }

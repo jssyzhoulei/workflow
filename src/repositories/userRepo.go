@@ -15,7 +15,7 @@ type UserRepoInterface interface {
 	AddUserRepo(user models.User, tx *gorm.DB) (int, error)
 	GetUserByIDRepo(id int) (user models.User, err error)
 	UpdateUserByIDRepo(user models.User, tx *gorm.DB) error
-	DeleteUserByIDRepo(id int,tx *gorm.DB) error
+	DeleteUserByIDRepo(id int, tx *gorm.DB) error
 	AddUserRoleRepo(userRole models.UserRole) error
 	GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB, groupIds ...int64) ([]models.User, error)
 	BatchDeleteUsersRepo(ids []int64, tx *gorm.DB) error
@@ -26,12 +26,12 @@ type UserRepoInterface interface {
 	DeleteUserRolesByUserId(ids []int, tx *gorm.DB) error
 	DeleteUserRolesById(id int, tx *gorm.DB) error
 	DeleteUserRolesByUserIds(ids []int64, tx *gorm.DB) error
-	UpdateUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *gorm.DB) error
-	ImportUsersByGroupIdRepo (groupId int , userId []int) error
+	UpdateUserRolesRepo(userRolesDTO models.UserRolesDTO, tx *gorm.DB) error
+	ImportUsersByGroupIdRepo(groupId int, userId []int) error
 	GetRoleIdsById(id int) ([]int, error)
-	GetRoleIdsByUserIds (ids []int) ([]int, error)
+	GetRoleIdsByUserIds(ids []int) ([]int, error)
 	GetUsersRepo(condition *models.UserQueryByCondition) ([]*models.UserListResult, int64, error)
-	DeleteUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *gorm.DB) error
+	DeleteUserRolesRepo(userRolesDTO models.UserRolesDTO, tx *gorm.DB) error
 }
 
 type userRepo struct {
@@ -67,15 +67,13 @@ func (u *userRepo) AddUserRepo(user models.User, tx *gorm.DB) (int, error) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = db.Create(&user).Error
-			if err != nil {
-				fmt.Println("create user error: ", err.Error())
-			}
-			return user.ID, nil
+			return user.ID, err
 		} else {
-			fmt.Println(err.Error(), "=================")
+			return 0, err
 		}
+	} else {
+		return 0, errors.New("user already exist")
 	}
-	return 0, err
 }
 
 // GetUserByIDRepo 通过ID获取用户详情
@@ -112,7 +110,7 @@ func (u *userRepo) UpdateUserByIDRepo(user models.User, tx *gorm.DB) error {
 	return errors.New("user is exist")
 }
 
-func (u *userRepo) ImportUsersByGroupIdRepo (groupId int , userId []int) error {
+func (u *userRepo) ImportUsersByGroupIdRepo(groupId int, userId []int) error {
 
 	err := u.Model(&models.User{}).Where("id in ?", userId).Update("group_id", groupId)
 	if err != nil {
@@ -122,7 +120,7 @@ func (u *userRepo) ImportUsersByGroupIdRepo (groupId int , userId []int) error {
 }
 
 // DeleteUserByIDRepo 根据ID删除用户
-func (u *userRepo) DeleteUserByIDRepo(id int,tx *gorm.DB) error {
+func (u *userRepo) DeleteUserByIDRepo(id int, tx *gorm.DB) error {
 	//var(
 	//	user models.User
 	//)
@@ -132,8 +130,8 @@ func (u *userRepo) DeleteUserByIDRepo(id int,tx *gorm.DB) error {
 	} else {
 		db = tx
 	}
-	updateColumnMap := map[string]interface{} {
-		"status": 1,
+	updateColumnMap := map[string]interface{}{
+		"status":     1,
 		"deleted_at": time.Now().Format("2006-01-02 15:04:05"),
 	}
 
@@ -150,12 +148,10 @@ func (u *userRepo) DeleteUserByIDRepo(id int,tx *gorm.DB) error {
 	//return nil
 }
 
-
 // GetUserListRepo 获取用户列表
-func (u *userRepo) GetUsersRepo(condition *models.UserQueryByCondition) ([]*models.UserListResult, int64, error){
+func (u *userRepo) GetUsersRepo(condition *models.UserQueryByCondition) ([]*models.UserListResult, int64, error) {
 	var err error
 	db := u.DB
-
 
 	whereCondition := " where 1=1 and a.deleted_at IS NULL and b.deleted_at IS NULL "
 	var conditionVal = make(map[string]interface{})
@@ -175,10 +171,9 @@ func (u *userRepo) GetUsersRepo(condition *models.UserQueryByCondition) ([]*mode
 
 	orderSql := " order by a.id desc "
 
-
 	page := condition.PageNum
 	limit := condition.PageSize
-	offset := page * limit - limit
+	offset := page*limit - limit
 
 	var pageSql string
 	if limit != 0 {
@@ -193,39 +188,41 @@ SELECT DISTINCT
 	a.created_at,
 	a.user_name,
 	a.login_name,
+	a.mobile,
 	d.name AS group_name,
 	c.name AS role_name,
 	d.id AS group_id
 FROM
 	` + "`user`" + ` a
 	LEFT JOIN user_role b ON a.id = b.user_id
-	LEFT JOIN ` + "`role`"+ ` c ON b.role_id = c.id
+	LEFT JOIN ` + "`role`" + ` c ON b.role_id = c.id and c.status = 0
 	LEFT JOIN ` + "`group`" + ` d ON a.group_id = d.id
 `
 	fullSql := sqlStr + whereCondition + orderSql
 	totalSql := fmt.Sprintf(countSQl, fullSql)
 
-	var resultScan = make([]*models.UserListScanResult,0)
-	err = db.Raw(fullSql + pageSql, conditionVal).Scan(&resultScan).Error
+	var resultScan = make([]*models.UserListScanResult, 0)
+	err = db.Raw(fullSql+pageSql, conditionVal).Scan(&resultScan).Error
 	if err != nil {
-		return nil,0, err
+		return nil, 0, err
 	}
 	var total int64
-	err = db.Raw(totalSql,conditionVal).Scan(&total).Error
+	err = db.Raw(totalSql, conditionVal).Scan(&total).Error
 	if err != nil {
-		return nil,0, err
+		return nil, 0, err
 	}
 	var result = make([]*models.UserListResult, 0)
 	var cache = make(map[string]map[string]interface{})
 	for _, val := range resultScan {
 		_tmp := &models.UserListResult{
-			Id:        int64(val.Id),
+			Id:        val.Id,
 			LoginName: val.LoginName,
 			CreatedAt: val.CreatedAt,
 			UserName:  val.UserName,
 			GroupName: val.GroupName,
 			RoleName:  nil,
-			GroupId:   int64(val.GroupId),
+			GroupId:   val.GroupId,
+			Mobile:    val.Mobile,
 		}
 		if _, ok := cache[val.LoginName]; !ok {
 			cache[val.LoginName] = make(map[string]interface{})
@@ -244,7 +241,7 @@ FROM
 			_tmp = append(_tmp, roleName)
 		}
 		l := len(result)
-		for i:=0;i<l;i++ {
+		for i := 0; i < l; i++ {
 			record := result[i]
 			if record.LoginName == loginName {
 				record.RoleName = _tmp
@@ -257,8 +254,8 @@ FROM
 }
 
 // GetUserListRepo 获取用户列表
-func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB, groupIds ...int64) ([]models.User, error){
-	var(
+func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm.DB, groupIds ...int64) ([]models.User, error) {
+	var (
 		users []models.User
 	)
 	var err error
@@ -273,7 +270,7 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm
 		Select("user_name, group_id, created_at, id, login_name, mobile, user_type, status")
 
 	if user.UserName != "" {
-		db = db.Where("user_name like ?", "%" + user.UserName + "%")
+		db = db.Where("user_name like ?", "%"+user.UserName+"%")
 	}
 
 	if user.ID != 0 {
@@ -281,7 +278,7 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm
 	}
 	if user.GroupID != 0 {
 		db = db.Where("group_id = ?", user.GroupID)
-	}else if len(groupIds) > 0 {
+	} else if len(groupIds) > 0 {
 		db = db.Where("group_id in ?", groupIds)
 	}
 	if page != nil {
@@ -292,7 +289,7 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm
 		if page.PageSize == 0 {
 			page.PageSize = 10
 		}
-		err := dbPage.Table("(?) as p",db).Count(&page.Total).Error
+		err := dbPage.Table("(?) as p", db).Count(&page.Total).Error
 		if err != nil {
 			return nil, err
 		}
@@ -310,20 +307,18 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm
 	return users, err
 }
 
-func (u *userRepo) GetRoleIdsByUserIds (ids []int) ([]int, error) {
+func (u *userRepo) GetRoleIdsByUserIds(ids []int) ([]int, error) {
 	var userRoles []models.UserRole
 	var roleIds []int
 	err := u.Model(&models.UserRole{}).Where("user_id in ?", ids).Find(&userRoles).Error
 	if err != nil {
 		return roleIds, err
 	}
-	for _, userRole := range userRoles{
+	for _, userRole := range userRoles {
 		roleIds = append(roleIds, userRole.RoleID)
 	}
 	return roleIds, nil
 }
-
-
 
 // AddUserRoleRepo ...
 func (u *userRepo) AddUserRoleRepo(userRole models.UserRole) error {
@@ -340,11 +335,12 @@ func (u *userRepo) BatchDeleteUsersRepo(ids []int64, tx *gorm.DB) error {
 	}
 	return db.Model(&models.User{}).Where("id in ?", ids).Delete(&models.User{}).Error
 }
+
 // GetUserByName 根据用户名获取用户
-func (u *userRepo) GetUserByName(name string)(models.User, error) {
-	var(
+func (u *userRepo) GetUserByName(name string) (models.User, error) {
+	var (
 		user = new(models.User)
-		err error
+		err  error
 	)
 	err = u.Where("login_name=?", name).First(&user).Error
 	return *user, err
@@ -353,7 +349,7 @@ func (u *userRepo) GetUserByName(name string)(models.User, error) {
 func (u *userRepo) GetUsersByLoginNames(loginNames []string) ([]models.User, error) {
 	var (
 		users []models.User
-		err error
+		err   error
 	)
 	err = u.Table("user").Select("*").Where("login_name In ?", loginNames).Find(&users).Error
 	return users, err
@@ -361,7 +357,7 @@ func (u *userRepo) GetUsersByLoginNames(loginNames []string) ([]models.User, err
 
 func (u *userRepo) AddUsersRepo(users []models.User, tx *gorm.DB) ([]int, error) {
 	var (
-		db = u.DB
+		db  = u.DB
 		err error
 		ids []int
 	)
@@ -382,7 +378,7 @@ func (u *userRepo) AddUsersRepo(users []models.User, tx *gorm.DB) ([]int, error)
 
 func (u *userRepo) AddUserRolesRepo(roles []models.UserRole, tx *gorm.DB) error {
 	var (
-		db = u.DB
+		db  = u.DB
 		err error
 	)
 	if tx != nil {
@@ -424,25 +420,25 @@ func (u *userRepo) DeleteUserRolesByUserIds(ids []int64, tx *gorm.DB) error {
 	return db.Table("user_role").Where("user_id IN ?", ids).Where("deleted_at is NULL").Delete(&models.UserRole{}).Error
 }
 
-func (u *userRepo) UpdateUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *gorm.DB) error {
-	var(
-		db = u.DB
+func (u *userRepo) UpdateUserRolesRepo(userRolesDTO models.UserRolesDTO, tx *gorm.DB) error {
+	var (
+		db  = u.DB
 		err error
 	)
 	if tx != nil {
 		db = tx
 	}
 
-	for _, roleId := range userRolesDTO.RoleIDs  {
+	for _, roleId := range userRolesDTO.RoleIDs {
 		db.Table("user_role").Where("user_id = ?", userRolesDTO.ID).Updates(map[string]interface{}{"user_id": userRolesDTO.ID, "role_id": roleId})
 	}
 
 	return err
 }
 
-func (u *userRepo) DeleteUserRolesRepo (userRolesDTO models.UserRolesDTO, tx *gorm.DB) error {
-	var(
-		db = u.DB
+func (u *userRepo) DeleteUserRolesRepo(userRolesDTO models.UserRolesDTO, tx *gorm.DB) error {
+	var (
+		db  = u.DB
 		err error
 	)
 	if tx != nil {

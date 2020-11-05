@@ -34,7 +34,7 @@ type userService struct {
 func NewUserService(repos repositories.RepoI, c *config.Config) UserServiceInterface {
 	return &userService{
 		userRepo: repos.GetUserRepo(),
-		config: c,
+		config:   c,
 		roleRepo: repos.GetRoleRepo(),
 	}
 }
@@ -42,25 +42,22 @@ func NewUserService(repos repositories.RepoI, c *config.Config) UserServiceInter
 // AddUserSvc 添加用户
 func (u *userService) AddUserSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error) {
 	var (
-		userRoles    []models.UserRole
+		userRoles []models.UserRole
 	)
 
 	tx := u.userRepo.GetTx()
 	key, _ := u.config.GetString("passwordKey")
-	userRolesDTO.Password,_ = userRolesDTO.EncodePwd(key)
+	userRolesDTO.Password, _ = userRolesDTO.EncodePwd(key)
 	id, err := u.userRepo.AddUserRepo(userRolesDTO.User, tx)
-	if err != nil {
+	if err != nil || id == 0 {
 		tx.Rollback()
 		return pb_user_v1.NullResponse{}, err
 	}
-	if id == 0 {
-		tx.Commit()
-		return pb_user_v1.NullResponse{}, nil
-	}
+
 	for _, roleId := range userRolesDTO.RoleIDs {
 		userRoles = append(userRoles, models.UserRole{
 			UserID: id,
-			RoleID: int(roleId),
+			RoleID: roleId,
 		})
 	}
 
@@ -69,9 +66,6 @@ func (u *userService) AddUserSvc(ctx context.Context, userRolesDTO models.UserRo
 		tx.Rollback()
 	}
 	tx.Commit()
-
-
-
 
 	//var err error
 	//var userRole models.UserRole
@@ -104,16 +98,16 @@ func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (c *pb_user_v1
 	}
 	c = &pb_user_v1.UserProto{}
 	userProto.Id = &pb_user_v1.Index{
-		Id:          int64(user.ID),
+		Id: int64(user.ID),
 	}
 	userProto = pb_user_v1.UserProto{
-		UserName: user.UserName,
+		UserName:  user.UserName,
 		LoginName: user.LoginName,
-		Password: user.Password,
-		GroupId: int64(user.GroupID),
-		UserType: int64(user.UserType),
-		Ststus: int64(user.Status),
-		Mobile: user.Mobile,
+		Password:  user.Password,
+		GroupId:   int64(user.GroupID),
+		UserType:  int64(user.UserType),
+		Ststus:    int64(user.Status),
+		Mobile:    user.Mobile,
 	}
 	for _, roleId := range roleIds {
 		userProto.RoleIds = append(userProto.RoleIds, &pb_user_v1.Index{Id: int64(roleId)})
@@ -124,12 +118,12 @@ func (u *userService) GetUserByIDSvc(ctx context.Context, id int) (c *pb_user_v1
 // UpdateUserByIDSvc 根据ID编辑用户
 func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models.UserRolesDTO) (pb_user_v1.NullResponse, error) {
 	var (
-		userRoles    []models.UserRole
+		userRoles []models.UserRole
 	)
 
 	tx := u.userRepo.GetTx()
 	key, _ := u.config.GetString("passwordKey")
-	userRolesDTO.Password,_ = userRolesDTO.EncodePwd(key)
+	userRolesDTO.Password, _ = userRolesDTO.EncodePwd(key)
 	err := u.userRepo.UpdateUserByIDRepo(userRolesDTO.User, tx)
 	if err != nil {
 		tx.Rollback()
@@ -159,7 +153,7 @@ func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models
 	}
 	err = u.userRepo.AddUserRolesRepo(userRoles, tx)
 	if err != nil {
-		fmt.Println("==================",err)
+		fmt.Println("==================", err)
 		tx.Rollback()
 		return pb_user_v1.NullResponse{}, err
 	}
@@ -175,6 +169,7 @@ func (u *userService) ImportUsersByGroupIdSvc(ctx context.Context, id models.Gro
 	}
 	return pb_user_v1.NullResponse{}, nil
 }
+
 // DeleteUserByID 根据ID删除用户信息
 func (u *userService) DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1.NullResponse, error) {
 	var (
@@ -197,10 +192,10 @@ func (u *userService) DeleteUserByIDSvc(ctx context.Context, id int) (pb_user_v1
 
 // GetUserListSvc 获取用户列表
 
-func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error){
+func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.UserPage) (c *pb_user_v1.UsersPage, err error) {
 	var (
-		page models.Page
-		user models.User
+		page    models.Page
+		user    models.User
 		userIds []int
 	)
 	if userPage.Page != nil {
@@ -229,14 +224,14 @@ func (u *userService) GetUserListSvc(ctx context.Context, userPage *pb_user_v1.U
 		//	Id:                   int64(user.ID),
 		//}
 		userProto = pb_user_v1.UserProto{
-			Id: &pb_user_v1.Index{Id: int64(user.ID)},
-			UserName: user.UserName,
+			Id:        &pb_user_v1.Index{Id: int64(user.ID)},
+			UserName:  user.UserName,
 			LoginName: user.LoginName,
-			Password: user.Password,
-			Mobile: user.Mobile,
-			GroupId: int64(user.GroupID),
-			Ststus: int64(user.Status),
-			UserType: int64(user.UserType),
+			Password:  user.Password,
+			Mobile:    user.Mobile,
+			GroupId:   int64(user.GroupID),
+			Ststus:    int64(user.Status),
+			UserType:  int64(user.UserType),
 		}
 
 		for _, v := range reoleIds {
@@ -274,13 +269,13 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 	//如果是追加则只新增对应的用户
 	//覆盖写将对用户角色进行逻辑删除后在插入新的角色
 	var (
-		names        []string
-		users        []models.User
-		userIsExist  []models.User
+		names          []string
+		users          []models.User
+		userIsExist    []models.User
 		userIdsIsExist []int
-		userNotExist []models.User
-		roleIds      []int64
-		userRoles    []models.UserRole
+		userNotExist   []models.User
+		roleIds        []int64
+		userRoles      []models.UserRole
 	)
 	if usersReq.Users != nil {
 		for _, user := range usersReq.Users {
@@ -386,8 +381,8 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 				for _, id := range userIdsIsExist {
 					for _, roleId := range roleIds {
 						userRoles = append(userRoles, models.UserRole{
-							UserID:    id,
-							RoleID:    int(roleId),
+							UserID: id,
+							RoleID: int(roleId),
 						})
 					}
 				}
@@ -409,31 +404,32 @@ func (u *userService) GetUsersSvc(ctx context.Context, data *pb_user_v1.UserQuer
 
 	var userQueryResponses pb_user_v1.UserQueryResponse
 	condition := &models.UserQueryByCondition{
-		ID: data.Id,
+		ID:        data.Id,
 		LoginName: data.LoginName,
-		GroupId: data.GroupId,
-		PageNum: data.PageNum,
-		PageSize: data.PageSize,
+		GroupId:   data.GroupId,
+		PageNum:   data.PageNum,
+		PageSize:  data.PageSize,
 	}
 
-	querySlices,total, err := u.userRepo.GetUsersRepo(condition)
+	querySlices, total, err := u.userRepo.GetUsersRepo(condition)
 	if err != nil {
 		return nil, err
 	}
 	userQueryResponses = pb_user_v1.UserQueryResponse{
-		Total: total,
-		PageNum: condition.PageNum,
+		Total:    total,
+		PageNum:  condition.PageNum,
 		PageSize: condition.PageSize,
 	}
 	for _, val := range querySlices {
 		_temp := &pb_user_v1.UserQueryResult{
-			Id:          val.Id,
-			LoginName:   val.LoginName,
-			CreatedAt:   val.CreatedAt,
-			UserName:    val.UserName,
-			GroupName:   val.GroupName,
-			GroupId:     val.GroupId,
-			RoleName:    val.RoleName,
+			Id:        val.Id,
+			LoginName: val.LoginName,
+			CreatedAt: val.CreatedAt,
+			UserName:  val.UserName,
+			GroupName: val.GroupName,
+			GroupId:   val.GroupId,
+			RoleName:  val.RoleName,
+			Mobile:    val.Mobile,
 		}
 		userQueryResponses.UserQueryResult = append(userQueryResponses.UserQueryResult, _temp)
 	}

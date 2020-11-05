@@ -13,6 +13,7 @@ type OrgTransport struct {
 	*roleGrpcTransport
 }
 
+
 func NewTransport(ept *endpoints.OrgEndpoint) pb_user_v1.RpcOrgServiceServer {
 	return &OrgTransport{
 		userGrpcTransport: NewUserGrpcTransport(ept.UserServiceEndpoint),
