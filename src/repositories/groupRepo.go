@@ -294,70 +294,67 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 		updateColumnMap["name"] = data.Name
 	}
 
-	if data.ParentID != nil {
-		updateColumnMap["parent_id"] = data.ParentID
+	// 获取组原本的信息
+	oldGroup, err := g.GroupQueryByIDRepo(data.ID, nil)
+	if err != nil {
+		return err
+	}
 
-		oldGroup, err := g.GroupQueryByIDRepo(data.ID, nil)
-		if err != nil {
-			return err
-		}
+	if oldGroup.ID == 0 {
+		return errors.New("组信息被标记为删除或组不存在")
+	}
 
-		if oldGroup.ID == 0 {
-			return errors.New("组信息被标记为删除或组不存在")
-		}
-
-		// 不允许更新含有下级组的父级
-		res, err := g.QueryGroupIDAndSubGroupsID(data.ID, db)
-		if err != nil {
-			return err
-		}
-		if len(res) > 1 {
-			return errors.New("包含子级不允许更新父级信息")
-		}
-
-		// 获取新的父级组ID
-		newParentGroup, err := g.GroupQueryByIDRepo(*data.ParentID, db)
-		if err != nil {
-			return err
-		}
-
+	if data.ParentID != nil && int64(oldGroup.ParentID) != *data.ParentID {
 
 		// 更新父级ID时,不允许跨越顶级组ID更新
 		if oldGroup.ParentID == 0 {
 			return errors.New("顶级组不允许执行变更父级操作")
 		} else {
-			// 获取顶级组ID
-			oriTopGroupID := strings.Split(oldGroup.LevelPath, "-")[1]
-
-			// 获取新的父级组的顶级组
-			newTopGroupID := strings.Split(newParentGroup.LevelPath, "-")[1]
-
-			// 判断是否跨越顶级组
-			if oriTopGroupID != newTopGroupID {
-				return errors.New("不允许跨越顶级组更新其父级ID")
+			// 不允许更新含有下级组的父级
+			res, err := g.QueryGroupIDAndSubGroupsID(data.ID, db)
+			if err != nil {
+				return err
 			}
+			if len(res) > 1 {
+				return errors.New("包含子级不允许更新父级信息")
+			}
+
+			// 没有子级parent为0, 直接提高层级至顶级组
+			if *data.ParentID == 0 {
+				updateColumnMap["level_path"] = "0-"
+			} else {
+				// 获取新的父级组ID
+				newParentGroup, err := g.GroupQueryByIDRepo(*data.ParentID, db)
+				if err != nil {
+					return err
+				}
+
+				// 获取顶级组ID
+				oriTopGroupID := strings.Split(oldGroup.LevelPath, "-")[1]
+
+				// 获取新的父级组的顶级组
+				var newTopGroupID string
+				// 如果新的父级就是顶级组那么直接对比该组的ID, 否则获取新的父级组的顶级组ID
+				if newParentGroup.ParentID == 0 {
+					// 这里LevelPath应该是这个样子: 0-
+					// 所以直接设置为当前新父级的ID
+					newTopGroupID = strconv.Itoa(newParentGroup.ID)
+				} else {
+					// 这里LevelPath应该是这个样子: 0-ID-ID
+					newTopGroupID = strings.Split(newParentGroup.LevelPath, "-")[1]
+				}
+
+				// 判断是否跨越顶级组
+				if oriTopGroupID != newTopGroupID {
+					return errors.New("不允许跨越顶级组更新其父级ID")
+				}
+
+				updateColumnMap["level_path"] = newParentGroup.LevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
+			}
+
+			updateColumnMap["parent_id"] = data.ParentID
 		}
 
-
-		//if oldGroup.ParentID == 0 {
-		//	oldLevelPath := oldGroup.LevelPath
-		//	if *data.ParentID == 0 {
-		//		updateColumnMap["level_path"] = "0-"
-		//	} else {
-		//		res := strings.Split(oldLevelPath, "-")
-		//		res[len(res) - 1] = strconv.FormatInt(*data.ParentID, 10) + "-"
-		//		newLevelPath := strings.Join(res, "-")
-		//		updateColumnMap["level_path"] = newLevelPath
-		//	}
-		//} else {
-
-		if *data.ParentID == 0 {
-			updateColumnMap["level_path"] = "0-"
-		} else {
-			updateColumnMap["level_path"] = newParentGroup.LevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
-		}
-
-		//}
 	}
 
 	if data.Description != "" {
@@ -536,16 +533,16 @@ func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx 
 		return errors.New("组已删除,无法修改数据")
 	}
 
-	updateColumnMap := map[string]interface{} {
-		"used": data.Used,
-	}
+	quotaTableName := models.Quota{}.TableName()
 
-	err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and type=?", data.GroupID,
-		data.IsShare, data.QuotaType).Updates(updateColumnMap).Error
+	sqlStr := "update %s set used=used+%d where group_id=%d and is_share=%d and type=%d"
+
+	fullSql := fmt.Sprintf(sqlStr, quotaTableName, data.Used, data.GroupID, data.IsShare, data.QuotaType)
+
+	err = db.Exec(fullSql).Error
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

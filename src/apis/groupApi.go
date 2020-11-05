@@ -169,6 +169,7 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		DiskQuotaSize: data.DiskQuotaSize,
 		Quotas:        pbQuotas,
 	}
+
 	resp, err := g.groupService.GroupUpdateSvc(context.Background(), d)
 	if err != nil {
 		log.Logger().Info("更新组信息错误: " + err.Error())
