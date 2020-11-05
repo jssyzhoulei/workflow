@@ -223,3 +223,6 @@ func testQueryQuotaByConditionSvc() error {
 	return nil
 }
 
+func TestGroupService_GetAllGroup(t *testing.T) {
+	fmt.Println(groupTestService.GetAllGroup(context.Background(), &pb_user_v1.GroupID{}))
+}

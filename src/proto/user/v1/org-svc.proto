@@ -41,4 +41,5 @@ service RpcOrgService {
   rpc RpcDeletePermissionByID(Index) returns (NullResponse);
   rpc RpcGetMenuCascadeByModule(MenuModule) returns(Cascades);
   rpc RpcAddUsers(AddUsersRequest) returns (NullResponse);
+  rpc RpcGetGroups(GroupID) returns (Groups);
 }

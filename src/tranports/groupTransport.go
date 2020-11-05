@@ -20,6 +20,7 @@ type groupGrpcTransport struct {
 	queryGroupIDAndSubGroupsID transport.Handler
 	queryQuotaByCondition transport.Handler
 	querySubGroupsUsers transport.Handler
+	getAllGroups transport.Handler
 }
 
 // NewGroupGrpcTransport ...
@@ -36,6 +37,7 @@ func NewGroupGrpcTransport(endpoint *endpoints.GroupServiceEndpoint) *groupGrpcT
 		queryGroupIDAndSubGroupsID: transport.NewServer(endpoint.QueryGroupIDAndSubGroupsIDEndpoint, parser.DecodeGroupIDProto, parser.EncodeGroupIDsResponse),
 		queryQuotaByCondition: transport.NewServer(endpoint.QueryQuotaByConditionEndpoint, parser.DecodeQueryQuotaByCondition, parser.EncodeQueryQuotaByConditionResponse),
 		querySubGroupsUsers: transport.NewServer(endpoint.QuerySubGroupsUsersEndpoint, parser.DecodeGroupIDProto, parser.EncodeUsers),
+		getAllGroups: transport.NewServer(endpoint.GetAllGroupsEndpoint, parser.DecodeGroupIDProto, parser.EncodeGroupsProto),
 	}
 }
 
@@ -136,4 +138,12 @@ func (g *groupGrpcTransport) RPCQuerySubGroupsUsers(ctx context.Context, proto *
 		return nil, err
 	}
 	return resp.(*pb_user_v1.Users), err
+}
+
+func (g *groupGrpcTransport) RpcGetGroups(ctx context.Context, id *pb_user_v1.GroupID) (*pb_user_v1.Groups, error) {
+	_, resp, err := g.getAllGroups.ServeGRPC(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.Groups), nil
 }

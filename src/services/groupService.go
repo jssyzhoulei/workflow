@@ -31,6 +31,7 @@ type GroupServiceInterface interface {
 	QueryGroupIDAndSubGroupsIDSvc(_ context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.GroupIDsResponse, error)
 	QueryQuotaByConditionSvc(_ context.Context, data *pb_user_v1.QueryQuotaByCondition) (*pb_user_v1.QueryQuotaByConditionResponse, error)
 	QuerySubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error)
+	GetAllGroup(_ context.Context, groupId *pb_user_v1.GroupID) (*pb_user_v1.Groups, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -593,16 +594,16 @@ func (g *GroupService) QueryQuotaByConditionSvc(_ context.Context, data *pb_user
 
 	var result = make([]*pb_user_v1.QuotaRecord, 0)
 	l := len(resp)
-	for i:=0;i<l;i++ {
+	for i := 0; i < l; i++ {
 		_item := resp[i]
 
 		_tmp := &pb_user_v1.QuotaRecord{
-			IsShare:              int64(_item.IsShare),
-			ResourceId:           _item.ResourceID,
-			Type:                 int64(_item.Type),
-			GroupId:              int64(_item.GroupID),
-			Total:                int64(_item.Total),
-			Used:                 int64(_item.Used),
+			IsShare:    int64(_item.IsShare),
+			ResourceId: _item.ResourceID,
+			Type:       int64(_item.Type),
+			GroupId:    int64(_item.GroupID),
+			Total:      int64(_item.Total),
+			Used:       int64(_item.Used),
 		}
 		result = append(result, _tmp)
 	}
@@ -621,7 +622,7 @@ func (g *GroupService) QuerySubGroupsUsersSvc(_ context.Context, data *pb_user_v
 
 	for _, v := range groupIDs {
 		if v == data.Id {
-			 continue
+			continue
 		}
 		groupIDSlice = append(groupIDSlice, v)
 	}
@@ -652,4 +653,27 @@ func (g *GroupService) QuerySubGroupsUsersSvc(_ context.Context, data *pb_user_v
 	return &pb_user_v1.Users{
 		Users: result,
 	}, nil
+}
+
+func (g *GroupService) GetAllGroup(_ context.Context, groupId *pb_user_v1.GroupID) (*pb_user_v1.Groups, error) {
+	var (
+		groups   []models.Group
+		pbGroups = &pb_user_v1.Groups{}
+	)
+	groups = g.groupRepo.GetAllGroup()
+	for _, v := range groups {
+		var (
+			pbGroup = &pb_user_v1.Group{
+				Id:                   int64(v.ID),
+				Name:                 v.Name,
+				Description:          v.Description,
+				ParentId:             int64(v.ParentID),
+				LevelPath:            v.LevelPath,
+				NameSpace:            v.NameSpace,
+				Status:               int64(v.Status),
+			}
+		)
+		pbGroups.Groups = append(pbGroups.Groups, pbGroup)
+	}
+	return pbGroups, nil
 }
