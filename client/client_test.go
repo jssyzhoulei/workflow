@@ -10,7 +10,7 @@ import (
 
 func TestOrgServiceClient_GetUserService(t *testing.T) {
 	o := NewOrgServiceClient([]string{"127.0.0.1:2379"}, 1, time.Second)
-	fmt.Println(o.GetGroupService().GroupAddSvc(context.Background(), &pb_user_v1.GroupAddRequest{
+	fmt.Println(o.GetGroupService().GetAllGroup(context.Background(), &pb_user_v1.GroupID{
 
 	}))
 }

@@ -27,6 +27,7 @@ type GroupRepoInterface interface {
 	GroupDeleteRepo(id int64, tx *gorm.DB) error
 	QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]int64, error)
 	SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx *gorm.DB) error
+	GetAllGroup() []models.Group
 
 }
 
@@ -303,13 +304,8 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 		return errors.New("组信息被标记为删除或组不存在")
 	}
 
-	// 获取新的父级组ID
-	newParentGroup, err := g.GroupQueryByIDRepo(*data.ParentID, db)
-	if err != nil {
-		return err
-	}
+	if data.ParentID != nil && int64(oldGroup.ParentID) != *data.ParentID {
 
-	if data.ParentID != nil && int64(oldGroup.ParentID) != *data.ParentID{
 		// 更新父级ID时,不允许跨越顶级组ID更新
 		if oldGroup.ParentID == 0 {
 			return errors.New("顶级组不允许执行变更父级操作")
@@ -323,41 +319,42 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 				return errors.New("包含子级不允许更新父级信息")
 			}
 
-			// 获取顶级组ID
-			oriTopGroupID := strings.Split(oldGroup.LevelPath, "-")[1]
-
-			// 获取新的父级组的顶级组
-			newTopGroupID := strings.Split(newParentGroup.LevelPath, "-")[1]
-
-			// 判断是否跨越顶级组
-			if oriTopGroupID != newTopGroupID {
-				return errors.New("不允许跨越顶级组更新其父级ID")
-			}
-
+			// 没有子级parent为0, 直接提高层级至顶级组
 			if *data.ParentID == 0 {
 				updateColumnMap["level_path"] = "0-"
 			} else {
+				// 获取新的父级组ID
+				newParentGroup, err := g.GroupQueryByIDRepo(*data.ParentID, db)
+				if err != nil {
+					return err
+				}
+
+				// 获取顶级组ID
+				oriTopGroupID := strings.Split(oldGroup.LevelPath, "-")[1]
+
+				// 获取新的父级组的顶级组
+				var newTopGroupID string
+				// 如果新的父级就是顶级组那么直接对比该组的ID, 否则获取新的父级组的顶级组ID
+				if newParentGroup.ParentID == 0 {
+					// 这里LevelPath应该是这个样子: 0-
+					// 所以直接设置为当前新父级的ID
+					newTopGroupID = strconv.Itoa(newParentGroup.ID)
+				} else {
+					// 这里LevelPath应该是这个样子: 0-ID-ID
+					newTopGroupID = strings.Split(newParentGroup.LevelPath, "-")[1]
+				}
+
+				// 判断是否跨越顶级组
+				if oriTopGroupID != newTopGroupID {
+					return errors.New("不允许跨越顶级组更新其父级ID")
+				}
+
 				updateColumnMap["level_path"] = newParentGroup.LevelPath + strconv.FormatInt(*data.ParentID, 10) + "-"
 			}
 
 			updateColumnMap["parent_id"] = data.ParentID
 		}
 
-
-		//if oldGroup.ParentID == 0 {
-		//	oldLevelPath := oldGroup.LevelPath
-		//	if *data.ParentID == 0 {
-		//		updateColumnMap["level_path"] = "0-"
-		//	} else {
-		//		res := strings.Split(oldLevelPath, "-")
-		//		res[len(res) - 1] = strconv.FormatInt(*data.ParentID, 10) + "-"
-		//		newLevelPath := strings.Join(res, "-")
-		//		updateColumnMap["level_path"] = newLevelPath
-		//	}
-		//} else {
-
-
-		//}
 	}
 
 	if data.Description != "" {
@@ -547,5 +544,13 @@ func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx 
 		return err
 	}
 	return nil
+}
+
+func (g *groupRepo) GetAllGroup() []models.Group {
+	var (
+		groups []models.Group
+	)
+	g.Find(&groups)
+	return groups
 }
 
