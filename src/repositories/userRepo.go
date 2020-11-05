@@ -180,7 +180,10 @@ func (u *userRepo) GetUsersRepo(condition *models.UserQueryByCondition) ([]*mode
 	limit := condition.PageSize
 	offset := page * limit - limit
 
-	pageSql := fmt.Sprintf(" limit %d offset %d ", limit, offset)
+	var pageSql string
+	if limit != 0 {
+		pageSql = fmt.Sprintf(" limit %d offset %d ", limit, offset)
+	}
 
 	countSQl := "select count(1) as count from (%s) a"
 
