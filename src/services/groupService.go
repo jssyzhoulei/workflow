@@ -289,12 +289,6 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 
 	var tx = g.groupRepo.GetTx()
 
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
 	d := &models.GroupUpdateRequest{
 		ID:          data.Id,
 		Name:        data.Name,
