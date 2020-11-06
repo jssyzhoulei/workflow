@@ -649,6 +649,7 @@ func (g *GroupService) QuerySubGroupsUsersSvc(_ context.Context, data *pb_user_v
 	}, nil
 }
 
+// GetAllGroup 查询查询所有的组
 func (g *GroupService) GetAllGroup(_ context.Context, groupId *pb_user_v1.GroupID) (*pb_user_v1.Groups, error) {
 	var (
 		groups   []models.Group
