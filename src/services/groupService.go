@@ -313,10 +313,17 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 		"disk":   models.ResourceDisk,
 	}
 
+	// 资源组ID, 用于更新资源组ID
+	var resourcesGroupIDMap = make(map[int64]string)
+
 	quotasLen := len(data.Quotas)
 	var quotasUpdateData = make([]*models.QuotaUpdateRequest, 0)
 	for i := 0; i < quotasLen; i++ {
 		q := data.Quotas[i]
+
+		if _, ok := resourcesGroupIDMap[q.IsShare]; !ok {
+			resourcesGroupIDMap[q.IsShare] = q.ResourcesGroupId
+		}
 
 		valMap := map[string]int64{
 			"cpu":    q.Cpu,
@@ -346,6 +353,13 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 	})
 
 	err = g.groupRepo.QuotaUpdateRepo(quotasUpdateData, tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// 更新资源组信息
+	err = g.groupRepo.UpdateQuotaResourceID(data.Id, resourcesGroupIDMap, tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, err

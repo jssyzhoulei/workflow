@@ -28,6 +28,7 @@ type GroupRepoInterface interface {
 	QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]int64, error)
 	SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx *gorm.DB) error
 	GetAllGroup() []models.Group
+	UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64]string, tx *gorm.DB) error
 
 }
 
@@ -546,6 +547,7 @@ func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx 
 	return nil
 }
 
+// GetAllGroup 获取所有的组
 func (g *groupRepo) GetAllGroup() []models.Group {
 	var (
 		groups []models.Group
@@ -554,3 +556,53 @@ func (g *groupRepo) GetAllGroup() []models.Group {
 	return groups
 }
 
+// UpdateQuotaResourceID 更新配额资源ID
+// @param resourceIDMap map[int64]string key为share 值为资源组ID字符串
+func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64]string, tx *gorm.DB) error {
+	var db *gorm.DB
+	var err error
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+
+	for share, resourceIDStr := range resourceIDMap {
+
+		// 查询原资源组ID
+		var oriResourcesIDStr string
+		err = db.Model(&models.Quota{}).Select("resources_id").Where("group_id=? and is_share=? and type<>4", groupID,
+			share).First(&oriResourcesIDStr).Error
+		if err != nil {
+			return err
+		}
+
+		// 相同时跳过,不相同时校验是否存在用户
+		if oriResourcesIDStr != resourceIDStr {
+			var userCount int64
+			err = db.Model(&models.User{}).Where("group_id=?", groupID).Count(&userCount).Error
+			if err != nil {
+				return err
+			}
+			if userCount != 0 {
+				return errors.New("组下包含用户,无法更新资源组")
+			}
+		} else {
+			// 相同时不需要执行更新操作
+			return nil
+		}
+
+		// 更新资源组信息
+		updateColumnMap := map[string]interface{}{
+			"resources_id": resourceIDStr,
+		}
+
+		err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and type<>4", groupID,
+			share).Updates(updateColumnMap).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
