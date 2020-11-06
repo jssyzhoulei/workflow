@@ -24,6 +24,7 @@ type groupAPIInterface interface {
 	QueryGroupAndSubGroupsUsers(c *gin.Context)
 	SetGroupQuotaUsed(c *gin.Context)
 	QuerySubGroupsUsers(c *gin.Context)
+	QueryGroupIDAndSubGroupsID(c *gin.Context)
 }
 
 type groupAPI struct {
@@ -385,5 +386,32 @@ func (g *groupAPI) QuerySubGroupsUsers(c *gin.Context) {
 		result = append(result, _tmp)
 	}
 	response(c, http.StatusOK, "成功", result, false)
+	return
+}
+
+// QueryGroupIDAndSubGroupsID 查询组下的所有子组ID包含被查询的组ID
+func (g *groupAPI) QueryGroupIDAndSubGroupsID(c *gin.Context) {
+
+	groupIDStr := c.DefaultQuery("group_id", "")
+
+	groupID, err := strconv.ParseInt(groupIDStr, 10, 64)
+	if err != nil {
+		log.Logger().Info("QueryGroupIDAndSubGroupsID 解析参数错误: " + err.Error())
+		response(c, http.StatusBadRequest, "解析参数错误", nil, false)
+		return
+	}
+
+	data := &pb_user_v1.GroupID{
+		Id:                   groupID,
+	}
+
+	resp, err := g.groupService.QueryGroupIDAndSubGroupsIDSvc(context.Background(), data)
+	if err != nil {
+		log.Logger().Info("QueryGroupIDAndSubGroupsID 查询错误: " + err.Error())
+		response(c, http.StatusBadRequest, "获取用户组子组失败或为空", nil, false)
+		return
+	}
+
+	response(c, http.StatusOK, "成功", resp.Ids, false)
 	return
 }
