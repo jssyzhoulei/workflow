@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"bufio"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
 	"github.com/tealeg/xlsx"
+	"net/http"
 	"strconv"
 )
 
@@ -24,6 +26,7 @@ type userApiInterface interface {
 	BatchDeleteUsersApi(ctx *gin.Context)
 	ImportUsersByGroupIdApi(ctx *gin.Context)
 	GetUsersApi(c *gin.Context)
+	ImportUserTemplate(c *gin.Context)
 }
 
 type userApi struct {
@@ -263,4 +266,15 @@ func (u *userApi) GetUsersApi(c *gin.Context) {
 	success_(c, users)
 	return
 }
+
+func (u *userApi) ImportUserTemplate(c *gin.Context) {
+	b, _ := base64.StdEncoding.DecodeString(templateBase64)
+	c.Header("Content-Disposition", "attachment; filename=模板.xlsx")
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Writer.WriteHeader(http.StatusOK)
+	writer := bufio.NewWriter(c.Writer)
+	_, _ = writer.Write(b)
+}
+
 
