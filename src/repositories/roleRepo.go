@@ -118,7 +118,8 @@ func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userI
 	querySql := `SELECT role.id, role.status, role.created_at, role.name, role.remark,
 				role.data_permit, group_concat(DISTINCT(user_role.user_id)) ids FROM role 
 				left join user_role on user_role.role_id = role.id and user_role.deleted_at is null 
-				WHERE role.deleted_at is null 
+				left join user on user_role.user_id = user.id 
+				WHERE role.deleted_at is null and user.deleted_at is null 
 				and role.name like ? `
 	if disable {
 		countSql += "and role.status = 0 "
