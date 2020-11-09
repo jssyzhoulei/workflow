@@ -230,8 +230,10 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 			}
 			groupData[r.ID].TopParentId = topParentID
 		}
+
 		if models.ResourceType(r.Type) == models.ResourceDisk {
 			groupData[r.ID].DiskQuotaSize = int64(r.Total)
+			continue
 		}
 
 		// 对零散的配额数据进行分组
