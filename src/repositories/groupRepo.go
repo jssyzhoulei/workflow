@@ -22,7 +22,7 @@ type GroupRepoInterface interface {
 	QuotaQueryByConditionRepo(condition *models.QuotaQueryByCondition, tx *gorm.DB) ([]*models.Quota, error)
 	GroupQueryWithQuotaByConditionRepo(condition *models.GroupQueryByCondition, tx *gorm.DB) ([]*models.GroupQueryWithQuotaScanRes, error)
 	GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB) error
-	QuotaUpdateRepo(data []*models.QuotaUpdateRequest, tx *gorm.DB) error
+	QuotaUpdateRepo(data []*models.QuotaUpdateRequest, groupID int64, tx *gorm.DB) error
 	GroupListWithChangedLevelPathRepo(groupID int64, tx *gorm.DB) ([]*models.Group, error)
 	GroupDeleteRepo(id int64, tx *gorm.DB) error
 	QueryGroupIDAndSubGroupsID(groupID int64, tx *gorm.DB) ([]int64, error)
@@ -371,12 +371,22 @@ func (g *groupRepo) GroupUpdateRepo(data *models.GroupUpdateRequest, tx *gorm.DB
 }
 
 // QuotaUpdateRepo 配额信息更新
-func (g *groupRepo) QuotaUpdateRepo(_data []*models.QuotaUpdateRequest, tx *gorm.DB) error {
+func (g *groupRepo) QuotaUpdateRepo(_data []*models.QuotaUpdateRequest,  groupID int64, tx *gorm.DB) error {
 	var db *gorm.DB
 	if tx == nil {
 		db = g.DB
 	} else {
 		db = tx
+	}
+
+	// 增加组信息校验,被删除的组,无法修改其配额数据
+	group, err := g.GroupQueryByIDRepo(groupID, nil)
+	if err != nil {
+		return errors.New("查询组信息错误: " + err.Error())
+	}
+
+	if group.Status == 1 {
+		return errors.New("组已删除,无法修改数据")
 	}
 
 	l := len(_data)
@@ -391,28 +401,40 @@ func (g *groupRepo) QuotaUpdateRepo(_data []*models.QuotaUpdateRequest, tx *gorm
 			return errors.New("资源类型不存在")
 		}
 
-		// 增加组信息校验,被删除的组,无法修改其配额数据
-		group, err := g.GroupQueryByIDRepo(data.GroupID, nil)
-		if err != nil {
-			return errors.New("查询组信息错误: " + err.Error())
-		}
-
-		if group.Status == 1 {
-			return errors.New("组已删除,无法修改数据")
-		}
-
-		updateColumnMap := map[string]interface{} {
-			"total": data.Total,
-			//"used": data.Used,
-		}
-
+		// 插入或者更新
+		var num int64
 		err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and type=?", data.GroupID,
-			data.IsShare, data.QuotaType).Updates(updateColumnMap).Error
+			data.IsShare, data.QuotaType).Count(&num).Error
 		if err != nil {
 			return err
 		}
-	}
+		if num == 0 {
+			// 当配额不存在时,创建对应的配额
+			var  data = &models.Quota{
+				IsShare:    int(data.IsShare),
+				ResourceID: data.ResourcesID,
+				Type:       models.ResourceType(data.QuotaType),
+				GroupID:    int(data.GroupID),
+				Total:      int(data.Total),
+				Used:       0,
+			}
+			err = db.Create(&data).Error
+			if err != nil {
+				return errors.New("QuotaUpdateRepo 创建配额错误: " + err.Error())
+			}
+		} else {
+			// 配额存在时更新总量
+			updateColumnMap := map[string]interface{} {
+				"total": data.Total,
+			}
 
+			err = db.Model(&models.Quota{}).Where("group_id=? and is_share=? and type=?", data.GroupID,
+				data.IsShare, data.QuotaType).Updates(updateColumnMap).Error
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -558,6 +580,7 @@ func (g *groupRepo) GetAllGroup() []models.Group {
 
 // UpdateQuotaResourceID 更新配额资源ID
 // @param resourceIDMap map[int64]string key为share 值为资源组ID字符串
+// 流程: 校验是否存在用户 -> 删除多余资源组数据 -> 更新变更的资源组
 func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64]string, tx *gorm.DB) error {
 	var db *gorm.DB
 	var err error
@@ -565,6 +588,27 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 		db = g.DB
 	} else {
 		db = tx
+	}
+
+	// 校验组下是否存在用户
+	var userCount int64
+	err = db.Model(&models.User{}).Where("group_id=?", groupID).Count(&userCount).Error
+	if err != nil {
+		return err
+	}
+	if userCount != 0 {
+		return errors.New("组下包含用户,无法更新资源组")
+	}
+
+	// 先进行删除
+	var resIDs = make([]string, 0, 1)
+	for _, id := range resourceIDMap {
+		resIDs = append(resIDs, id)
+	}
+
+	err = db.Unscoped().Where("group_id=? and resources_id not in ? and type<>4", groupID, resIDs).Delete(&models.Quota{}).Error
+	if err != nil {
+		return errors.New("删除资源组时错误: " + err.Error())
 	}
 
 	for share, resourceIDStr := range resourceIDMap {
@@ -577,19 +621,9 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 			return err
 		}
 
-		// 相同时跳过,不相同时校验是否存在用户
-		if oriResourcesIDStr != resourceIDStr {
-			var userCount int64
-			err = db.Model(&models.User{}).Where("group_id=?", groupID).Count(&userCount).Error
-			if err != nil {
-				return err
-			}
-			if userCount != 0 {
-				return errors.New("组下包含用户,无法更新资源组")
-			}
-		} else {
-			// 相同时不需要执行更新操作
-			return nil
+		// 组ID + 共享类型 查询资源组字段,相同则不操作
+		if oriResourcesIDStr == resourceIDStr {
+			continue
 		}
 
 		// 更新资源组信息

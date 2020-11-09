@@ -289,9 +289,9 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 
 // GroupUpdateSvc 组信息更新
 func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
-
 	var tx = g.groupRepo.GetTx()
 
+	// 更新组表信息
 	d := &models.GroupUpdateRequest{
 		ID:          data.Id,
 		Name:        data.Name,
@@ -308,6 +308,7 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 		return nil, err
 	}
 
+	// 处理配额
 	quotaTypeMap := map[string]models.ResourceType{
 		"cpu":    models.ResourceCpu,
 		"gpu":    models.ResourceGpu,
@@ -318,6 +319,7 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 	// 资源组ID, 用于更新资源组ID
 	var resourcesGroupIDMap = make(map[int64]string)
 
+	// 展开上传数据的配额数据
 	quotasLen := len(data.Quotas)
 	var quotasUpdateData = make([]*models.QuotaUpdateRequest, 0)
 	for i := 0; i < quotasLen; i++ {
@@ -354,13 +356,20 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 		Total:       data.DiskQuotaSize,
 	})
 
-	err = g.groupRepo.QuotaUpdateRepo(quotasUpdateData, tx)
+
+	// 更新配额信息
+	// 按照 组ID 共享类型 数据类型更新总量数据
+	// 不存在的配额进行创建
+	err = g.groupRepo.QuotaUpdateRepo(quotasUpdateData, data.Id, tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
 	// 更新资源组信息
+	// 一个组只能有一个 共享 一个非共享, 这里按照共享类型更新 资源组ID
+	// 仅限不存在子级,不存在用户的组使用更新
+	// 如果原本有两个类型的配额(共享,非共享),执行删除操作
 	err = g.groupRepo.UpdateQuotaResourceID(data.Id, resourcesGroupIDMap, tx)
 	if err != nil {
 		tx.Rollback()
@@ -387,7 +396,7 @@ func (g *GroupService) QuotaUpdateSvc(ctx context.Context, data *pb_user_v1.Quot
 
 	_data := []*models.QuotaUpdateRequest{d}
 
-	err = g.groupRepo.QuotaUpdateRepo(_data, nil)
+	err = g.groupRepo.QuotaUpdateRepo(_data, data.GroupId, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -66,7 +66,7 @@ func Gin() *gin.Engine {
 
 func Routers(e *gin.Engine) {
 	es := strings.Split(*etcdHosts, ";")
-	o := client.NewOrgServiceClient(es, 2, time.Second)
+	o := client.NewOrgServiceClient(es, 2, time.Second * 30)
 	api := apis.NewApis(o)
 	g := e.Group("/apis/v1/org/")
 	userApiRouters(g, api)

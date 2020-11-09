@@ -30,8 +30,8 @@ build:
 	@echo ========== go build ==========
 #	go mod vendor
 	protoc -I $(ROOT_DIR)src/proto/user/v1/ --go_out=plugins=grpc:./src/proto/user/v1/ $(ROOT_DIR)src/proto/user/v1/*.proto
-	env CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) go build -a -installsuffix cgo -o $(DIST_DIR)org-api  $(ROOT_DIR)cmd/org-api/org-api.go
-	env CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) go build -a -installsuffix cgo -o $(DIST_DIR)org-svc  $(ROOT_DIR)cmd/org-svc/org-svc.go
+	env CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) go build -installsuffix cgo -o $(DIST_DIR)org-api  $(ROOT_DIR)cmd/org-api/org-api.go
+	env CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) go build -installsuffix cgo -o $(DIST_DIR)org-svc  $(ROOT_DIR)cmd/org-svc/org-svc.go
 
 .PHONY: dist_dir
 dist_dir: ; $(info ======== prepare distribute dir:)

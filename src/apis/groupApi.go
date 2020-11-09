@@ -133,7 +133,7 @@ func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
 func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 
 	var data = new(models.GroupUpdateRequest)
-	err := c.BindJSON(data)
+	err := c.BindJSON(&data)
 	if err != nil {
 		log.Logger().Info(fmt.Sprintf("GroupUpdateAPI 参数解析错误: %s", err.Error()))
 		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
