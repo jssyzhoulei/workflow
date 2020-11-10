@@ -139,6 +139,7 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
 		return
 	}
+
 	var parentID int64
 	var useParentID bool
 	if data.ParentID == nil {
@@ -148,6 +149,16 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 		parentID = *data.ParentID
 		useParentID = true
 	}
+
+	//var parentID int64
+	//var useParentID bool
+	//if data.ParentID == nil {
+	//	response(c, http.StatusBadRequest, "参数解析错误,必须传递父级ID", nil, false)
+	//	return
+	//} else {
+	//	parentID = *data.ParentID
+	//	useParentID = true
+	//}
 
 	var pbQuotas = make([]*pb_user_v1.Quota, 0)
 	for _, v := range data.Quotas {

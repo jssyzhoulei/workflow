@@ -598,6 +598,17 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 		return err
 	}
 
+	subGroupIDs, err := g.QueryGroupIDAndSubGroupsID(groupID, tx)
+	if err != nil {
+		return err
+	}
+	var subGroupIDArray = make([]int64, 0, len(subGroupIDs) - 1)
+	for  i:=0;i<len(subGroupIDs);i++ {
+		if subGroupIDs[i] == groupID {
+			continue
+		}
+		subGroupIDArray = append(subGroupIDArray, subGroupIDs[i])
+	}
 
 	for share, resourceIDStr := range resourceIDMap {
 
@@ -614,8 +625,8 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 			continue
 		}
 
-		if userCount != 0 {
-			return errors.New("组下包含用户,无法更新资源组")
+		if userCount != 0 || len(subGroupIDArray) != 0 {
+			return errors.New("组下包含用户或子组,无法更新资源组")
 		}
 
 		// 更新资源组信息
@@ -640,8 +651,8 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 	// 如果已经存在的资源组数量 小于 传入的
 	// 例如: 已经存在 2 传入 1 表示配额表含有待删除的配额数据
 	if len(idSlice) > len(resourceIDMap) {
-		if userCount != 0 {
-			return errors.New("组下包含用户,无法删除资源组")
+		if userCount != 0 || len(subGroupIDArray) != 0{
+			return errors.New("组下包含用户或子组,无法删除资源组")
 		}
 		// 进行删除
 		var resIDs = make([]string, 0, 1)
@@ -683,6 +694,7 @@ func (g *groupRepo) QueryQuota(groupID int64, tx *gorm.DB) (*models.QueryQuota, 
 
 		switch data.Type {
 		case models.ResourceCpu:
+			cache[data.IsShare].ResourcesGroupId = data.ResourceID
 			cache[data.IsShare].CpuTotal = data.Total
 			cache[data.IsShare].CpuUsed = data.Used
 		case models.ResourceGpu:

@@ -77,12 +77,19 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			tx.Rollback()
 			return nil, err
 		}
-		topGroupIDStr := strings.Split(parentGroup.LevelPath, "-")[1]
-		topGroupID, err := strconv.ParseInt(topGroupIDStr, 10, 64)
-		if err != nil {
-			tx.Rollback()
-			return nil, err
+		// 获取顶级父ID
+		var topGroupID int64
+		if parentGroup.ParentID == 0 {
+			topGroupID = int64(parentGroup.ID)
+		} else {
+			topGroupIDStr := strings.Split(parentGroup.LevelPath, "-")[1]
+			topGroupID, err = strconv.ParseInt(topGroupIDStr, 10, 64)
+			if err != nil {
+				tx.Rollback()
+				return nil, err
+			}
 		}
+
 		topGroup, err := g.groupRepo.GroupQueryByIDRepo(topGroupID, tx)
 		if err != nil {
 			tx.Rollback()
@@ -359,6 +366,7 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 		Description: data.Description,
 	}
 
+	// 必须传递 ParentID 才能校验配额, 否则不校验
 	if data.UseParentId {
 		d.ParentID = &data.ParentId
 	}
@@ -368,6 +376,18 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 		tx.Rollback()
 		return nil, err
 	}
+
+	var parentGroupQuota *models.QueryQuota
+	if data.UseParentId {
+		// 查询顶级组的资源组和配额
+		parentGroupQuota, err = g.groupRepo.QueryQuota(*d.ParentID, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+
 
 	// 处理配额
 	quotaTypeMap := map[string]models.ResourceType{
@@ -390,6 +410,16 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 			resourcesGroupIDMap[q.IsShare] = q.ResourcesGroupId
 		}
 
+		var parentQuota *models.QueryQuotaInfo
+
+		if parentGroupQuota != nil {
+			if q.IsShare == 1 {
+				parentQuota = parentGroupQuota.ShareQuota
+			} else if q.IsShare == 2 {
+				parentQuota = parentGroupQuota.NonShareQuota
+			}
+		}
+
 		valMap := map[string]int64{
 			"cpu":    q.Cpu,
 			"gpu":    q.Gpu,
@@ -397,6 +427,24 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 		}
 
 		for kind, val := range valMap {
+			if parentQuota != nil {
+				switch quotaTypeMap[kind] {
+
+				case models.ResourceCpu:
+					if int(val) > parentQuota.CpuTotal {
+						return nil, fmt.Errorf("资源类型: %d,CPU配额超出父级大小", parentQuota.IsShare)
+					}
+				case models.ResourceGpu:
+					if int(val) > parentQuota.GpuTotal {
+						return nil, fmt.Errorf("资源类型: %d,GPU配额超出父级大小", parentQuota.IsShare)
+					}
+				case models.ResourceMemory:
+					if int(val) > parentQuota.MemoryTotal {
+						return nil, fmt.Errorf("资源类型: %d,Memory配额超出父级大小", parentQuota.IsShare)
+					}
+				}
+			}
+
 			_tmp := &models.QuotaUpdateRequest{
 				GroupID:     data.Id,
 				IsShare:     q.IsShare,
@@ -405,6 +453,12 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 				Total:       val,
 			}
 			quotasUpdateData = append(quotasUpdateData, _tmp)
+		}
+	}
+
+	if parentGroupQuota != nil {
+		if int64(parentGroupQuota.DiskQuotaTotal) < data.DiskQuotaSize {
+			return nil, errors.New("磁盘配额超出父级大小")
 		}
 	}
 
