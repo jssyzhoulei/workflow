@@ -590,16 +590,6 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 		db = tx
 	}
 
-	// 校验组下是否存在用户
-	var userCount int64
-	err = db.Model(&models.User{}).Where("group_id=?", groupID).Count(&userCount).Error
-	if err != nil {
-		return err
-	}
-	if userCount != 0 {
-		return errors.New("组下包含用户,无法更新资源组")
-	}
-
 	// 先进行删除
 	var resIDs = make([]string, 0, 1)
 	for _, id := range resourceIDMap {
@@ -610,6 +600,8 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 	if err != nil {
 		return errors.New("删除资源组时错误: " + err.Error())
 	}
+
+	checkTag := false
 
 	for share, resourceIDStr := range resourceIDMap {
 
@@ -625,6 +617,21 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 		if oriResourcesIDStr == resourceIDStr {
 			continue
 		}
+
+		// 循环中仅校验一次, 组中是否存在用户
+		if !checkTag {
+			// 校验组下是否存在用户
+			var userCount int64
+			err = db.Model(&models.User{}).Where("group_id=?", groupID).Count(&userCount).Error
+			if err != nil {
+				return err
+			}
+			if userCount != 0 {
+				return errors.New("组下包含用户,无法更新资源组")
+			}
+			checkTag = true
+		}
+
 
 		// 更新资源组信息
 		updateColumnMap := map[string]interface{}{
