@@ -29,7 +29,7 @@ type GroupRepoInterface interface {
 	SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx *gorm.DB) error
 	GetAllGroup() []models.Group
 	UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64]string, tx *gorm.DB) error
-
+	QueryQuota(groupID int64, tx *gorm.DB) (*models.QueryQuota, error)
 }
 
 type groupRepo struct {
@@ -639,4 +639,52 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 	}
 
 	return nil
+}
+
+// QueryQuota 查询配额
+func (g *groupRepo) QueryQuota(groupID int64, tx *gorm.DB) (*models.QueryQuota, error) {
+	var db *gorm.DB
+	if tx == nil {
+		db = g.DB
+	} else {
+		db = tx
+	}
+	var res = make([]*models.Quota, 0, 4)
+	err := db.Model(&models.Quota{}).Where("group_id=?", groupID).Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var result = new(models.QueryQuota)
+	var cache = make(map[int]*models.QueryQuotaInfo)
+	l := len(res)
+	for i := 0; i < l; i++ {
+		data := res[i]
+		if _, ok := cache[data.IsShare]; !ok {
+			cache[data.IsShare] = new(models.QueryQuotaInfo)
+		}
+
+		switch data.Type {
+		case models.ResourceCpu:
+			cache[data.IsShare].CpuTotal = data.Total
+			cache[data.IsShare].CpuUsed = data.Used
+		case models.ResourceGpu:
+			cache[data.IsShare].GpuTotal = data.Total
+			cache[data.IsShare].GpuUsed = data.Used
+		case models.ResourceMemory:
+			cache[data.IsShare].MemoryTotal = data.Total
+			cache[data.IsShare].MemoryUsed = data.Used
+		case models.ResourceDisk:
+			result.DiskQuotaTotal = data.Total
+			result.DiskQuotaUsed = data.Total
+		}
+	}
+	if _, ok := cache[1]; ok {
+		result.ShareQuota = cache[1]
+	}
+	if _, ok := cache[2]; ok {
+		result.NonShareQuota = cache[2]
+	}
+
+	return result, nil
 }

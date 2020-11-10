@@ -145,3 +145,23 @@ type SetGroupQuotaRequest struct {
 	QuotaType   int64  `json:"quota_type"`
 	Used        int64  `json:"used"`
 }
+
+// QueryQuotaInfo 配额
+type QueryQuotaInfo struct {
+	IsShare          int64  `json:"is_share"`
+	ResourcesGroupId string `json:"resources_group_id"`
+	GpuTotal         int    `json:"gpu_total"`
+	CpuTotal         int    `json:"cpu_total"`
+	MemoryTotal      int    `json:"memory_total"`
+	GpuUsed          int    `json:"gpu_used"`
+	CpuUsed          int    `json:"cpu_used"`
+	MemoryUsed       int    `json:"memory_used"`
+}
+
+// QueryQuota 查询配额
+type QueryQuota struct {
+	ShareQuota     *QueryQuotaInfo `json:"share_quota"`
+	NonShareQuota  *QueryQuotaInfo `json:"non_share_quota"`
+	DiskQuotaTotal int             `json:"disk_quota_total"`
+	DiskQuotaUsed  int             `json:"disk_quota_used"`
+}

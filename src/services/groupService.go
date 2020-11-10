@@ -66,7 +66,10 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 	}()
 
 	// 非顶级父ID的组,查询其顶级父ID的namespace
+	// 非顶级组查询其顶级父ID的资源组和配额信息, 执行参数校验
 	var k8sNameSpace string
+	var topGroupQuota *models.QueryQuota
+	
 	if data.ParentId != 0 {
 		// 通过父级查询顶级组信息
 		parentGroup, err := g.groupRepo.GroupQueryByIDRepo(data.ParentId, tx)
@@ -86,6 +89,14 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 			return nil, err
 		}
 		k8sNameSpace = topGroup.NameSpace
+
+		// 查询顶级组的资源组和配额
+		topGroupQuota , err = g.groupRepo.QueryQuota(topGroupID, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
 	} else {
 		md5Str := md5.EncodeMD5(data.Name)
 		k8sNameSpace = "org-svc-" + md5Str
@@ -149,7 +160,51 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		}
 
 		for kind, val := range valMap {
-			var resourcesGroupID = q.ResourcesGroupId
+			// 可以精简下列判断
+			var resourcesGroupID string
+			if topGroupQuota != nil {
+				if q.IsShare == 1 {
+					quotaInfo := topGroupQuota.ShareQuota
+					resourcesGroupID = quotaInfo.ResourcesGroupId
+
+					// 执行校验
+					switch quotaTypeMap[kind] {
+						case models.ResourceCpu:
+							if int(val) > quotaInfo.CpuTotal {
+								return nil, errors.New("资源类型:共享 非顶级组,CPU配额超出父级大小")
+							}
+						case models.ResourceGpu:
+							if int(val) > quotaInfo.GpuTotal {
+								return nil, errors.New("资源类型:共享 非顶级组,GPU配额超出父级大小")
+							}
+						case models.ResourceMemory:
+							if int(val) > quotaInfo.MemoryTotal {
+								return nil, errors.New("资源类型:共享 非顶级组,Memory配额超出父级大小")
+							}
+					}
+				} else if q.IsShare == 2 {
+					quotaInfo := topGroupQuota.NonShareQuota
+					resourcesGroupID = quotaInfo.ResourcesGroupId
+
+					// 执行校验
+					switch quotaTypeMap[kind] {
+					case models.ResourceCpu:
+						if int(val) > quotaInfo.CpuTotal {
+							return nil, errors.New("资源类型:独享 非顶级组,CPU配额超出父级大小")
+						}
+					case models.ResourceGpu:
+						if int(val) > quotaInfo.GpuTotal {
+							return nil, errors.New("资源类型:独享 非顶级组,GPU配额超出父级大小")
+						}
+					case models.ResourceMemory:
+						if int(val) > quotaInfo.MemoryTotal {
+							return nil, errors.New("资源类型:独享 非顶级组,Memory配额超出父级大小")
+						}
+					}
+				}
+			} else {
+				resourcesGroupID = q.ResourcesGroupId
+			}
 
 			tmp := &models.Quota{
 				IsShare:    int(q.IsShare),
@@ -163,6 +218,12 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		}
 	}
 	// 磁盘配额单独添加
+	if topGroupQuota != nil {
+		if int(data.DiskQuotaSize) > topGroupQuota.DiskQuotaTotal {
+			return nil, errors.New("资源类型:磁盘配额 非顶级组,磁盘配额超出父级大小")
+		}
+	}
+
 	result = append(result, &models.Quota{
 		IsShare:    0,
 		ResourceID: "",
