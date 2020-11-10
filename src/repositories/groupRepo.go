@@ -580,7 +580,8 @@ func (g *groupRepo) GetAllGroup() []models.Group {
 
 // UpdateQuotaResourceID 更新配额资源ID
 // @param resourceIDMap map[int64]string key为share 值为资源组ID字符串
-// 流程: 校验是否存在用户 -> 删除多余资源组数据 -> 更新变更的资源组
+// 流程: 获取用户信息 -> 判断是否需要更新资源组 -> 判断是否存在用户 -> 查询组下资源组个数 -> 判断是否需要删除 -> 判断是否存在用户
+// 任一判断失败,则返回err
 func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64]string, tx *gorm.DB) error {
 	var db *gorm.DB
 	var err error
@@ -590,18 +591,13 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 		db = tx
 	}
 
-	// 先进行删除
-	var resIDs = make([]string, 0, 1)
-	for _, id := range resourceIDMap {
-		resIDs = append(resIDs, id)
-	}
-
-	err = db.Unscoped().Where("group_id=? and resources_id not in ? and type<>4", groupID, resIDs).Delete(&models.Quota{}).Error
+	// 校验组下是否存在用户
+	var userCount int64
+	err = db.Model(&models.User{}).Where("group_id=?", groupID).Count(&userCount).Error
 	if err != nil {
-		return errors.New("删除资源组时错误: " + err.Error())
+		return err
 	}
 
-	checkTag := false
 
 	for share, resourceIDStr := range resourceIDMap {
 
@@ -618,20 +614,9 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 			continue
 		}
 
-		// 循环中仅校验一次, 组中是否存在用户
-		if !checkTag {
-			// 校验组下是否存在用户
-			var userCount int64
-			err = db.Model(&models.User{}).Where("group_id=?", groupID).Count(&userCount).Error
-			if err != nil {
-				return err
-			}
-			if userCount != 0 {
-				return errors.New("组下包含用户,无法更新资源组")
-			}
-			checkTag = true
+		if userCount != 0 {
+			return errors.New("组下包含用户,无法更新资源组")
 		}
-
 
 		// 更新资源组信息
 		updateColumnMap := map[string]interface{}{
@@ -642,6 +627,31 @@ func (g *groupRepo) UpdateQuotaResourceID(groupID int64, resourceIDMap map[int64
 			share).Updates(updateColumnMap).Error
 		if err != nil {
 			return err
+		}
+	}
+
+	// 查询当前组包含有几个资源组
+	var idSlice = make([]string, 0, 2)
+	err = db.Model(&models.Quota{}).Select("resources_id").Where("group_id=? and type<>4", groupID).Distinct("resources_id").Find(&idSlice).Error
+	if err != nil {
+		return errors.New("查询资源ID时错误: " + err.Error())
+	}
+
+	// 如果已经存在的资源组数量 小于 传入的
+	// 例如: 已经存在 2 传入 1 表示配额表含有待删除的配额数据
+	if len(idSlice) > len(resourceIDMap) {
+		if userCount != 0 {
+			return errors.New("组下包含用户,无法删除资源组")
+		}
+		// 进行删除
+		var resIDs = make([]string, 0, 1)
+		for _, id := range resourceIDMap {
+			resIDs = append(resIDs, id)
+		}
+
+		err = db.Unscoped().Where("group_id=? and resources_id not in ? and type<>4", groupID, resIDs).Delete(&models.Quota{}).Error
+		if err != nil {
+			return errors.New("删除资源组时错误: " + err.Error())
 		}
 	}
 
