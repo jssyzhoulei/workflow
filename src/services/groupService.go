@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,7 +14,6 @@ import (
 	"gitee.com/grandeep/org-svc/src/repositories"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/config"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/md5"
 	"strconv"
 	"strings"
 	"time"
@@ -105,7 +106,10 @@ func (g *GroupService) GroupAddSvc(ctx context.Context, data *pb_user_v1.GroupAd
 		}
 
 	} else {
-		md5Str := md5.EncodeMD5(data.Name)
+		m := md5.New()
+		m.Write([]byte(data.Name))
+		m.Write([]byte(time.Now().Format("2006-01-02 15:04:05")))
+		md5Str := hex.EncodeToString(m.Sum(nil))
 		k8sNameSpace = "org-svc-" + md5Str
 	}
 
