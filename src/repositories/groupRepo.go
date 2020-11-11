@@ -47,7 +47,7 @@ func NewGroupRepo(db *yorm.DB) GroupRepoInterface {
 	}
 }
 
-// GroupAdd 添加组
+// GroupAddRepo 添加组
 func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 	var err error
 	var db *gorm.DB
@@ -73,7 +73,7 @@ func (g *groupRepo) GroupAddRepo(data *models.Group, tx *gorm.DB) error {
 	var levelPath string
 	err = db.Model(&models.Group{}).Where("id=?", data.ParentID).First(&parentGroup).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err.Error() == "record not found" {
 			parentIsNotExist = true
 			levelPath = "0-"
 		} else {

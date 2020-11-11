@@ -379,8 +379,34 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 
 	var parentGroupQuota *models.QueryQuota
 	if data.UseParentId {
+
+		// 通过父级查询顶级组信息
+		parentGroup, err := g.groupRepo.GroupQueryByIDRepo(data.ParentId, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		// 获取顶级父ID
+		var topGroupID int64
+		if parentGroup.ParentID == 0 {
+			topGroupID = int64(parentGroup.ID)
+		} else {
+			topGroupIDStr := strings.Split(parentGroup.LevelPath, "-")[1]
+			topGroupID, err = strconv.ParseInt(topGroupIDStr, 10, 64)
+			if err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+		}
+
+		topGroup, err := g.groupRepo.GroupQueryByIDRepo(topGroupID, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
 		// 查询顶级组的资源组和配额
-		parentGroupQuota, err = g.groupRepo.QueryQuota(*d.ParentID, tx)
+		parentGroupQuota, err = g.groupRepo.QueryQuota(int64(topGroup.ID), tx)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
