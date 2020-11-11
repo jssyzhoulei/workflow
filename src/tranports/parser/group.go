@@ -127,3 +127,11 @@ func EncodeGroupsProto(_ context.Context, res interface{}) (interface{}, error) 
 	}
 	return nil, errors.New("EncodeGroupsProto 失败")
 }
+
+// EncodeQueryQuotaResponse ...
+func EncodeQueryQuotaResponse(_ context.Context, res interface{}) (interface{}, error) {
+	if _,ok := res.(*pb_user_v1.QueryQuotaResponse);ok {
+		return res, nil
+	}
+	return nil, errors.New("EncodeGroupQuotaResponse 失败")
+}

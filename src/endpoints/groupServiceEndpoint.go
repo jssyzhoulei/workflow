@@ -24,7 +24,9 @@ type GroupServiceEndpoint struct {
 	QueryQuotaByConditionEndpoint endpoint.Endpoint
 	QuerySubGroupsUsersEndpoint endpoint.Endpoint
 	GetAllGroupsEndpoint endpoint.Endpoint
+	QueryQuotaEndpoint endpoint.Endpoint
 }
+
 
 // NewGroupEndpoint GroupServiceEndpoint的构造函数
 func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
@@ -41,6 +43,7 @@ func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 		QueryQuotaByConditionEndpoint: MakeQueryQuotaByConditionEndpoint(service.GetGroupService()),
 		QuerySubGroupsUsersEndpoint: MakeQuerySubGroupsUsersEndpoint(service.GetGroupService()),
 		GetAllGroupsEndpoint: MakeGetAllGroupEndpoint(service.GetGroupService()),
+		QueryQuotaEndpoint: MakeQueryQuotaEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -299,3 +302,25 @@ func (g *GroupServiceEndpoint) GetAllGroup(ctx context.Context, groupId *pb_user
 	}
 	return resp.(*pb_user_v1.Groups), nil
 }
+
+// MakeQueryQuotaEndpoint ...
+func MakeQueryQuotaEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.GroupID)
+		if !ok {
+			return nil, fmt.Errorf("MakeQueryQuotaEndpoint 请求参数错误")
+		}
+		response, err = groupServiceInterface.QueryQuotaSvc(ctx, data)
+		return
+	}
+}
+
+// QueryQuota 查询配额
+func (g *GroupServiceEndpoint) QueryQuotaSvc(ctx context.Context, groupId *pb_user_v1.GroupID) (*pb_user_v1.QueryQuotaResponse, error) {
+	resp, err := g.QueryQuotaEndpoint(ctx, groupId)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.QueryQuotaResponse), nil
+}
+

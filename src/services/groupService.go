@@ -33,6 +33,7 @@ type GroupServiceInterface interface {
 	QueryQuotaByConditionSvc(_ context.Context, data *pb_user_v1.QueryQuotaByCondition) (*pb_user_v1.QueryQuotaByConditionResponse, error)
 	QuerySubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error)
 	GetAllGroup(_ context.Context, groupId *pb_user_v1.GroupID) (*pb_user_v1.Groups, error)
+	QueryQuotaSvc(_ context.Context, groupID *pb_user_v1.GroupID) (*pb_user_v1.QueryQuotaResponse, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -841,4 +842,40 @@ func (g *GroupService) GetAllGroup(_ context.Context, groupId *pb_user_v1.GroupI
 		pbGroups.Groups = append(pbGroups.Groups, pbGroup)
 	}
 	return pbGroups, nil
+}
+
+// QueryQuota 查询所有配额信息
+func (g *GroupService) QueryQuotaSvc(_ context.Context, groupID *pb_user_v1.GroupID) (*pb_user_v1.QueryQuotaResponse, error) {
+
+	res, err := g.groupRepo.QueryQuota(groupID.Id, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &pb_user_v1.QueryQuotaResponse{
+		ShareQuota: &pb_user_v1.QueryQuotaInfo{
+			IsShare:          res.ShareQuota.IsShare,
+			ResourcesGroupId: res.ShareQuota.ResourcesGroupId,
+			GpuTotal:         int64(res.ShareQuota.GpuTotal),
+			CpuTotal:         int64(res.ShareQuota.CpuTotal),
+			MemoryTotal:      int64(res.ShareQuota.MemoryTotal),
+			GpuUsed:          int64(res.ShareQuota.GpuUsed),
+			CpuUsed:          int64(res.ShareQuota.CpuUsed),
+			MemoryUsed:       int64(res.ShareQuota.MemoryUsed),
+		},
+		NonShareQuota: &pb_user_v1.QueryQuotaInfo{
+			IsShare:          res.NonShareQuota.IsShare,
+			ResourcesGroupId: res.NonShareQuota.ResourcesGroupId,
+			GpuTotal:         int64(res.NonShareQuota.GpuTotal),
+			CpuTotal:         int64(res.NonShareQuota.CpuTotal),
+			MemoryTotal:      int64(res.NonShareQuota.MemoryTotal),
+			GpuUsed:          int64(res.NonShareQuota.GpuUsed),
+			CpuUsed:          int64(res.NonShareQuota.CpuUsed),
+			MemoryUsed:       int64(res.NonShareQuota.MemoryUsed),
+		},
+		DiskQuotaTotal: int64(res.DiskQuotaTotal),
+		DiskQuotaUsed:  int64(res.DiskQuotaUsed),
+	}
+
+	return result, nil
 }

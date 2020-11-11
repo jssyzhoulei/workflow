@@ -128,3 +128,11 @@ func DecodeGroupsProto(_ context.Context, res interface{}) (interface{}, error) 
 	}
 	return nil, errors.New("DecodeGroupsProto 失败")
 }
+
+// DecodeQueryQuotaResponse ...
+func DecodeQueryQuotaResponse(_ context.Context, res interface{}) (interface{}, error) {
+	if _,ok := res.(*pb_user_v1.QueryQuotaResponse);ok {
+		return res, nil
+	}
+	return nil, errors.New("EncodeGroupQuotaResponse 失败")
+}

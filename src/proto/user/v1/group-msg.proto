@@ -129,3 +129,23 @@ message Group {
 message Groups {
   repeated Group groups = 1;
 }
+
+// QueryQuotaInfo 查询配额内部类型
+message QueryQuotaInfo {
+  int64 is_share = 1;
+  string resources_group_id = 2;
+  int64 gpu_total = 3;
+  int64 cpu_total = 4;
+  int64 memory_total = 5;
+  int64 gpu_used = 6;
+  int64 cpu_used = 7;
+  int64 memory_used = 8;
+}
+
+// QueryQuotaResponse 查询配额
+message QueryQuotaResponse {
+  QueryQuotaInfo share_quota = 1;
+  QueryQuotaInfo non_share_quota = 2;
+  int64 disk_quota_total =3;
+  int64 disk_quota_used =4;
+}

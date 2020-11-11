@@ -26,7 +26,7 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.EncodeIndexProto,
 			parser.DecodeUserModel,
 			pb_user_v1.UserProto{},
-			).Endpoint(),
+		).Endpoint(),
 		UpdateUserByIDEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
@@ -34,7 +34,7 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.EncodeUserRoleDTO,
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
-			).Endpoint(),
+		).Endpoint(),
 		DeleteUserByIDEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
@@ -42,7 +42,7 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.EncodeIndexProto,
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
-			).Endpoint(),
+		).Endpoint(),
 		AddUsersEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
@@ -58,7 +58,7 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.EncodeUserPage,
 			parser.DecodeUsersPage,
 			pb_user_v1.UsersPage{},
-			).Endpoint(),
+		).Endpoint(),
 		BatchDeleteUsersEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
@@ -66,7 +66,7 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.EncodeUserIDs,
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
-			).Endpoint(),
+		).Endpoint(),
 		ImportUsersByGroupIdEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
@@ -74,7 +74,7 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.EncodeGroupAndUserId,
 			parser.DecodeNullProto,
 			pb_user_v1.NullResponse{},
-			).Endpoint(),
+		).Endpoint(),
 		GetUsersEndpoint: grpctransport.NewClient(
 			conn,
 			"pb_user_v1.RpcOrgService",
@@ -82,7 +82,7 @@ func userGrpcConn(conn *grpc.ClientConn) services.UserServiceInterface {
 			parser.EncodeUserCondition,
 			parser.DecodeUserResponse,
 			pb_user_v1.UserQueryResponse{},
-			).Endpoint(),
+		).Endpoint(),
 	}
 }
 
@@ -184,7 +184,15 @@ func groupGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 			parser.EncodeGroupIDProto,
 			parser.DecodeGroupsProto,
 			pb_user_v1.Groups{},
-	).Endpoint(),
+		).Endpoint(),
+		QueryQuotaEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RPCQueryQuota",
+			parser.EncodeGroupIDProto,
+			parser.DecodeQueryQuotaResponse,
+			pb_user_v1.QueryQuotaResponse{},
+		).Endpoint(),
 	}
 }
 
@@ -293,4 +301,3 @@ func permissionGrpcConn(conn *grpc.ClientConn) services.PermissionServiceInterfa
 		).Endpoint(),
 	}
 }
-
