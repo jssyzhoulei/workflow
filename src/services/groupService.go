@@ -561,7 +561,7 @@ func (g *GroupService) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.Grou
 		return nil, err
 	}
 
-	if len(users) > 1 {
+	if len(users) != 0 {
 		return nil, fmt.Errorf("无法删除组,组内存在用户: %d 个", len(users))
 	}
 
@@ -571,7 +571,7 @@ func (g *GroupService) GroupDeleteSvc(ctx context.Context, data *pb_user_v1.Grou
 		return nil, fmt.Errorf("无法删除组,查询是否包含下级组时错误: %s", err.Error())
 	}
 
-	if len(groups) > 1 {
+	if len(groups) != 0 {
 		return nil, fmt.Errorf("无法删除组,包含下级组: %d 个", len(groups))
 	}
 
