@@ -710,9 +710,13 @@ func (g *groupRepo) QueryQuota(groupID int64, tx *gorm.DB) (*models.QueryQuota, 
 	}
 	if _, ok := cache[1]; ok {
 		result.ShareQuota = cache[1]
+	} else {
+		result.ShareQuota = new(models.QueryQuotaInfo)
 	}
 	if _, ok := cache[2]; ok {
 		result.NonShareQuota = cache[2]
+	} else {
+		result.NonShareQuota = new(models.QueryQuotaInfo)
 	}
 
 	return result, nil
