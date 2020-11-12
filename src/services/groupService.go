@@ -364,27 +364,9 @@ func (g *GroupService) GroupQueryWithQuotaByConditionSvc(ctx context.Context, da
 func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.GroupUpdateRequest) (*pb_user_v1.GroupResponse, error) {
 	var tx = g.groupRepo.GetTx()
 
-	// 更新组表信息
-	d := &models.GroupUpdateRequest{
-		ID:          data.Id,
-		Name:        data.Name,
-		Description: data.Description,
-	}
-
-	// 必须传递 ParentID 才能校验配额, 否则不校验
-	if data.UseParentId {
-		d.ParentID = &data.ParentId
-	}
-
-	err := g.groupRepo.GroupUpdateRepo(d, tx)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
 	var parentGroupQuota *models.QueryQuota
 	if data.UseParentId {
-
+		fmt.Println("获取顶级组信息")
 		// 通过父级查询顶级组信息
 		parentGroup, err := g.groupRepo.GroupQueryByIDRepo(data.ParentId, tx)
 		if err != nil {
@@ -410,6 +392,8 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 			return nil, err
 		}
 
+		fmt.Println("获取顶级组信息: ", topGroup)
+
 		// 查询顶级组的资源组和配额
 		parentGroupQuota, err = g.groupRepo.QueryQuota(int64(topGroup.ID), tx)
 		if err != nil {
@@ -417,7 +401,7 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 			return nil, err
 		}
 	}
-
+	fmt.Println("处理配额")
 
 
 	// 处理配额
@@ -506,7 +490,7 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 	// 更新配额信息
 	// 按照 组ID 共享类型 数据类型更新总量数据
 	// 不存在的配额进行创建
-	err = g.groupRepo.QuotaUpdateRepo(quotasUpdateData, data.Id, tx)
+	err := g.groupRepo.QuotaUpdateRepo(quotasUpdateData, data.Id, tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -517,6 +501,25 @@ func (g *GroupService) GroupUpdateSvc(ctx context.Context, data *pb_user_v1.Grou
 	// 仅限不存在子级,不存在用户的组使用更新
 	// 如果原本有两个类型的配额(共享,非共享),执行删除操作
 	err = g.groupRepo.UpdateQuotaResourceID(data.Id, resourcesGroupIDMap, tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// 更新组表信息
+	d := &models.GroupUpdateRequest{
+		ID:          data.Id,
+		Name:        data.Name,
+		Description: data.Description,
+	}
+
+	// 必须传递 ParentID 才能校验配额, 否则不校验
+	if data.UseParentId {
+		d.ParentID = &data.ParentId
+	}
+
+	fmt.Println("更新组信息")
+	err = g.groupRepo.GroupUpdateRepo(d, tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
