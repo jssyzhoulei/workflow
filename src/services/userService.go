@@ -300,6 +300,8 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 					break
 				}
 			}
+			key, _ := u.config.GetString("passwordKey")
+			md5Passwd, _ := models.User{Password:userReq.Password}.EncodePwd(key)
 			if isExist {
 				fmt.Println(id)
 				userIsExist = append(userIsExist, models.User{
@@ -308,7 +310,7 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 					},
 					UserName:  userReq.UserName,
 					LoginName: userReq.LoginName,
-					Password:  userReq.Password,
+					Password:  md5Passwd,
 					GroupID:   int(userReq.GroupId),
 					Mobile:    userReq.Mobile,
 				})
@@ -317,7 +319,7 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 				userNotExist = append(userNotExist, models.User{
 					UserName:  userReq.UserName,
 					LoginName: userReq.LoginName,
-					Password:  userReq.Password,
+					Password:  md5Passwd,
 					GroupID:   int(userReq.GroupId),
 					Mobile:    userReq.Mobile,
 				})
