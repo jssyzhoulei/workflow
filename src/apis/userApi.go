@@ -213,6 +213,7 @@ func (u *userApi) ImportUser(ctx *gin.Context) {
 	}
 	for _, sheet := range file.Sheets {
 		//验证模板是否正确
+
 		for k, row := range sheet.Rows {
 			if k == 0 {
 				if len(row.Cells) >= 4 {
@@ -236,6 +237,11 @@ func (u *userApi) ImportUser(ctx *gin.Context) {
 					user.RoleIds = append(user.RoleIds, &pb_user_v1.Index{Id: v})
 				}
 				users.Users = append(users.Users, &user)
+			} else if row.Cells[0].Value == "" && row.Cells[1].Value == "" && row.Cells[2].Value == "" {
+				break
+			} else if row.Cells[0].Value == "" || row.Cells[1].Value == "" || row.Cells[2].Value == "" {
+				error_(ctx, 400, fmt.Errorf("第 %d 行, 必填项为空", k))
+				return
 			}
 		}
 	}
