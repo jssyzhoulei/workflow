@@ -27,6 +27,7 @@ service RpcOrgService {
   rpc RPCQueryQuotaByCondition(QueryQuotaByCondition) returns (QueryQuotaByConditionResponse);
   rpc RPCQuerySubGroupsUsers(GroupID) returns (Users);
   rpc RPCQueryQuota(GroupID) returns (QueryQuotaResponse);
+  rpc RPCQueryTopGroupExcludeSelfUsers(GroupIDWithPage) returns (GroupUsersWithPage);
   rpc RpcAddRole(CreateMenuPermRequestProto) returns (NullResponse);
   rpc RpcUpdateRole(CreateMenuPermRequestProto) returns (NullResponse);
   rpc RpcDeleteRole(Index) returns (NullResponse);

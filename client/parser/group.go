@@ -136,3 +136,20 @@ func DecodeQueryQuotaResponse(_ context.Context, res interface{}) (interface{}, 
 	}
 	return nil, errors.New("EncodeGroupQuotaResponse 失败")
 }
+
+// EncodeGroupIDWithPage ...
+func EncodeGroupIDWithPage(_ context.Context, res interface{}) (interface{}, error) {
+	if _,ok := res.(*pb_user_v1.GroupIDWithPage);ok {
+		return res, nil
+	}
+	return nil, errors.New("DecodeGroupIDWithPage 失败")
+}
+
+
+// DecodeGroupUsersWithPage ...
+func DecodeGroupUsersWithPage(_ context.Context, res interface{}) (interface{}, error) {
+	if _,ok := res.(*pb_user_v1.GroupUsersWithPage);ok {
+		return res, nil
+	}
+	return nil, errors.New("EncodeGroupUsersWithPage 失败")
+}

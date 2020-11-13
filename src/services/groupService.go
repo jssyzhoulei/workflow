@@ -34,6 +34,7 @@ type GroupServiceInterface interface {
 	QuerySubGroupsUsersSvc(ctx context.Context, data *pb_user_v1.GroupID) (*pb_user_v1.Users, error)
 	GetAllGroup(_ context.Context, groupId *pb_user_v1.GroupID) (*pb_user_v1.Groups, error)
 	QueryQuotaSvc(_ context.Context, groupID *pb_user_v1.GroupID) (*pb_user_v1.QueryQuotaResponse, error)
+	QueryTopGroupExcludeSelfUsersSvc(_ context.Context, data *pb_user_v1.GroupIDWithPage) (*pb_user_v1.GroupUsersWithPage, error)
 }
 
 // GroupService 组服务,实现了 GroupServiceInterface
@@ -795,6 +796,10 @@ func (g *GroupService) QuerySubGroupsUsersSvc(_ context.Context, data *pb_user_v
 		groupIDSlice = append(groupIDSlice, v)
 	}
 
+	if len(groupIDSlice) == 0 {
+		return nil, errors.New("不存在下级组")
+	}
+
 	users, err := g.userRepo.GetUserListRepo(models.User{}, nil, nil, groupIDSlice...)
 	if err != nil {
 		return nil, err
@@ -881,4 +886,76 @@ func (g *GroupService) QueryQuotaSvc(_ context.Context, groupID *pb_user_v1.Grou
 	}
 
 	return result, nil
+}
+
+// QueryTopGroupExcludeSelfUsersSvc 查询顶级组及其下面子组的用户,不包含传入的组
+func (g *GroupService) QueryTopGroupExcludeSelfUsersSvc(ctx context.Context, data *pb_user_v1.GroupIDWithPage) (*pb_user_v1.GroupUsersWithPage, error) {
+
+	group, err := g.GroupQueryWithQuotaByConditionSvc(ctx, &pb_user_v1.GroupQueryWithQuotaByConditionRequest{
+		Id: []int64{data.Id},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(group.Groups) != 1 {
+		return nil, fmt.Errorf("查询组信息失败: %v", group.Groups)
+	}
+	_group := group.Groups[0]
+
+
+
+	groupIDs, err := g.groupRepo.QueryGroupIDAndSubGroupsID(_group.TopParentId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var groupIDSlice = make([]int64, 0, len(groupIDs)-1)
+
+	for _, v := range groupIDs {
+		if v == data.Id {
+			continue
+		}
+		groupIDSlice = append(groupIDSlice, v)
+	}
+
+	if len(groupIDSlice) == 0 {
+		return &pb_user_v1.GroupUsersWithPage{}, nil
+	}
+
+	fmt.Println("DEBUG", _group.TopParentId, groupIDSlice, data.Id)
+
+	page := &models.Page{
+		PageSize:  int(data.PageSize),
+		PageNum:   int(data.Page),
+	}
+
+	users, err := g.userRepo.GetUserListRepo(models.User{}, page, nil, groupIDSlice...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pb_user_v1.UserProto
+	l := len(users)
+	for i := 0; i < l; i++ {
+		user := users[i]
+
+		_user := &pb_user_v1.UserProto{
+			Id:        &pb_user_v1.Index{Id: int64(user.ID)},
+			UserName:  user.UserName,
+			LoginName: user.LoginName,
+			Mobile:    user.Mobile,
+			GroupId:   int64(user.GroupID),
+			UserType:  int64(user.UserType),
+			RoleIds:   nil,
+		}
+		result = append(result, _user)
+	}
+
+	return &pb_user_v1.GroupUsersWithPage{
+		Users:     result,
+		Page:      int64(page.PageNum),
+		PageSize:  int64(page.PageSize),
+		TotalPage: int64(page.TotalPage),
+		TotalNum:  page.Total,
+	}, nil
 }

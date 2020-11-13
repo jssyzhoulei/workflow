@@ -25,6 +25,7 @@ type groupAPIInterface interface {
 	SetGroupQuotaUsed(c *gin.Context)
 	QuerySubGroupsUsers(c *gin.Context)
 	QueryGroupIDAndSubGroupsID(c *gin.Context)
+	QueryTopGroupExcludeSelfUsers(c *gin.Context)
 }
 
 type groupAPI struct {
@@ -424,5 +425,69 @@ func (g *groupAPI) QueryGroupIDAndSubGroupsID(c *gin.Context) {
 	}
 
 	response(c, http.StatusOK, "成功", resp.Ids, false)
+	return
+}
+
+// QueryTopGroupExcludeSelfUsers 查询顶级组下所有组不包含传入组的用户
+func (g *groupAPI) QueryTopGroupExcludeSelfUsers(c *gin.Context) {
+
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("page_size", "10")
+	groupIDStr := c.DefaultQuery("group_id", "")
+
+	if groupIDStr == "" {
+		response(c, http.StatusBadRequest, "参数缺失", nil, false)
+		return
+	}
+
+	groupID, err := strconv.Atoi(groupIDStr)
+	if err != nil {
+		response(c, http.StatusBadRequest, "参数解析失败", nil, false)
+		return
+	}
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		response(c, http.StatusBadRequest, "页码参数解析失败", nil, false)
+		return
+	}
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil {
+		response(c, http.StatusBadRequest, "页面大小参数解析失败", nil, false)
+		return
+	}
+
+	data := &pb_user_v1.GroupIDWithPage{
+		Id:                   int64(groupID),
+		PageSize:             int64(pageSize),
+		Page:                 int64(page),
+	}
+
+	resp, err := g.groupService.QueryTopGroupExcludeSelfUsersSvc(context.Background(), data)
+	if err != nil {
+		log.Logger().Info("查询顶级组下所有组不包含传入组的用户 失败: " + err.Error())
+		response(c, http.StatusBadRequest, "查询失败", nil, false)
+		return
+	}
+
+	var result = make([]*models.QueryGroupsUsersResponse, 0)
+	for i := 0; i < len(resp.Users); i++ {
+		_user := resp.Users[i]
+		_tmp := &models.QueryGroupsUsersResponse{
+			ID:        _user.Id.Id,
+			UserName:  _user.UserName,
+			LoginName: _user.LoginName,
+			GroupID:   _user.GroupId,
+			UserType:  int(_user.UserType),
+			Mobile:    _user.Mobile,
+		}
+		result = append(result, _tmp)
+	}
+	response(c, http.StatusOK, "成功", map[string]interface{}{
+		"users": result,
+		"page": resp.Page,
+		"page_size": resp.PageSize,
+		"total_page": resp.TotalPage,
+		"total_num": resp.TotalNum,
+	}, false)
 	return
 }

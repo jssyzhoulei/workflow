@@ -25,6 +25,7 @@ type GroupServiceEndpoint struct {
 	QuerySubGroupsUsersEndpoint endpoint.Endpoint
 	GetAllGroupsEndpoint endpoint.Endpoint
 	QueryQuotaEndpoint endpoint.Endpoint
+	QueryTopGroupExcludeSelfUsersEndpoint endpoint.Endpoint
 }
 
 
@@ -44,6 +45,7 @@ func NewGroupEndpoint(service services.ServiceI) *GroupServiceEndpoint {
 		QuerySubGroupsUsersEndpoint: MakeQuerySubGroupsUsersEndpoint(service.GetGroupService()),
 		GetAllGroupsEndpoint: MakeGetAllGroupEndpoint(service.GetGroupService()),
 		QueryQuotaEndpoint: MakeQueryQuotaEndpoint(service.GetGroupService()),
+		QueryTopGroupExcludeSelfUsersEndpoint: MakeQueryTopGroupExcludeSelfUsersEndpoint(service.GetGroupService()),
 	}
 }
 
@@ -324,3 +326,23 @@ func (g *GroupServiceEndpoint) QueryQuotaSvc(ctx context.Context, groupId *pb_us
 	return resp.(*pb_user_v1.QueryQuotaResponse), nil
 }
 
+// MakeQueryQuotaEndpoint ...
+func MakeQueryTopGroupExcludeSelfUsersEndpoint(groupServiceInterface services.GroupServiceInterface) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		data, ok := request.(*pb_user_v1.GroupIDWithPage)
+		if !ok {
+			return nil, fmt.Errorf("MakeQueryTopGroupExcludeSelfUsersEndpoint 请求参数错误")
+		}
+		response, err = groupServiceInterface.QueryTopGroupExcludeSelfUsersSvc(ctx, data)
+		return
+	}
+}
+
+// QueryTopGroupExcludeSelfUsersSvc 查询顶级组以下不包含传入组 下的所有用户
+func (g *GroupServiceEndpoint) QueryTopGroupExcludeSelfUsersSvc(ctx context.Context, groupId *pb_user_v1.GroupIDWithPage) (*pb_user_v1.GroupUsersWithPage, error) {
+	resp, err := g.QueryTopGroupExcludeSelfUsersEndpoint(ctx, groupId)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupUsersWithPage), nil
+}

@@ -13,6 +13,7 @@ func groupAPIRouters(g *gin.RouterGroup, api apis.IApis) {
 	g.GET("/group/tree", api.GetGroupApis().GroupTreeQueryAPI)
 	g.GET("/group/user", api.GetGroupApis().QueryGroupAndSubGroupsUsers)
 	g.GET("/group/sub_user", api.GetGroupApis().QuerySubGroupsUsers)
+	g.GET("/group/top_sub_user", api.GetGroupApis().QueryTopGroupExcludeSelfUsers)
 	g.GET("/group/sub_group_id", api.GetGroupApis().QueryGroupIDAndSubGroupsID)
 	g.PUT("/quota", api.GetGroupApis().QuotaUpdateAPI)
 	g.PUT("/quota/used", api.GetGroupApis().SetGroupQuotaUsed)

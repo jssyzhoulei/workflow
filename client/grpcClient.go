@@ -193,6 +193,14 @@ func groupGrpcConn(conn *grpc.ClientConn) services.GroupServiceInterface {
 			parser.DecodeQueryQuotaResponse,
 			pb_user_v1.QueryQuotaResponse{},
 		).Endpoint(),
+		QueryTopGroupExcludeSelfUsersEndpoint: grpctransport.NewClient(
+			conn,
+			"pb_user_v1.RpcOrgService",
+			"RPCQueryTopGroupExcludeSelfUsers",
+			parser.EncodeGroupIDWithPage,
+			parser.DecodeGroupUsersWithPage,
+			pb_user_v1.GroupUsersWithPage{},
+		).Endpoint(),
 	}
 }
 

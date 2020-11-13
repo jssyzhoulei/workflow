@@ -22,6 +22,7 @@ type groupGrpcTransport struct {
 	querySubGroupsUsers transport.Handler
 	getAllGroups transport.Handler
 	queryQuota transport.Handler
+	queryTopGroupExcludeSelfUsers transport.Handler
 }
 
 // NewGroupGrpcTransport ...
@@ -40,6 +41,7 @@ func NewGroupGrpcTransport(endpoint *endpoints.GroupServiceEndpoint) *groupGrpcT
 		querySubGroupsUsers: transport.NewServer(endpoint.QuerySubGroupsUsersEndpoint, parser.DecodeGroupIDProto, parser.EncodeUsers),
 		getAllGroups: transport.NewServer(endpoint.GetAllGroupsEndpoint, parser.DecodeGroupIDProto, parser.EncodeGroupsProto),
 		queryQuota: transport.NewServer(endpoint.QueryQuotaEndpoint, parser.DecodeGroupIDProto, parser.EncodeQueryQuotaResponse),
+		queryTopGroupExcludeSelfUsers: transport.NewServer(endpoint.QueryTopGroupExcludeSelfUsersEndpoint, parser.DecodeGroupIDWithPage, parser.EncodeGroupUsersWithPage),
 	}
 }
 
@@ -157,4 +159,13 @@ func (g *groupGrpcTransport) RPCQueryQuota(ctx context.Context, id *pb_user_v1.G
 		return nil, err
 	}
 	return resp.(*pb_user_v1.QueryQuotaResponse), nil
+}
+
+// RPCQueryTopGroupExcludeSelfUsers ...
+func (g *groupGrpcTransport) RPCQueryTopGroupExcludeSelfUsers(ctx context.Context, id *pb_user_v1.GroupIDWithPage) (*pb_user_v1.GroupUsersWithPage, error) {
+	_, resp, err := g.queryTopGroupExcludeSelfUsers.ServeGRPC(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*pb_user_v1.GroupUsersWithPage), nil
 }

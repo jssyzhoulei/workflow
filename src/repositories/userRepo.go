@@ -265,8 +265,8 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm
 	} else {
 		db = tx
 	}
-	dbPage := *u.DB
-	db = u.Table("user").
+
+	db = db.Model(&models.User{}).
 		Select("user_name, group_id, created_at, id, login_name, mobile, user_type, status")
 
 	if user.UserName != "" {
@@ -282,19 +282,19 @@ func (u *userRepo) GetUserListRepo(user models.User, page *models.Page, tx *gorm
 		db = db.Where("group_id in ?", groupIds)
 	}
 	if page != nil {
-		db.DB()
+		//db.DB()
 		if page.PageNum == 0 {
 			page.PageNum = 1
 		}
 		if page.PageSize == 0 {
 			page.PageSize = 10
 		}
-		err := dbPage.Table("(?) as p", db).Count(&page.Total).Error
+		err := db.Count(&page.Total).Error
 		if err != nil {
 			return nil, err
 		}
 		page.TotalPage = math.Ceil(float64(page.Total)) / float64(page.PageSize)
-		err = db.Limit(page.PageSize).Offset(page.PageSize * (page.PageNum - 1)).Find(&users).Error
+		err = db.Order("id desc").Limit(page.PageSize).Offset(page.PageSize * page.PageNum - page.PageSize).Find(&users).Error
 		if err != nil {
 			return nil, err
 		}
