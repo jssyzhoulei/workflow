@@ -705,7 +705,7 @@ func (g *groupRepo) QueryQuota(groupID int64, tx *gorm.DB) (*models.QueryQuota, 
 			cache[data.IsShare].MemoryUsed = data.Used
 		case models.ResourceDisk:
 			result.DiskQuotaTotal = data.Total
-			result.DiskQuotaUsed = data.Total
+			result.DiskQuotaUsed = data.Used
 		}
 	}
 	if _, ok := cache[1]; ok {
