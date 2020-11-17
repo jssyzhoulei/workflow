@@ -224,6 +224,11 @@ func (u *userApi) ImportUser(ctx *gin.Context) {
 				}
 				continue
 			}
+
+			if len(row.Cells) < 3 {
+				//fmt.Println("DEBUG 批量导入警告: ", len(row.Cells), row.Cells)
+				continue
+			}
 			if row.Cells[0].Value != "" && row.Cells[1].Value != "" && row.Cells[2].Value != "" {
 				var (
 					user pb_user_v1.UserProto
