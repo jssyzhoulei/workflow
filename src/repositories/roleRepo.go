@@ -2,10 +2,12 @@ package repositories
 
 import (
 	"errors"
+	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type RoleRepoI interface {
@@ -97,7 +99,7 @@ func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userI
 		page  = 1
 		limit = 10
 		name  string
-		roles []roleUserIds
+		roles = make([]*roleUserIds,0)
 		resp  pb_user_v1.RolePageRequestProto
 	)
 
@@ -112,28 +114,91 @@ func (u *roleRepo) ListRolesRepo(pageObj *pb_user_v1.RolePageRequestProto, userI
 		disable = pageObj.Disable
 	}
 
-	countSql := `SELECT count(1) count from role WHERE role.deleted_at is null
-				and role.name like ? `
+	querySql := `
+select
+	c.id,
+	c.data_permit,
+	c.status,
+	c.created_at,
+	c.remark,
+	c.` + `name` + `,
+	a.id as ids
+from 
+	` + `user` + ` a
+	left join user_role b on a.id=b.user_id 
+	left join ` + `role` + ` c on b.role_id=c.id 
+	where 1=1 
+	and a.deleted_at is null 
+	and b.deleted_at is null 
+	and c.deleted_at is null
+	and c.name like ? `
 
-	querySql := `SELECT role.id, role.status, role.created_at, role.name, role.remark,
-				role.data_permit, group_concat(DISTINCT(user_role.user_id)) ids FROM role 
-				left join user_role on user_role.role_id = role.id and user_role.deleted_at is null 
-				left join user on user_role.user_id = user.id 
-				WHERE role.deleted_at is null and user.deleted_at is null 
-				and role.name like ? `
+	fmt.Println(page, limit)
 	if disable {
-		countSql += "and role.status = 0 "
-		querySql += "and role.status = 0 "
+		querySql += "and c.status = 0 "
 	}
-	u.DB.Raw(countSql, "%"+name+"%").
-		Count(&resp.Page.Total)
 
-	err := u.DB.Raw(querySql+`group by role.id LIMIT ? OFFSET ?`, "%"+name+"%", limit, limit*(page-1)).
-		Scan(&roles).Error
-
-	if err == nil {
-		resp.Roles = *buildRoleProto(&roles)
+	var _tmp = make([]roleUserIds, 0, 10)
+	err := u.DB.Raw(querySql, "%"+name+"%").Scan(&_tmp).Error
+	if err != nil {
+		return nil, err
 	}
+
+	l := len(_tmp)
+
+	cache := make(map[string][]string)
+	for i := 0; i < l; i++ {
+		item := _tmp[i]
+
+		if _, ok := cache[item.Name]; !ok {
+			cache[item.Name] = make([]string, 0, 2)
+			var _role *roleUserIds
+
+			_role = &roleUserIds{
+				Role: models.Role{
+					Name:       item.Name,
+					DataPermit: item.DataPermit,
+					Status:     item.Status,
+				},
+				IDs: "",
+			}
+			_role.CreatedAt = item.CreatedAt
+			roles = append(roles, _role)
+		}
+		cache[item.Name] = append(cache[item.Name], item.IDs)
+	}
+
+	rolesLength := len(roles)
+	for name, ids := range cache {
+		for i:=0;i<rolesLength;i++ {
+			r := roles[i]
+			if name == r.Name {
+				r.IDs = strings.Join(ids, ",")
+				break
+			}
+		}
+	}
+
+	var result = make([]roleUserIds, 0)
+	l2 := len(roles)
+	for i:=0;i<l2;i++ {
+		item := roles[i]
+
+		_role := roleUserIds{
+			Role:   models.Role{
+				BaseModel:  models.BaseModel{
+					CreatedAt:     item.CreatedAt,
+				},
+				Name:       item.Name,
+				DataPermit: item.DataPermit,
+				Status:     item.Status,
+			},
+			IDs:    item.IDs,
+		}
+		result = append(result, _role)
+	}
+
+	resp.Roles = *buildRoleProto(&result)
 
 	return &resp, err
 }

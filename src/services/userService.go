@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
@@ -153,7 +152,6 @@ func (u *userService) UpdateUserByIDSvc(ctx context.Context, userRolesDTO models
 	}
 	err = u.userRepo.AddUserRolesRepo(userRoles, tx)
 	if err != nil {
-		fmt.Println("==================", err)
 		tx.Rollback()
 		return pb_user_v1.NullResponse{}, err
 	}
