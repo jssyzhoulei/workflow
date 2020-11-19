@@ -7,6 +7,7 @@ import (
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gorm.io/gorm"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -65,7 +66,7 @@ func (u *userRepo) AddUserRepo(user models.User, tx *gorm.DB) (int, error) {
 
 	_, err := u.GetUserByName(user.LoginName)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err.Error() == "record not found" {
 			err = db.Create(&user).Error
 			return user.ID, err
 		} else {
@@ -190,7 +191,9 @@ SELECT DISTINCT
 	a.login_name,
 	a.mobile,
 	d.name AS group_name,
-	c.name AS role_name,
+   GROUP_CONCAT(
+   c.name
+   ) as role_name,
 	d.id AS group_id
 FROM
 	` + "`user`" + ` a
@@ -198,7 +201,7 @@ FROM
 	LEFT JOIN ` + "`role`" + ` c ON b.role_id = c.id and c.status = 0
 	LEFT JOIN ` + "`group`" + ` d ON a.group_id = d.id
 `
-	fullSql := sqlStr + whereCondition + orderSql
+	fullSql := sqlStr + whereCondition + " group by a.id " + orderSql
 	totalSql := fmt.Sprintf(countSQl, fullSql)
 
 	var resultScan = make([]*models.UserListScanResult, 0)
@@ -211,8 +214,9 @@ FROM
 	if err != nil {
 		return nil, 0, err
 	}
+
+	// 处理结果
 	var result = make([]*models.UserListResult, 0)
-	var cache = make(map[string]map[string]interface{})
 	for _, val := range resultScan {
 		_tmp := &models.UserListResult{
 			Id:        val.Id,
@@ -220,34 +224,11 @@ FROM
 			CreatedAt: val.CreatedAt,
 			UserName:  val.UserName,
 			GroupName: val.GroupName,
-			RoleName:  nil,
+			RoleName:  strings.Split(val.RoleName, ","),
 			GroupId:   val.GroupId,
 			Mobile:    val.Mobile,
 		}
-		if _, ok := cache[val.LoginName]; !ok {
-			cache[val.LoginName] = make(map[string]interface{})
-			result = append(result, _tmp)
-		} else {
-			total--
-		}
-		if _, ok := cache[val.LoginName][val.RoleName]; !ok {
-			cache[val.LoginName][val.RoleName] = nil
-		}
-	}
-
-	for loginName, roleNameMap := range cache {
-		var _tmp = make([]string, 0)
-		for roleName, _ := range roleNameMap {
-			_tmp = append(_tmp, roleName)
-		}
-		l := len(result)
-		for i := 0; i < l; i++ {
-			record := result[i]
-			if record.LoginName == loginName {
-				record.RoleName = _tmp
-				break
-			}
-		}
+		result = append(result, _tmp)
 	}
 
 	return result, total, nil
@@ -351,7 +332,7 @@ func (u *userRepo) GetUsersByLoginNames(loginNames []string) ([]models.User, err
 		users []models.User
 		err   error
 	)
-	err = u.Table("user").Select("*").Where("login_name In ?", loginNames).Find(&users).Error
+	err = u.Table("user").Select("*").Where("login_name in ?", loginNames).Find(&users).Error
 	return users, err
 }
 

@@ -252,7 +252,6 @@ func (u *userApi) ImportUser(ctx *gin.Context) {
 	}
 	users.IsCover = importUserRequest.IsCover
 	_ , err = u.userService.AddUsersSvc(context.Background(), users)
-	fmt.Println(err)
 	if err != nil {
 		error_(ctx, code.SVC_ERROR)
 		return

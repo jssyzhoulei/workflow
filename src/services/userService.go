@@ -285,7 +285,10 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 	if len(names) == 0 {
 		return pb_user_v1.NullResponse{}, errors.New("无用户可导入")
 	}
-	users, _ = u.userRepo.GetUsersByLoginNames(names)
+	users, err := u.userRepo.GetUsersByLoginNames(names)
+	if err != nil {
+		return pb_user_v1.NullResponse{}, err
+	}
 	//找出已存在的用户
 	if usersReq.Users != nil {
 		for _, userReq := range usersReq.Users {
@@ -303,7 +306,6 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 			key, _ := u.config.GetString("passwordKey")
 			md5Passwd, _ := models.User{Password:userReq.Password}.EncodePwd(key)
 			if isExist {
-				fmt.Println(id)
 				userIsExist = append(userIsExist, models.User{
 					BaseModel: models.BaseModel{
 						ID: id,
