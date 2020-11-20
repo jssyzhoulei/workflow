@@ -155,14 +155,19 @@ from
 			var _role *roleUserIds
 
 			_role = &roleUserIds{
-				Role: models.Role{
+				Role:   models.Role{
+					BaseModel:  models.BaseModel{
+						ID:            item.ID,
+						CreatedAt:     item.CreatedAt,
+						Remark:        item.Remark,
+					},
 					Name:       item.Name,
 					DataPermit: item.DataPermit,
 					Status:     item.Status,
 				},
-				IDs: "",
+				IDs:    "",
 			}
-			_role.CreatedAt = item.CreatedAt
+
 			roles = append(roles, _role)
 		}
 		cache[item.Name] = append(cache[item.Name], item.IDs)
@@ -187,7 +192,9 @@ from
 		_role := roleUserIds{
 			Role:   models.Role{
 				BaseModel:  models.BaseModel{
+					ID:            item.ID,
 					CreatedAt:     item.CreatedAt,
+					Remark:        item.Remark,
 				},
 				Name:       item.Name,
 				DataPermit: item.DataPermit,
