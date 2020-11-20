@@ -295,7 +295,7 @@ func (u *userService) AddUsersSvc(ctx context.Context, usersReq *pb_user_v1.AddU
 				id      int
 			)
 			for _, user := range users {
-				if user.GroupID == int(userReq.GroupId) && user.LoginName == userReq.LoginName {
+				if user.LoginName == userReq.LoginName {
 					isExist = true
 					id = user.ID
 					break
