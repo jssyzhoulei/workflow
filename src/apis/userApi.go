@@ -236,7 +236,7 @@ func (u *userApi) ImportUser(ctx *gin.Context) {
 				user.UserName = row.Cells[0].Value
 				user.Password = row.Cells[2].Value
 				user.LoginName = row.Cells[1].Value
-				user.Mobile = row.Cells[1].Value
+				user.Mobile = row.Cells[3].Value
 				user.GroupId  = importUserRequest.GroupID
 				for _, v := range importUserRequest.RoleID {
 					user.RoleIds = append(user.RoleIds, &pb_user_v1.Index{Id: v})
