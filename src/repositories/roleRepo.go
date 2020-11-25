@@ -131,7 +131,7 @@ from
 	and a.deleted_at is null 
 	and b.deleted_at is null 
 	and c.deleted_at is null
-	and c.name like ? `
+	and c.name like ? order by c.id asc`
 
 	fmt.Println(page, limit)
 	if disable {
@@ -204,6 +204,14 @@ from
 		}
 		result = append(result, _role)
 	}
+
+	resp.Page.Total = int64(len(result))
+
+	offset := page * limit - limit
+	result = result[offset:]
+
+	resp.Page.PageSize = int64(limit)
+	resp.Page.PageNum = int64(page)
 
 	resp.Roles = *buildRoleProto(&result)
 
