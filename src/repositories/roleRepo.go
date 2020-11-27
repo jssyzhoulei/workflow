@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"errors"
-	"fmt"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
@@ -131,12 +130,13 @@ from
 	and a.deleted_at is null 
 	and b.deleted_at is null 
 	and c.deleted_at is null
-	and c.name like ? order by c.id asc`
+	and c.name like ? `
 
-	fmt.Println(page, limit)
 	if disable {
-		querySql += "and c.status = 0 "
+		querySql += ` and c.status = 0 `
 	}
+
+	querySql += " order by c.id asc  "
 
 	var _tmp = make([]roleUserIds, 0, 10)
 	err := u.DB.Raw(querySql, "%"+name+"%").Scan(&_tmp).Error
