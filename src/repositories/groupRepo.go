@@ -557,10 +557,15 @@ func (g *groupRepo) SetGroupQuotaUsedRepo(data *models.SetGroupQuotaRequest, tx 
 	}
 
 	quotaTableName := models.Quota{}.TableName()
-
-	sqlStr := "update %s set used=used+%d where group_id=%d and is_share=%d and type=%d"
-
-	fullSql := fmt.Sprintf(sqlStr, quotaTableName, data.Used, data.GroupID, data.IsShare, data.QuotaType)
+	var sqlStr string
+	var fullSql string
+	if data.QuotaType == 4 {
+		sqlStr = "update %s set used=used+%d where group_id=%d and type=%d"
+		fullSql = fmt.Sprintf(sqlStr, quotaTableName, data.Used, data.GroupID, data.QuotaType)
+	} else {
+		sqlStr = "update %s set used=used+%d where group_id=%d and is_share=%d and type=%d"
+		fullSql = fmt.Sprintf(sqlStr, quotaTableName, data.Used, data.GroupID, data.IsShare, data.QuotaType)
+	}
 
 	err = db.Exec(fullSql).Error
 	if err != nil {
