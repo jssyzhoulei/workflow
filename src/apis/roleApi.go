@@ -3,11 +3,11 @@ package apis
 import (
 	"context"
 	"fmt"
+	"gitee.com/grandeep/org-svc/logger"
 	"gitee.com/grandeep/org-svc/src/apis/code"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -39,13 +39,13 @@ func (r *roleApi) AddRoleApi(c *gin.Context) {
 
 	err := c.BindJSON(data)
 	if err != nil || !data.Check() {
-		log.Logger().Warn(fmt.Sprintf("add role request param error with data : %+v ", data))
+		log.Logger.Warn(fmt.Sprintf("add role request param error with data : %+v ", data))
 		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
 	_, err = r.roleService.AddRoleSvc(context.Background(), data)
 	if err != nil {
-		log.Logger().Error("create role error: " + err.Error())
+		log.Logger.Error("create role error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
@@ -58,13 +58,13 @@ func (r *roleApi) UpdateRoleApi(c *gin.Context) {
 
 	err := c.BindJSON(data)
 	if err != nil {
-		log.Logger().Warn(fmt.Sprintf("update role request param error : %s", err.Error()))
+		log.Logger.Warn(fmt.Sprintf("update role request param error : %s", err.Error()))
 		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
 	_, err = r.roleService.UpdateRoleSvc(context.Background(), data)
 	if err != nil {
-		log.Logger().Error("update role error: " + err.Error())
+		log.Logger.Error("update role error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
@@ -81,11 +81,11 @@ func (r *roleApi) DeleteRoleApi(c *gin.Context) {
 	}
 	_, err = r.roleService.DeleteRoleSvc(context.Background(), id)
 	if err != nil {
-		if strings.Contains(err.Error(), "relation user"){
+		if strings.Contains(err.Error(), "relation user") {
 			response(c, 201, "请先解除绑定用户角色", "", false)
 			return
 		}
-		log.Logger().Error("delete role error: " + err.Error())
+		log.Logger.Error("delete role error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
@@ -103,7 +103,7 @@ func (r *roleApi) QueryRoleApi(c *gin.Context) {
 	}
 	resp, err := r.roleService.QueryRoleSvc(context.Background(), id)
 	if err != nil || len(resp.MenuPerms) == 0 {
-		log.Logger().Error("query role error ")
+		log.Logger.Error("query role error ")
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}
@@ -117,13 +117,13 @@ func (r *roleApi) QueryRolesApi(c *gin.Context) {
 
 	err := c.BindJSON(data)
 	if err != nil {
-		log.Logger().Warn(fmt.Sprintf("query roles request param error : %s", err.Error()))
+		log.Logger.Warn(fmt.Sprintf("query roles request param error : %s", err.Error()))
 		response(c, http.StatusBadRequest, "param error", nil, false)
 		return
 	}
 	resp, err := r.roleService.QueryRolesSvc(context.Background(), data)
 	if err != nil {
-		log.Logger().Error("query roles error: " + err.Error())
+		log.Logger.Error("query roles error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
 		return
 	}

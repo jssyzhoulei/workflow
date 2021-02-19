@@ -13,7 +13,7 @@ import (
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/repositories"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/config"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
+	"gitee.com/grandeep/org-svc/logger"
 	"strconv"
 	"strings"
 	"time"
@@ -671,7 +671,7 @@ func generateGroupTree(data []*models.Group, rootParentID int) []*models.GroupTr
 				// 进行递归查找
 				err := insertToParentChildren(result[i], cNode, strconv.Itoa(child.ParentID), _t[2:])
 				if err != nil {
-					log.Logger().Info(err.Error())
+					log.Logger.Info(err.Error())
 				}
 				break // 递归完成直接 break 内层循环
 			}

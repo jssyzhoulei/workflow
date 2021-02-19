@@ -5,11 +5,11 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"gitee.com/grandeep/org-svc/logger"
 	"gitee.com/grandeep/org-svc/src/apis/code"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
 	"github.com/tealeg/xlsx"
 	"net/http"
@@ -46,7 +46,7 @@ func (u *userApi) AddUserApi(ctx *gin.Context) {
 	)
 	err := ctx.BindJSON(&userRoleDTO)
 	if err != nil {
-		log.Logger().Error(fmt.Sprintf("add user request param error : %s", err.Error()))
+		log.Logger.Error(fmt.Sprintf("add user request param error : %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
@@ -56,7 +56,7 @@ func (u *userApi) AddUserApi(ctx *gin.Context) {
 		//	response(ctx, 201, "用户名已存在", nil, false)
 		//	return
 		//}
-		log.Logger().Error("add user error: " + err.Error())
+		log.Logger.Error("add user error: " + err.Error())
 		error_(ctx, 201, err)
 		return
 	}
@@ -65,17 +65,17 @@ func (u *userApi) AddUserApi(ctx *gin.Context) {
 }
 
 // GetUserByIDApi 获取用户详请
-func (u *userApi) GetUserByIDApi(ctx *gin.Context){
+func (u *userApi) GetUserByIDApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	ID,err := strconv.Atoi(id)
+	ID, err := strconv.Atoi(id)
 	if err != nil {
-		log.Logger().Error(fmt.Sprintf("get user request param error: %s", err.Error()))
+		log.Logger.Error(fmt.Sprintf("get user request param error: %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
 	data, err := u.userService.GetUserByIDSvc(context.Background(), ID)
 	if err != nil {
-		log.Logger().Error("get user error: " + err.Error())
+		log.Logger.Error("get user error: " + err.Error())
 		error_(ctx, 201, err)
 		return
 	}
@@ -93,13 +93,13 @@ func (u *userApi) UpdateUserByIDApi(ctx *gin.Context) {
 	err := ctx.BindJSON(&userRoleDTO)
 	//fmt.Printf("%+v",*data)
 	if err != nil {
-		log.Logger().Error(fmt.Sprintf("update user request param error : %s", err.Error()))
+		log.Logger.Error(fmt.Sprintf("update user request param error : %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
 	_, err = u.userService.UpdateUserByIDSvc(context.Background(), userRoleDTO)
 	if err != nil {
-		log.Logger().Error("update user error: " + err.Error())
+		log.Logger.Error("update user error: " + err.Error())
 		error_(ctx, 201, err)
 		return
 	}
@@ -107,18 +107,18 @@ func (u *userApi) UpdateUserByIDApi(ctx *gin.Context) {
 	return
 }
 
-func (u *userApi) ImportUsersByGroupIdApi(ctx *gin.Context){
+func (u *userApi) ImportUsersByGroupIdApi(ctx *gin.Context) {
 	var groupUsersId = models.GroupAndUserId{}
 	err := ctx.BindJSON(&groupUsersId)
 	fmt.Println(groupUsersId)
 	if err != nil {
-		log.Logger().Error(fmt.Sprintf("import users by groupid request param error: %s", err.Error()))
+		log.Logger.Error(fmt.Sprintf("import users by groupid request param error: %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
 	_, err = u.userService.ImportUsersByGroupIdSvc(context.Background(), groupUsersId)
 	if err != nil {
-		log.Logger().Error("update user error: " + err.Error())
+		log.Logger.Error("update user error: " + err.Error())
 		error_(ctx, 201, err)
 		return
 	}
@@ -126,16 +126,16 @@ func (u *userApi) ImportUsersByGroupIdApi(ctx *gin.Context){
 }
 
 // DeleteUserByIDApi 删除用户API
-func (u *userApi) DeleteUserByIDApi(ctx *gin.Context){
+func (u *userApi) DeleteUserByIDApi(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		log.Logger().Error(fmt.Sprintf("delete user request param error: %s", err.Error()))
+		log.Logger.Error(fmt.Sprintf("delete user request param error: %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
 	_, err = u.userService.DeleteUserByIDSvc(context.Background(), id)
 	if err != nil {
-		log.Logger().Error("delete user error: " + err.Error())
+		log.Logger.Error("delete user error: " + err.Error())
 		error_(ctx, 201, err)
 		return
 	}
@@ -144,22 +144,21 @@ func (u *userApi) DeleteUserByIDApi(ctx *gin.Context){
 }
 
 // GetUserListApi 获取用户列表
-func (u *userApi) GetUserListApi(ctx *gin.Context){
+func (u *userApi) GetUserListApi(ctx *gin.Context) {
 	var (
 		userPage pb_user_v1.UserPage
 	)
 	err := ctx.BindJSON(&userPage)
 
-
 	if err != nil {
-		log.Logger().Error(fmt.Sprintf("get user list request param error: %s", err.Error()))
+		log.Logger.Error(fmt.Sprintf("get user list request param error: %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
 
 	users, err := u.userService.GetUserListSvc(context.Background(), &userPage)
 	if err != nil {
-		log.Logger().Error("get user list error: " + err.Error())
+		log.Logger.Error("get user list error: " + err.Error())
 		error_(ctx, 201, err)
 		return
 	}
@@ -174,13 +173,13 @@ func (u *userApi) BatchDeleteUsersApi(ctx *gin.Context) {
 
 	err := ctx.BindJSON(&data)
 	if err != nil {
-		log.Logger().Error(fmt.Sprintf("batch delete user request param error : %s", err.Error()))
+		log.Logger.Error(fmt.Sprintf("batch delete user request param error : %s", err.Error()))
 		error_(ctx, 201, err)
 		return
 	}
 	_, err = u.userService.BatchDeleteUsersSvc(context.Background(), data.ID)
 	if err != nil {
-		log.Logger().Error("batch delete user error: " + err.Error())
+		log.Logger.Error("batch delete user error: " + err.Error())
 		error_(ctx, 201, err)
 		return
 	}
@@ -192,9 +191,9 @@ func (u *userApi) BatchDeleteUsersApi(ctx *gin.Context) {
 func (u *userApi) ImportUser(ctx *gin.Context) {
 	var (
 		importUserRequest models.ImportUserRequest
-		content []byte
-		file *xlsx.File
-		users = &pb_user_v1.AddUsersRequest{}
+		content           []byte
+		file              *xlsx.File
+		users             = &pb_user_v1.AddUsersRequest{}
 	)
 	err := ctx.BindJSON(&importUserRequest)
 	if err != nil {
@@ -237,7 +236,7 @@ func (u *userApi) ImportUser(ctx *gin.Context) {
 				user.Password = row.Cells[2].Value
 				user.LoginName = row.Cells[1].Value
 				user.Mobile = row.Cells[3].Value
-				user.GroupId  = importUserRequest.GroupID
+				user.GroupId = importUserRequest.GroupID
 				for _, v := range importUserRequest.RoleID {
 					user.RoleIds = append(user.RoleIds, &pb_user_v1.Index{Id: v})
 				}
@@ -251,7 +250,7 @@ func (u *userApi) ImportUser(ctx *gin.Context) {
 		}
 	}
 	users.IsCover = importUserRequest.IsCover
-	_ , err = u.userService.AddUsersSvc(context.Background(), users)
+	_, err = u.userService.AddUsersSvc(context.Background(), users)
 	if err != nil {
 		error_(ctx, code.SVC_ERROR)
 		return
@@ -263,13 +262,13 @@ func (u *userApi) GetUsersApi(c *gin.Context) {
 	var data = new(pb_user_v1.UserQueryCondition)
 	err := c.BindJSON(data)
 	if err != nil {
-		log.Logger().Error(fmt.Sprintf("get users request param error : %s", err.Error()))
+		log.Logger.Error(fmt.Sprintf("get users request param error : %s", err.Error()))
 		error_(c, 201, err)
 		return
 	}
 	users, err := u.userService.GetUsersSvc(context.Background(), data)
 	if err != nil {
-		log.Logger().Error("get users error: " + err.Error())
+		log.Logger.Error("get users error: " + err.Error())
 		error_(c, 201, err)
 		return
 	}
@@ -286,5 +285,3 @@ func (u *userApi) ImportUserTemplate(c *gin.Context) {
 	writer := bufio.NewWriter(c.Writer)
 	_, _ = writer.Write(b)
 }
-
-

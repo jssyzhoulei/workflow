@@ -1,8 +1,8 @@
 package engine
 
 import (
+	"gitee.com/grandeep/org-svc/logger"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/config"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
 	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/mysql"
 	"go.uber.org/zap"
@@ -11,7 +11,7 @@ import (
 type Engine struct {
 	Config *config.Config
 	Logger *zap.Logger
-	DB *yorm.DB
+	DB     *yorm.DB
 }
 
 func NewEngine(path string) *Engine {
@@ -21,8 +21,8 @@ func NewEngine(path string) *Engine {
 		mysqlConfig mysql.Mysql
 		//sqlPath string
 	)
-	e.Config,err = config.NewConfig(path)
-	e.Logger = log.Logger()
+	e.Config, err = config.NewConfig(path)
+	e.Logger = log.Logger
 	if err != nil {
 		panic("engine err")
 	}

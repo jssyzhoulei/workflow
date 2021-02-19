@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	"gitee.com/grandeep/org-svc/logger"
 	"gitee.com/grandeep/org-svc/src/models"
 	pb_user_v1 "gitee.com/grandeep/org-svc/src/proto/user/v1"
 	"gitee.com/grandeep/org-svc/src/services"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
 )
 
@@ -46,13 +46,13 @@ func (g *groupAPI) GroupAddAPI(c *gin.Context) {
 
 	err := c.BindJSON(data)
 	if err != nil {
-		log.Logger().Info(fmt.Sprintf("GroupAdd 参数解析错误: %s", err.Error()))
+		log.Logger.Info(fmt.Sprintf("GroupAdd 参数解析错误: %s", err.Error()))
 		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
 		return
 	}
 
 	if data.Name == "" || len(data.Quotas) == 0 {
-		log.Logger().Info(fmt.Sprintf("GroupAdd 必传参数缺失: name: %s quotas: %v", data.Name, data.Quotas))
+		log.Logger.Info(fmt.Sprintf("GroupAdd 必传参数缺失: name: %s quotas: %v", data.Name, data.Quotas))
 		response(c, http.StatusBadRequest, "参数不合法", nil, false)
 		return
 	}
@@ -61,7 +61,7 @@ func (g *groupAPI) GroupAddAPI(c *gin.Context) {
 	for i := 0; i < l; i++ {
 		t := data.Quotas[i]
 		if t.IsShare == 0 || strings.Trim(t.ResourcesGroupId, " ") == "" {
-			log.Logger().Info(fmt.Sprintf("GroupAdd 必传参数缺失: is_share: %d resources_group_id: %s", t.IsShare,
+			log.Logger.Info(fmt.Sprintf("GroupAdd 必传参数缺失: is_share: %d resources_group_id: %s", t.IsShare,
 				t.ResourcesGroupId))
 			response(c, http.StatusBadRequest, "参数不合法", nil, false)
 			return
@@ -70,7 +70,7 @@ func (g *groupAPI) GroupAddAPI(c *gin.Context) {
 
 	res, err := g.groupService.GroupAddSvc(context.Background(), data)
 	if err != nil {
-		log.Logger().Info("添加组错误: " + err.Error())
+		log.Logger.Info("添加组错误: " + err.Error())
 		response(c, http.StatusBadRequest, "操作失败", nil, false)
 		return
 	}
@@ -84,14 +84,14 @@ func (g *groupAPI) GroupQueryWithQuotaAPI(c *gin.Context) {
 
 	err := c.BindJSON(data)
 	if err != nil {
-		log.Logger().Info(fmt.Sprintf("GroupQueryWithQuota 参数解析错误: %s", err.Error()))
+		log.Logger.Info(fmt.Sprintf("GroupQueryWithQuota 参数解析错误: %s", err.Error()))
 		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
 		return
 	}
 
 	res, err := g.groupService.GroupQueryWithQuotaByConditionSvc(context.Background(), data)
 	if err != nil {
-		log.Logger().Info("查询组和其配额信息错误: " + err.Error())
+		log.Logger.Info("查询组和其配额信息错误: " + err.Error())
 		response(c, http.StatusBadRequest, "操作失败", nil, false)
 		return
 	}
@@ -136,7 +136,7 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 	var data = new(models.GroupUpdateRequest)
 	err := c.BindJSON(&data)
 	if err != nil {
-		log.Logger().Info(fmt.Sprintf("GroupUpdateAPI 参数解析错误: %s", err.Error()))
+		log.Logger.Info(fmt.Sprintf("GroupUpdateAPI 参数解析错误: %s", err.Error()))
 		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
 		return
 	}
@@ -185,7 +185,7 @@ func (g *groupAPI) GroupUpdateAPI(c *gin.Context) {
 
 	resp, err := g.groupService.GroupUpdateSvc(context.Background(), d)
 	if err != nil {
-		log.Logger().Info("更新组信息错误: " + err.Error())
+		log.Logger.Info("更新组信息错误: " + err.Error())
 		response(c, http.StatusBadRequest, "操作失败", nil, false)
 		return
 	}
@@ -203,7 +203,7 @@ func (g *groupAPI) QuotaUpdateAPI(c *gin.Context) {
 
 	err := c.BindJSON(data)
 	if err != nil {
-		log.Logger().Info(fmt.Sprintf("QuotaUpdateAPI 参数解析错误: %s", err.Error()))
+		log.Logger.Info(fmt.Sprintf("QuotaUpdateAPI 参数解析错误: %s", err.Error()))
 		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
 		return
 	}
@@ -219,7 +219,7 @@ func (g *groupAPI) QuotaUpdateAPI(c *gin.Context) {
 
 	resp, err := g.groupService.QuotaUpdateSvc(context.Background(), d)
 	if err != nil {
-		log.Logger().Info("更新配额信息错误: " + err.Error())
+		log.Logger.Info("更新配额信息错误: " + err.Error())
 		response(c, http.StatusBadRequest, "操作失败", nil, false)
 		return
 	}
@@ -251,7 +251,7 @@ func (g *groupAPI) GroupTreeQueryAPI(c *gin.Context) {
 
 	resp, err := g.groupService.GroupTreeQuerySvc(context.Background(), d)
 	if err != nil {
-		log.Logger().Info("获取 组树失败: " + err.Error())
+		log.Logger.Info("获取 组树失败: " + err.Error())
 		response(c, http.StatusBadRequest, "查询失败或结果为空", nil, false)
 		return
 	}
@@ -279,7 +279,7 @@ func (g *groupAPI) GroupDelete(c *gin.Context) {
 
 	_, err = g.groupService.GroupDeleteSvc(context.Background(), d)
 	if err != nil {
-		log.Logger().Info("删除 组失败: " + err.Error())
+		log.Logger.Info("删除 组失败: " + err.Error())
 		response(c, http.StatusBadRequest, "删除失败", nil, false)
 		return
 	}
@@ -307,7 +307,7 @@ func (g *groupAPI) QueryGroupAndSubGroupsUsers(c *gin.Context) {
 
 	resp, err := g.groupService.QueryGroupAndSubGroupsUsersSvc(context.Background(), d)
 	if err != nil {
-		log.Logger().Info("查询组及其子组下的所有用户 失败: " + err.Error())
+		log.Logger.Info("查询组及其子组下的所有用户 失败: " + err.Error())
 		response(c, http.StatusBadRequest, "查询失败", nil, false)
 		return
 	}
@@ -336,7 +336,7 @@ func (g *groupAPI) SetGroupQuotaUsed(c *gin.Context) {
 
 	err := c.BindJSON(&data)
 	if err != nil {
-		log.Logger().Info("SetGroupQuotaUsed 解析参数失败: " + err.Error())
+		log.Logger.Info("SetGroupQuotaUsed 解析参数失败: " + err.Error())
 		response(c, http.StatusBadRequest, "解析参数失败", nil, false)
 		return
 	}
@@ -350,7 +350,7 @@ func (g *groupAPI) SetGroupQuotaUsed(c *gin.Context) {
 
 	_, err = g.groupService.SetGroupQuotaUsedSvc(context.Background(), d)
 	if err != nil {
-		log.Logger().Error("SetGroupQuotaUsed 操作失败: " + err.Error())
+		log.Logger.Error("SetGroupQuotaUsed 操作失败: " + err.Error())
 		response(c, http.StatusBadRequest, "操作失败", nil, false)
 		return
 	}
@@ -379,7 +379,7 @@ func (g *groupAPI) QuerySubGroupsUsers(c *gin.Context) {
 
 	resp, err := g.groupService.QuerySubGroupsUsersSvc(context.Background(), d)
 	if err != nil {
-		log.Logger().Info("查询子组下的用户 失败: " + err.Error())
+		log.Logger.Info("查询子组下的用户 失败: " + err.Error())
 		response(c, http.StatusBadRequest, "查询失败", nil, false)
 		return
 	}
@@ -408,18 +408,18 @@ func (g *groupAPI) QueryGroupIDAndSubGroupsID(c *gin.Context) {
 
 	groupID, err := strconv.ParseInt(groupIDStr, 10, 64)
 	if err != nil {
-		log.Logger().Info("QueryGroupIDAndSubGroupsID 解析参数错误: " + err.Error())
+		log.Logger.Info("QueryGroupIDAndSubGroupsID 解析参数错误: " + err.Error())
 		response(c, http.StatusBadRequest, "解析参数错误", nil, false)
 		return
 	}
 
 	data := &pb_user_v1.GroupID{
-		Id:                   groupID,
+		Id: groupID,
 	}
 
 	resp, err := g.groupService.QueryGroupIDAndSubGroupsIDSvc(context.Background(), data)
 	if err != nil {
-		log.Logger().Info("QueryGroupIDAndSubGroupsID 查询错误: " + err.Error())
+		log.Logger.Info("QueryGroupIDAndSubGroupsID 查询错误: " + err.Error())
 		response(c, http.StatusBadRequest, "获取用户组子组失败或为空", nil, false)
 		return
 	}
@@ -457,14 +457,14 @@ func (g *groupAPI) QueryTopGroupExcludeSelfUsers(c *gin.Context) {
 	}
 
 	data := &pb_user_v1.GroupIDWithPage{
-		Id:                   int64(groupID),
-		PageSize:             int64(pageSize),
-		Page:                 int64(page),
+		Id:       int64(groupID),
+		PageSize: int64(pageSize),
+		Page:     int64(page),
 	}
 
 	resp, err := g.groupService.QueryTopGroupExcludeSelfUsersSvc(context.Background(), data)
 	if err != nil {
-		log.Logger().Info("查询顶级组下所有组不包含传入组的用户 失败: " + err.Error())
+		log.Logger.Info("查询顶级组下所有组不包含传入组的用户 失败: " + err.Error())
 		response(c, http.StatusBadRequest, "查询失败", nil, false)
 		return
 	}
@@ -483,11 +483,11 @@ func (g *groupAPI) QueryTopGroupExcludeSelfUsers(c *gin.Context) {
 		result = append(result, _tmp)
 	}
 	response(c, http.StatusOK, "成功", map[string]interface{}{
-		"users": result,
-		"page": resp.Page,
-		"page_size": resp.PageSize,
+		"users":      result,
+		"page":       resp.Page,
+		"page_size":  resp.PageSize,
 		"total_page": resp.TotalPage,
-		"total_num": resp.TotalNum,
+		"total_num":  resp.TotalNum,
 	}, false)
 	return
 }

@@ -2,8 +2,8 @@ package apis
 
 import (
 	"gitee.com/grandeep/org-svc/client"
+	"gitee.com/grandeep/org-svc/logger"
 	"gitee.com/grandeep/org-svc/src/apis/code"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/log"
 	"github.com/gin-gonic/gin"
 	"github.com/gogo/protobuf/jsonpb"
 	"net/http"
@@ -40,9 +40,9 @@ func NewApis(o *client.OrgServiceClient) IApis {
 		userApiInterface: NewUserApi(o.GetUserService()),
 		//groupApiI,NewGroupApi(o.),
 		//groupApiI,NewGroupApi(o.),
-		RoleApiInterface:NewRoleApi(o.GetRoleService()),
+		RoleApiInterface:       NewRoleApi(o.GetRoleService()),
 		permissionApiInterface: NewPermissionApi(o.GetPermissionService()),
-		groupAPIInterface: NewGroupAPI(o.GetGroupService()),
+		groupAPIInterface:      NewGroupAPI(o.GetGroupService()),
 	}
 }
 
@@ -67,23 +67,21 @@ func success_(c *gin.Context, data interface{}) {
 		data = ""
 	}
 	c.Request.Header.Set("Content-Type", "application/json")
-	c.JSON(200, ApiResponse {
-		Code: code.OK,
+	c.JSON(200, ApiResponse{
+		Code:    code.OK,
 		Message: "ok",
-		Data: data,
+		Data:    data,
 	})
 	c.Abort()
 	return
 }
 
-
-
 func error_(c *gin.Context, status code.Code, err ...error) {
 	//c.Request.Header.Set("Content-Type", "application/json")
-	c.JSON(200,ApiResponse {
-		Code: status,
+	c.JSON(200, ApiResponse{
+		Code:    status,
 		Message: status.Message(err...),
-		Data: nil,
+		Data:    nil,
 	})
 	c.Abort()
 	return
@@ -105,7 +103,7 @@ func response(c *gin.Context, status int, message string, data interface{}, isBy
 	} else {
 		_, err := c.Writer.Write(data.([]byte))
 		if err != nil {
-			log.Logger().Warn("PB消息byte写入响应信息失败: " + err.Error())
+			log.Logger.Warn("PB消息byte写入响应信息失败: " + err.Error())
 		}
 	}
 
@@ -122,9 +120,8 @@ func response(c *gin.Context, status int, message string, data interface{}, isBy
 //	return
 //}
 
-
 type ApiResponse struct {
-	Code code.Code `json:"code"`
-	Message string `json:"message"`
-	Data interface{} `json:"data"`
+	Code    code.Code   `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
