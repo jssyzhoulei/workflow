@@ -3,18 +3,16 @@ package repositories
 type RepoI interface {
 	GetUserRepo() UserRepoInterface
 	GetRoleRepo() RoleRepoI
-	GetPermissionRepo() PermissionRepoInterface
 }
 
 type repo struct {
 	UserRepoInterface
 	RoleRepoI
-	PermissionRepoInterface
 }
 
-func (r *repo) GetPermissionRepo() PermissionRepoInterface {
-	return r.PermissionRepoInterface
-}
+//func (r *repo) GetPermissionRepo() PermissionRepoInterface {
+//	return r.PermissionRepoInterface
+//}
 
 //func NewRepoI(db *yorm.DB) RepoI {
 //	return &repo{

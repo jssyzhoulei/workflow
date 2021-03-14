@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jssyzhoulei/workflow/src/models"
-	"github.com/jssyzhoulei/workflow/utils/src/pkg/yorm"
 	"gorm.io/gorm"
 	"math"
 	"strings"
@@ -41,13 +40,6 @@ type userRepo struct {
 
 func (u *userRepo) GetTx() *gorm.DB {
 	return u.Begin()
-}
-
-// NewUserRepo ...
-func NewUserRepo(db *yorm.DB) UserRepoInterface {
-	return &userRepo{
-		DB: db.DB,
-	}
 }
 
 // AddUserRepo 添加用户
