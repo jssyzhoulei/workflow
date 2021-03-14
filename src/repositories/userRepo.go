@@ -3,8 +3,8 @@ package repositories
 import (
 	"errors"
 	"fmt"
-	"gitee.com/grandeep/org-svc/src/models"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
+	"github.com/jssyzhoulei/workflow/src/models"
+	"github.com/jssyzhoulei/workflow/utils/src/pkg/yorm"
 	"gorm.io/gorm"
 	"math"
 	"strings"

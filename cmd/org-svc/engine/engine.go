@@ -1,10 +1,10 @@
 package engine
 
 import (
-	"gitee.com/grandeep/org-svc/logger"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/config"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm"
-	"gitee.com/grandeep/org-svc/utils/src/pkg/yorm/mysql"
+	"github.com/jssyzhoulei/workflow/logger"
+	"github.com/jssyzhoulei/workflow/utils/src/pkg/config"
+	"github.com/jssyzhoulei/workflow/utils/src/pkg/yorm"
+	"github.com/jssyzhoulei/workflow/utils/src/pkg/yorm/mysql"
 	"go.uber.org/zap"
 )
 

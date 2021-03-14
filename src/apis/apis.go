@@ -1,25 +1,11 @@
 package apis
 
 import (
-	"gitee.com/grandeep/org-svc/client"
-	"gitee.com/grandeep/org-svc/logger"
-	"gitee.com/grandeep/org-svc/src/apis/code"
 	"github.com/gin-gonic/gin"
-	"github.com/gogo/protobuf/jsonpb"
+	"github.com/jssyzhoulei/workflow/src/apis/code"
 	"net/http"
 )
 
-var (
-	jsonpbMarshaler *jsonpb.Marshaler
-)
-
-func init() {
-	jsonpbMarshaler = &jsonpb.Marshaler{
-		EnumsAsInts:  true,
-		EmitDefaults: true,
-		OrigName:     true,
-	}
-}
 
 type IApis interface {
 	GetUserApis() userApiInterface
@@ -33,17 +19,6 @@ type apis struct {
 	permissionApiInterface permissionApiInterface
 	groupAPIInterface
 	RoleApiInterface
-}
-
-func NewApis(o *client.OrgServiceClient) IApis {
-	return &apis{
-		userApiInterface: NewUserApi(o.GetUserService()),
-		//groupApiI,NewGroupApi(o.),
-		//groupApiI,NewGroupApi(o.),
-		RoleApiInterface:       NewRoleApi(o.GetRoleService()),
-		permissionApiInterface: NewPermissionApi(o.GetPermissionService()),
-		groupAPIInterface:      NewGroupAPI(o.GetGroupService()),
-	}
 }
 
 func (a *apis) GetUserApis() userApiInterface {

@@ -2,12 +2,9 @@ package routers
 
 import (
 	"flag"
-	"gitee.com/grandeep/org-svc/client"
-	"gitee.com/grandeep/org-svc/logger"
-	"gitee.com/grandeep/org-svc/src/apis"
 	"github.com/gin-gonic/gin"
+	"github.com/jssyzhoulei/workflow/logger"
 	"go.uber.org/zap"
-	"strings"
 	"sync"
 	"time"
 )
@@ -65,12 +62,12 @@ func Gin() *gin.Engine {
 }
 
 func Routers(e *gin.Engine) {
-	es := strings.Split(*etcdHosts, ";")
-	o := client.NewOrgServiceClient(es, 2, time.Second*30)
-	api := apis.NewApis(o)
-	g := e.Group("/apis/v1/org/")
-	userApiRouters(g, api)
-	permissionApiRouters(g, api)
-	groupAPIRouters(g, api)
-	roleApiRouters(g, api)
+	//es := strings.Split(*etcdHosts, ";")
+	//o := client.NewOrgServiceClient(es, 2, time.Second*30)
+	//api := apis.NewApis(o)
+	//g := e.Group("/apis/v1/org/")
+	//userApiRouters(g, api)
+	//permissionApiRouters(g, api)
+	//groupAPIRouters(g, api)
+	//roleApiRouters(g, api)
 }

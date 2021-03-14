@@ -2,11 +2,11 @@ package main
 
 import (
 	"flag"
-	"gitee.com/grandeep/org-svc/src/routers"
-	"gitee.com/grandeep/org-svc/logger"
+	"github.com/jssyzhoulei/workflow/logger"
+	"github.com/jssyzhoulei/workflow/src/routers"
 )
 
-func main()  {
+func main() {
 	flag.Parse()
 	routers.Routers(routers.Gin())
 	log.Logger.Info("Gin Running...")
