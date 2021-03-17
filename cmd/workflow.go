@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"flag"
-	"google.golang.org/grpc"
-	"time"
+	"github.com/jssyzhoulei/workflow/cmd/engine"
 )
 
 var (
@@ -65,15 +63,16 @@ func main() {
 	//Register.Deregister()
 	//e.Logger.Info("bye")
 	//services.NewService()
+	engine.InitDB()
 }
 
-func Intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	var (
-		fn context.CancelFunc
-	)
-	ctx = context.WithValue(ctx, "grpcContext", info.FullMethod)
-	ctx = context.WithValue(ctx, "startTime", time.Now())
-	ctx, fn = context.WithTimeout(ctx, time.Second)
-	defer fn()
-	return handler(ctx, req)
-}
+//func Intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+//	var (
+//		fn context.CancelFunc
+//	)
+//	ctx = context.WithValue(ctx, "grpcContext", info.FullMethod)
+//	ctx = context.WithValue(ctx, "startTime", time.Now())
+//	ctx, fn = context.WithTimeout(ctx, time.Second)
+//	defer fn()
+//	return handler(ctx, req)
+//}

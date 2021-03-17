@@ -1,15 +1,5 @@
 package models
 
-type User2 struct {
-	UserId   int64  `json:"user_id"`
-	UserName string `json:"user_name"`
-}
-
-// User 用户表
-func (u User2) TableName() string {
-	return "user2"
-}
-
 type User struct {
 	BaseModel
 	UserName  string `gorm:"column:user_name;type:varchar(50);comment:'用户名'" json:"user_name"`

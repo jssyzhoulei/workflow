@@ -23,3 +23,5 @@ type Page struct {
 	PageNum   int         `json:"page_num"`
 	Data      interface{} `json:"data"`
 }
+
+//sudo docker run -d -p 3306:3306 -v /home/yangyin/docker/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD="123456" mysql:5.7
