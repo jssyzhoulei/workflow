@@ -90,6 +90,6 @@ func connect() (*gorm.DB, error) {
 
 func InitDB() {
 	db, _ := connect()
-	//_ = db.AutoMigrate(&models.User{}, &models.Group{}, &models.Menu{}, &models.Permission{}, &models.Quota{}, &models.Role{}, &models.RoleMenuPermission{}, &models.UserRole{})
+	//_ = db.AutoMigrate(&models.User{}, &models.Group{}, &models.Menu{}, &models.Permission{}, &models.Role{}, &models.RoleMenuPermission{}, &models.UserRole{})
 	DB = db
 }
