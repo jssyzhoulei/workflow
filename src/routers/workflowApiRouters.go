@@ -5,8 +5,11 @@ import (
 	"github.com/jssyzhoulei/workflow/src/apis"
 )
 
-func userApiRouters(g *gin.RouterGroup, api apis.IApis) {
-	//g.POST("/user", api.GetUserApis().AddUserApi)
+func workApiRouters(g *gin.RouterGroup, api apis.Apis) {
+	g.POST("/workflow", api.AddWorkflow)
+	g.PUT("/workflow", api.UpdateWorkflow)
+	g.DELETE("/workflow", api.DelWorkflow)
+	g.GET("/workflow", api.ListWorkflow)
 	//g.PUT("/user", api.GetUserApis().UpdateUserByIDApi)
 	//g.GET("/user/query/:id", api.GetUserApis().GetUserByIDApi)
 	//g.DELETE("/user/del/:id", api.GetUserApis().DeleteUserByIDApi)

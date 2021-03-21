@@ -1,9 +1,9 @@
 package routers
 
 import (
-	"flag"
 	"github.com/gin-gonic/gin"
 	"github.com/jssyzhoulei/workflow/logger"
+	"github.com/jssyzhoulei/workflow/src/apis"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -12,7 +12,6 @@ import (
 var (
 	once      sync.Once
 	engine    *gin.Engine
-	etcdHosts = flag.String("eh", "127.0.0.1:2379", "")
 )
 
 // GinLogger 接收gin框架默认的日志
@@ -39,7 +38,7 @@ func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorizations, accept, origin, Cache-Control, X-Requested-With, Token, Language, From")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, Token, Language, From")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
@@ -56,17 +55,17 @@ func Gin() *gin.Engine {
 		gin.SetMode(gin.ReleaseMode)
 		engine = gin.New()
 		engine.Use(Cors())
-		engine.Use(GinLogger(log.Logger))
+		engine.Use(GinLogger(log.Logger()))
 	})
 	return engine
 }
 
-func Routers(e *gin.Engine) {
+func Routers(e *gin.Engine, api apis.Apis) {
 	//es := strings.Split(*etcdHosts, ";")
 	//o := client.NewOrgServiceClient(es, 2, time.Second*30)
 	//api := apis.NewApis(o)
-	//g := e.Group("/apis/v1/org/")
-	//userApiRouters(g, api)
+	g := e.Group("/apis/v1/")
+	workApiRouters(g, api)
 	//permissionApiRouters(g, api)
 	//groupAPIRouters(g, api)
 	//roleApiRouters(g, api)

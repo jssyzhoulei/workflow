@@ -2,39 +2,18 @@ package apis
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/jssyzhoulei/workflow/logger"
 	"github.com/jssyzhoulei/workflow/src/apis/code"
+	"github.com/jssyzhoulei/workflow/src/services"
 	"net/http"
 )
 
-
-type IApis interface {
-	GetUserApis() userApiInterface
-	GetPermission() permissionApiInterface
-	GetGroupApis() groupAPIInterface
-	GetRoleApis() RoleApiInterface
+type Apis struct {
+	*services.WorkService
 }
 
-type apis struct {
-	userApiInterface
-	permissionApiInterface permissionApiInterface
-	groupAPIInterface
-	RoleApiInterface
-}
-
-func (a *apis) GetUserApis() userApiInterface {
-	return a.userApiInterface
-}
-
-func (a *apis) GetGroupApis() groupAPIInterface {
-	return a.groupAPIInterface
-}
-
-func (a *apis) GetRoleApis() RoleApiInterface {
-	return a.RoleApiInterface
-}
-
-func (a *apis) GetPermission() permissionApiInterface {
-	return a.permissionApiInterface
+func NewApis(s *services.WorkService) Apis {
+	return Apis{s}
 }
 
 func success_(c *gin.Context, data interface{}) {
@@ -78,7 +57,7 @@ func response(c *gin.Context, status int, message string, data interface{}, isBy
 	} else {
 		_, err := c.Writer.Write(data.([]byte))
 		if err != nil {
-			log.Logger.Warn("PB消息byte写入响应信息失败: " + err.Error())
+			log.Logger().Warn("PB消息byte写入响应信息失败: " + err.Error())
 		}
 	}
 

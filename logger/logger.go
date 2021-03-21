@@ -1,10 +1,13 @@
 package log
 
 import (
+	"fmt"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
+	"sync"
+	"time"
 )
 
 /**
@@ -17,11 +20,11 @@ import (
  * compress 是否压缩
  * serviceName 服务名
  */
-func NewLogger(filePath string, level zapcore.Level, maxSize int,
-	maxBackups int, maxAge int, compress bool, serviceName string) *zap.Logger {
-	core := newCore(filePath, level, maxSize, maxBackups, maxAge, compress)
-	return zap.New(core, zap.AddCaller(), zap.Development(), zap.Fields(zap.String("serviceName", serviceName)))
-}
+//func NewLogger(filePath string, level zapcore.Level, maxSize int,
+//	maxBackups int, maxAge int, compress bool, serviceName string) *zap.Logger {
+//	core := newCore(filePath, level, maxSize, maxBackups, maxAge, compress)
+//	return zap.New(core, zap.AddCaller(), zap.Development(), zap.Fields(zap.String("serviceName", serviceName)))
+//}
 
 /**
  * zapcore构造
@@ -60,15 +63,14 @@ func newCore(filePath string, level zapcore.Level, maxSize int, maxBackups int, 
 	)
 }
 
+//var Logger *zap.Logger
+//var GatewayLogger *zap.Logger
 
-var Logger *zap.Logger
-var GatewayLogger *zap.Logger
-
-func init() {
-
-	Logger = NewLogger("./logs/org.log", zapcore.InfoLevel, 128, 30, 7, true, "Main")
-	GatewayLogger = NewLogger("./logs/gateway.log", zapcore.DebugLevel, 128, 30, 7, true, "Gateway")
-}
+//func init() {
+//
+//	Logger = NewLogger("./logs/org.log", zapcore.InfoLevel, 128, 30, 7, true, "Main")
+//	GatewayLogger = NewLogger("./logs/gateway.log", zapcore.DebugLevel, 128, 30, 7, true, "Gateway")
+//}
 
 //
 //func Logger() *zap.Logger {
@@ -77,3 +79,43 @@ func init() {
 //	})
 //	return logger
 //}
+
+const (
+	MODE_DEV  = "dev"
+	MODE_PROD = "prod"
+)
+
+func NewLogger(mode string) (*zap.Logger, error) {
+	var (
+		logConfig zap.Config
+	)
+	switch mode {
+	case "", MODE_DEV:
+		logConfig = zap.NewDevelopmentConfig()
+		logConfig.EncoderConfig.EncodeTime = timeEncoder
+		logConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		logConfig.EncoderConfig.EncodeCaller = zapcore.FullCallerEncoder
+	case MODE_PROD:
+		logConfig = zap.NewProductionConfig()
+	default:
+		panic("unknown run mode it mast dev or prod")
+	}
+	return logConfig.Build()
+}
+
+var (
+	logger *zap.Logger
+	once   sync.Once
+)
+
+func Logger() *zap.Logger {
+	once.Do(func() {
+		logger, _ = NewLogger(MODE_DEV)
+	})
+	return logger
+}
+
+func timeEncoder(time time.Time, encoder zapcore.PrimitiveArrayEncoder) {
+	s := fmt.Sprintf("\x1b[0;33m%s\x1b[0m", time.Format("[2006-01-02 15:04:05]"))
+	encoder.AppendString(s)
+}

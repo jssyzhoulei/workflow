@@ -7,6 +7,8 @@ type WorkFLow struct {
 	BaseModel
 	Name        string `gorm:"column:name;type:varchar(50);comment:'工作流名称'" json:"name"`
 	Description string `gorm:"column:description;type:varchar(1024);comment:'描述'" json:"description"`
+	CreateID    int    `gorm:"column:create_id;type:int(10);comment:'创建者'" json:"create_id"`
+	GroupID     int    `gorm:"column:group_id;type:int(10);comment:'创建者组'" json:"group_id"`
 	Version     int    `gorm:"column:version;type:int(10);comment:'工作流版本'" json:"version"`
 	Status      int    `gorm:"column:status;type:int(10);default:0;comment:'备用字段'" json:"status"`
 }
