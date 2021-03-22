@@ -60,13 +60,7 @@ func Gin() *gin.Engine {
 	return engine
 }
 
-func Routers(e *gin.Engine, api apis.Apis) {
-	//es := strings.Split(*etcdHosts, ";")
-	//o := client.NewOrgServiceClient(es, 2, time.Second*30)
-	//api := apis.NewApis(o)
+func Routers(e *gin.Engine, api *apis.Apis) {
 	g := e.Group("/apis/v1/")
 	workApiRouters(g, api)
-	//permissionApiRouters(g, api)
-	//groupAPIRouters(g, api)
-	//roleApiRouters(g, api)
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/jssyzhoulei/workflow/src/apis"
 )
 
-func workApiRouters(g *gin.RouterGroup, api apis.Apis) {
+func workApiRouters(g *gin.RouterGroup, api *apis.Apis) {
 	g.POST("/workflow", api.AddWorkflow)
 	g.PUT("/workflow", api.UpdateWorkflow)
 	g.DELETE("/workflow", api.DelWorkflow)

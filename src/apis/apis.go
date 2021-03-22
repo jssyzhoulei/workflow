@@ -12,8 +12,8 @@ type Apis struct {
 	*services.WorkService
 }
 
-func NewApis(s *services.WorkService) Apis {
-	return Apis{s}
+func NewApis(s *services.WorkService) *Apis {
+	return &Apis{s}
 }
 
 func success_(c *gin.Context, data interface{}) {
@@ -64,15 +64,6 @@ func response(c *gin.Context, status int, message string, data interface{}, isBy
 	c.Abort()
 	return
 }
-
-//var _buffer bytes.Buffer
-//
-//err = jsonpbMarshaler.Marshal(&_buffer, res)
-//if err != nil {
-//	log.Logger().Info("序列化查询组和其配额信息错误: " + err.Error())
-//	response(c, http.StatusBadRequest, "操作失败", nil, false)
-//	return
-//}
 
 type ApiResponse struct {
 	Code    code.Code   `json:"code"`

@@ -1,17 +1,17 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: gdp
+  name: workflow
 
 ---
 #定义 service
 apiVersion: v1
 kind: Service
 metadata:
-  name: org-svc
-  namespace: gdp
+  name: workflow
+  namespace: workflow
   labels:
-    app: org-svc
+    app: workflow
 spec:
   type: NodePort
   ports:
@@ -27,25 +27,25 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: org-svc
-  namespace: gdp
+  name: workflow
+  namespace: workflow
   labels:
-    app: org-svc
+    app: workflow
 spec:
   replicas: 1            #生成复本数量为2
   selector:
     matchLabels:
-      app: org-svc
+      app: workflow
   template:
     metadata:
       labels:
-        app: org-svc
+        app: workflow
       annotations:
-        app: org-svc
+        app: workflow
     spec:
       nodeName: node1
       containers:
-        - name: org-svc
+        - name: workflow
           image: 192.168.2.190:5000/library/org-svc:1.0.0
           command:
             - "/bin/sh"

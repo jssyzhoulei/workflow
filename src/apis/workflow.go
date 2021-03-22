@@ -21,6 +21,7 @@ func (a Apis) AddWorkflow(c *gin.Context) {
 	if err != nil {
 		log.Logger().Error("auth user error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
+		return
 	}
 	response(c, http.StatusOK, "success", nil, false)
 }
@@ -51,6 +52,7 @@ func (a Apis) UpdateWorkflow(c *gin.Context) {
 	if err != nil {
 		log.Logger().Error("auth user error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
+		return
 	}
 	response(c, http.StatusOK, "success", nil, false)
 }
@@ -68,6 +70,7 @@ func (a Apis) DelWorkflow(c *gin.Context) {
 	if err != nil {
 		log.Logger().Error("auth user error: " + err.Error())
 		response(c, http.StatusBadRequest, "server error", nil, false)
+		return
 	}
 	response(c, http.StatusOK, "success", nil, false)
 }
