@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: workflow
+
+---
+#定义 service
+apiVersion: v1
+kind: Service
+metadata:
+  name: workflow
+  namespace: workflow
+  labels:
+    app: workflow
+spec:
+  type: NodePort
+  ports:
+    - port: 88
+      targetPort: 88
+      protocol: TCP
+      nodePort: 30788
+  selector:
+    app: org-svc
+
+---
+#创建 deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workflow
+  namespace: workflow
+  labels:
+    app: workflow
+spec:
+  replicas: 1            #生成复本数量为2
+  selector:
+    matchLabels:
+      app: workflow
+  template:
+    metadata:
+      labels:
+        app: workflow
+      annotations:
+        app: workflow
+    spec:
+      nodeName: node1
+      containers:
+        - name: workflow
+          image: 192.168.2.190:5000/library/org-svc:1.0.0
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "/app/org-svc -ip $POD_IP"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 300m
+              memory: 3000Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 886
+              name: svc-port
+          volumeMounts:
+            - mountPath: /resources/config
+              name: config
+            - mountPath: /etc/localtime
+              name: localtime
+        - name: org-api
+          image: 192.168.2.190:5000/library/org-api:1.0.0
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "/app/org-api -eh 192.168.2.191:2379"
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 300m
+              memory: 3000Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 88
+              name: org-svc
+          volumeMounts:
+            - mountPath: /etc/localtime
+              name: localtime
+      volumes:
+        - hostPath:
+            path: /mnt/inspurfs/org/config
+            type: Directory
+          name: config
+        - hostPath:
+            path: /etc/localtime
+          name: localtime
