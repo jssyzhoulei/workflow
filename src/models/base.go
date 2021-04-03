@@ -24,4 +24,7 @@ type Page struct {
 	Data      interface{} `json:"data"`
 }
 
+// mysql -uroot -hlocalhost -p123456
+// CREATE DATABASE `workflow` CHARACTER SET utf8mb4；
 //sudo docker run -d -p 3306:3306 -v /home/yangyin/docker/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD="123456" mysql:5.7
+//sudo docker run -d -p 3306:3306 -v /Users/sm2072/docker/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD="123456" mysql:5.7
