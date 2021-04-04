@@ -26,7 +26,6 @@ func (a Apis) AddWorkflow(c *gin.Context) {
 	response(c, http.StatusOK, "success", nil, false)
 }
 
-
 func (a Apis) ListWorkflow(c *gin.Context) {
 	//userId := c.DefaultQuery("user_id", "0")
 
@@ -74,4 +73,3 @@ func (a Apis) DelWorkflow(c *gin.Context) {
 	}
 	response(c, http.StatusOK, "success", nil, false)
 }
-

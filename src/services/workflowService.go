@@ -13,19 +13,19 @@ func NewWorkSvc(repo *repositories.WorkRepo) *WorkService {
 	return &WorkService{repo}
 }
 
-func (ws WorkService)CreateFlow(wf *models.WorkFLow)error{
+func (ws WorkService) CreateFlow(wf *models.WorkFLow) error {
 	return ws.repo.AddWorkFlow(wf)
 }
 
-func (ws WorkService)ListFlow()(interface{}, error){
+func (ws WorkService) ListFlow() (interface{}, error) {
 	req := new(repositories.ListReq)
 	return ws.repo.ListWorkFlow(req)
 }
 
-func (ws WorkService)UpdateFlow(wf *models.WorkFLow)error{
+func (ws WorkService) UpdateFlow(wf *models.WorkFLow) error {
 	return ws.repo.UpdateWorkFlow(wf)
 }
 
-func (ws WorkService)DelFlow(wf *models.WorkFLow)error{
+func (ws WorkService) DelFlow(wf *models.WorkFLow) error {
 	return ws.repo.DelWorkFlow(wf)
 }
