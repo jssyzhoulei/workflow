@@ -30,8 +30,6 @@ type ListReq struct {
 	Page
 }
 
-
-// wode tijiaoa
 func (db *WorkRepo) ListWorkFlow(req *ListReq) ([]models.WorkFLow, error) {
 	var res []models.WorkFLow
 	if req.perPage == 0 {
@@ -56,4 +54,11 @@ func (db *WorkRepo) UpdateWorkFlow(wf *models.WorkFLow) error {
 
 func (db *WorkRepo) DelWorkFlow(wf *models.WorkFLow) error {
 	return db.Model(models.WorkFLow{}).Delete(wf).Error
+}
+
+func (db *WorkRepo) AddWorkNode(tx *gorm.DB,wn *models.WorkNode) error {
+	if tx == nil{
+		tx = db.DB
+	}
+	return tx.Model(models.WorkNode{}).Create(wn).Error
 }
