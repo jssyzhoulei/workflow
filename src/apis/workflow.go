@@ -6,6 +6,7 @@ import (
 	"github.com/jssyzhoulei/workflow/logger"
 	"github.com/jssyzhoulei/workflow/src/models"
 	"net/http"
+	"strconv"
 )
 
 func (a Apis) AddWorkflow(c *gin.Context) {
@@ -90,4 +91,22 @@ func (a Apis) AddWorkNodes(c *gin.Context) {
 		return
 	}
 	response(c, http.StatusOK, "success", nil, false)
+}
+
+func (a Apis) ListWorkNodes(c *gin.Context) {
+	flowIdStr := c.Query("flow_id")
+	flowId, err := strconv.Atoi(flowIdStr)
+
+	if err != nil {
+		log.Logger().Info(fmt.Sprintf("GroupAdd 参数解析错误: %s", err.Error()))
+		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
+		return
+	}
+	res, err := a.ListNodes(flowId)
+	if err != nil {
+		log.Logger().Error("list node error: " + err.Error())
+		response(c, http.StatusBadRequest, "server error", nil, false)
+		return
+	}
+	response(c, http.StatusOK, "success", res, false)
 }

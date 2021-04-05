@@ -39,3 +39,11 @@ func (ws WorkService) CreateNodes(wf []*models.WorkNodeRequest) error {
 		return ns.parseNodes(tx, 0, wf)
 	})
 }
+
+func (ws WorkService) ListNodes(flowId int) ([]*models.WorkNodeRequest, error){
+	list, err := ws.repo.ListWorkNode(flowId)
+	if err != nil{
+		return nil, err
+	}
+	return buildNodeTree(list), nil
+}

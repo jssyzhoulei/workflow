@@ -58,6 +58,7 @@ func (db *WorkRepo) UpdateWorkFlow(wf *models.WorkFLow) error {
 }
 
 func (db *WorkRepo) DelWorkFlow(wf *models.WorkFLow) error {
+	// 关联删除work node 也可以不删
 	return db.Model(wf).Delete(wf).Error
 }
 
@@ -73,4 +74,10 @@ func (db *WorkRepo) SaveWorkNode(tx *gorm.DB, wn *models.WorkNode) error {
 		tx = db.DB
 	}
 	return tx.Model(wn).Save(wn).Error
+}
+
+func (db *WorkRepo) ListWorkNode(flowId int) ([]models.WorkNode, error) {
+	var res []models.WorkNode
+
+	return res, db.Model(node).Where("work_flow_id = ?", flowId).Find(&res).Error
 }

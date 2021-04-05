@@ -88,3 +88,31 @@ func checkWorkNode(wf *models.WorkNodeRequest) error {
 	}
 	return nil
 }
+
+func buildNodeTree(nodes []models.WorkNode) []*models.WorkNodeRequest {
+	var (
+		// id node map
+		nodeMap = make(map[int]*models.WorkNodeRequest)
+		// parent id node list map
+		nodeMapList = make(map[int][]*models.WorkNodeRequest)
+		topList     = make([]*models.WorkNodeRequest, 0)
+	)
+	for _, i := range nodes {
+		newNode := models.WorkNodeRequest{}
+		newNode.WorkNode = i
+		if i.ParentID == 0 {
+			topList = append(topList, &newNode)
+		} else {
+			if _, ok := nodeMapList[i.ParentID]; ok {
+				nodeMapList[i.ParentID] = append(nodeMapList[i.ParentID], &newNode)
+			} else {
+				nodeMapList[i.ParentID] = []*models.WorkNodeRequest{&newNode}
+			}
+		}
+		nodeMap[i.ID] = &newNode
+	}
+	for parentId, list := range nodeMapList {
+		nodeMap[parentId].Children = list
+	}
+	return topList
+}

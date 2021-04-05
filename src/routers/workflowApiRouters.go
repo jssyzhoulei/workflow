@@ -11,4 +11,5 @@ func workApiRouters(g *gin.RouterGroup, api *apis.Apis) {
 	g.DELETE("/workflow", api.DelWorkflow)
 	g.GET("/workflow", api.ListWorkflow)
 	g.POST("/worknode", api.AddWorkNodes)
+	g.GET("/worknode", api.ListWorkNodes)
 }
