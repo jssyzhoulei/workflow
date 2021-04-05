@@ -73,3 +73,21 @@ func (a Apis) DelWorkflow(c *gin.Context) {
 	}
 	response(c, http.StatusOK, "success", nil, false)
 }
+
+func (a Apis) AddWorkNodes(c *gin.Context) {
+	var data = new([]*models.WorkNodeRequest)
+
+	err := c.BindJSON(data)
+	if err != nil {
+		log.Logger().Info(fmt.Sprintf("GroupAdd 参数解析错误: %s", err.Error()))
+		response(c, http.StatusBadRequest, "参数解析错误", nil, false)
+		return
+	}
+	err = a.CreateNodes(*data)
+	if err != nil {
+		log.Logger().Error("auth user error: " + err.Error())
+		response(c, http.StatusBadRequest, "server error", nil, false)
+		return
+	}
+	response(c, http.StatusOK, "success", nil, false)
+}

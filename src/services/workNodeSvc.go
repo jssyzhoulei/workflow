@@ -1,27 +1,59 @@
 package services
 
 import (
+	"errors"
 	"github.com/jssyzhoulei/workflow/src/models"
+	"github.com/jssyzhoulei/workflow/src/repositories"
 	"gorm.io/gorm"
 )
 
-func (ws WorkService) CreateNodes(wf []*models.WorkNode) error {
-	return nil
+type workNodeSvc struct {
+	repo *repositories.WorkRepo
+	// skip name 跟 work node request的map
+	nameObjMap map[string]*models.WorkNodeRequest
 }
 
-func (ws WorkService) parseNodes(tx *gorm.DB, parentId int, wfs []*models.WorkNode) error {
+func NewNodeSvc(repo *repositories.WorkRepo) *workNodeSvc {
+	return &workNodeSvc{
+		repo:       repo,
+		nameObjMap: make(map[string]*models.WorkNodeRequest),
+	}
+}
+
+func (wns workNodeSvc) parseNodes(tx *gorm.DB, parentId int, wfs []*models.WorkNodeRequest) error {
 	var lastId int
-	for _, i := range wfs {
+	if parentId == 0 {
+		if wfs == nil || len(wfs) == 0 || wfs[0].Type != models.WorkNodeTypeHead {
+			return errors.New("缺少head节点")
+		}
+	}
+	for index, i := range wfs {
+		err := checkWorkNode(i)
+		if err != nil {
+			return err
+		}
 		i.ParentID = parentId
 		i.LastID = lastId
-		err := ws.repo.AddWorkNode(tx, i)
+		// 添加当前节点
+		err = wns.repo.AddWorkNode(tx, &i.WorkNode)
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 		lastId = i.ID
 		if len(i.Children) > 0 {
-			err := ws.parseNodes(tx, i.ID, i.Children)
+			err := wns.parseNodes(tx, i.ID, i.Children)
+			if err != nil {
+				return err
+			}
+		}
+		// 保存需要更新skip id的work node map
+		if i.SkipName != "" {
+			wns.nameObjMap[i.SkipName] = wfs[index]
+		}
+		if wns.nameObjMap[i.Name] != nil {
+			// 更新skip id值
+			wns.nameObjMap[i.Name].SkipID = i.ID
+			err = wns.repo.SaveWorkNode(tx, &wns.nameObjMap[i.Name].WorkNode)
 			if err != nil {
 				return err
 			}
@@ -30,6 +62,29 @@ func (ws WorkService) parseNodes(tx *gorm.DB, parentId int, wfs []*models.WorkNo
 	return nil
 }
 
-func checkWorkNode(wfs *models.WorkNode) {
-	return
+func checkWorkNode(wf *models.WorkNodeRequest) error {
+
+	switch wf.Type {
+	case models.WorkNodeTypeGeneral, models.WorkNodeTypeHead:
+		// 此两种情况不支持嵌套
+		if wf.Children != nil && len(wf.Children) != 0 {
+			wf.Children = nil
+		}
+	default:
+		if wf.Children == nil || len(wf.Children) == 0 {
+			return errors.New("复杂节点的子节点为空")
+		}
+	}
+	if wf.AuditType == models.AuditTypeAbsolute {
+		if wf.PrincipleID == 0 {
+			// 此时principle 为user id
+			return errors.New("审批人类型固定时，principle需要指定负责人")
+		} else if wf.AuditType == models.AuditTypeUAnyGroup {
+			if wf.PrincipleID == 0 {
+				// 此时principle id为 group id
+				return errors.New("审批人类型为组下人时，principle需要指定组织id")
+			}
+		}
+	}
+	return nil
 }

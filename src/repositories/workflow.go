@@ -15,12 +15,17 @@ type Page struct {
 	perPage int
 }
 
+var (
+	flow = new(models.WorkFLow)
+	node = new(models.WorkNode)
+)
+
 func NewRepo(db *gorm.DB) *WorkRepo {
 	return &WorkRepo{db}
 }
 
 func (db *WorkRepo) AddWorkFlow(wf *models.WorkFLow) error {
-	return db.Model(models.WorkFLow{}).Create(wf).Error
+	return db.Model(wf).Create(wf).Error
 }
 
 type ListReq struct {
@@ -35,7 +40,7 @@ func (db *WorkRepo) ListWorkFlow(req *ListReq) ([]models.WorkFLow, error) {
 	if req.perPage == 0 {
 		req.perPage = 10
 	}
-	query := db.Model(models.WorkFLow{}).Where("name like ?", "%"+req.Name+"%")
+	query := db.Model(flow).Where("name like ?", "%"+req.Name+"%")
 	if req.UserId != 0 {
 		query = query.Where("create_id = ? ", req.UserId)
 	}
@@ -49,16 +54,23 @@ func (db *WorkRepo) UpdateWorkFlow(wf *models.WorkFLow) error {
 	if wf.ID == 0 {
 		return errors.New("work flow record not found by update")
 	}
-	return db.Model(models.WorkFLow{}).Save(wf).Error
+	return db.Model(wf).Save(wf).Error
 }
 
 func (db *WorkRepo) DelWorkFlow(wf *models.WorkFLow) error {
-	return db.Model(models.WorkFLow{}).Delete(wf).Error
+	return db.Model(wf).Delete(wf).Error
 }
 
-func (db *WorkRepo) AddWorkNode(tx *gorm.DB,wn *models.WorkNode) error {
-	if tx == nil{
+func (db *WorkRepo) AddWorkNode(tx *gorm.DB, wn *models.WorkNode) error {
+	if tx == nil {
 		tx = db.DB
 	}
-	return tx.Model(models.WorkNode{}).Create(wn).Error
+	return tx.Model(wn).Create(wn).Error
+}
+
+func (db *WorkRepo) SaveWorkNode(tx *gorm.DB, wn *models.WorkNode) error {
+	if tx == nil {
+		tx = db.DB
+	}
+	return tx.Model(wn).Save(wn).Error
 }

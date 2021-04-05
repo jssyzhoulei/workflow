@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/jssyzhoulei/workflow/src/models"
 	"github.com/jssyzhoulei/workflow/src/repositories"
+	"gorm.io/gorm"
 )
 
 type WorkService struct {
@@ -28,4 +29,13 @@ func (ws WorkService) UpdateFlow(wf *models.WorkFLow) error {
 
 func (ws WorkService) DelFlow(wf *models.WorkFLow) error {
 	return ws.repo.DelWorkFlow(wf)
+}
+
+func (ws WorkService) CreateNodes(wf []*models.WorkNodeRequest) error {
+	ns := NewNodeSvc(ws.repo)
+	// 此方法中事物commit、rollback自动进行
+	return ws.repo.Transaction(func(tx *gorm.DB) error {
+		// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
+		return ns.parseNodes(tx, 0, wf)
+	})
 }
