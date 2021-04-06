@@ -11,12 +11,15 @@ type workNodeSvc struct {
 	repo *repositories.WorkRepo
 	// skip name 跟 work node request的map
 	nameObjMap map[string]*models.WorkNodeRequest
+	// 节点名称不允许重复
+	nameSet    map[string]bool
 }
 
 func NewNodeSvc(repo *repositories.WorkRepo) *workNodeSvc {
 	return &workNodeSvc{
 		repo:       repo,
 		nameObjMap: make(map[string]*models.WorkNodeRequest),
+		nameSet:    make(map[string]bool),
 	}
 }
 
@@ -28,7 +31,7 @@ func (wns workNodeSvc) parseNodes(tx *gorm.DB, parentId int, wfs []*models.WorkN
 		}
 	}
 	for index, i := range wfs {
-		err := checkWorkNode(i)
+		err := wns.checkWorkNode(i)
 		if err != nil {
 			return err
 		}
@@ -62,7 +65,15 @@ func (wns workNodeSvc) parseNodes(tx *gorm.DB, parentId int, wfs []*models.WorkN
 	return nil
 }
 
-func checkWorkNode(wf *models.WorkNodeRequest) error {
+func (wns *workNodeSvc) checkWorkNode(wf *models.WorkNodeRequest) error {
+
+	if _, ok := wns.nameSet[wf.Name]; ok{
+		return errors.New("节点名称重复")
+	}
+	if _, ok := wns.nameSet[wf.SkipName]; ok {
+		return errors.New("不允许反向跳转节点")
+	}
+	wns.nameSet[wf.Name] = true
 
 	switch wf.Type {
 	case models.WorkNodeTypeGeneral, models.WorkNodeTypeHead:
