@@ -11,3 +11,8 @@ func (r Role) TableName() string {
 	return "role"
 }
 
+const (
+	Self = iota + 1
+	Admin
+	Top
+)
