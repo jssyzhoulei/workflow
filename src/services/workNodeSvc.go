@@ -13,6 +13,7 @@ type workNodeSvc struct {
 	nameObjMap map[string]*models.WorkNodeRequest
 	// 节点名称不允许重复
 	nameSet    map[string]bool
+	workflowId int
 }
 
 func NewNodeSvc(repo *repositories.WorkRepo) *workNodeSvc {
@@ -67,7 +68,15 @@ func (wns workNodeSvc) parseNodes(tx *gorm.DB, parentId int, wfs []*models.WorkN
 
 func (wns *workNodeSvc) checkWorkNode(wf *models.WorkNodeRequest) error {
 
-	if _, ok := wns.nameSet[wf.Name]; ok{
+	if wns.workflowId == 0 {
+		wns.workflowId = wf.WorkFLowID
+		if wns.workflowId == 0 {
+			return errors.New("work node need work flow id ")
+		}
+	} else {
+		wf.WorkFLowID = wns.workflowId
+	}
+	if _, ok := wns.nameSet[wf.Name]; ok {
 		return errors.New("节点名称重复")
 	}
 	if _, ok := wns.nameSet[wf.SkipName]; ok {

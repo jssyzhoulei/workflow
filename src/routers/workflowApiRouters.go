@@ -10,6 +10,6 @@ func workApiRouters(g *gin.RouterGroup, api *apis.Apis) {
 	g.PUT("/workflow", api.UpdateWorkflow)
 	g.DELETE("/workflow", api.DelWorkflow)
 	g.GET("/workflow", api.ListWorkflow)
-	g.POST("/worknode", api.AddWorkNodes)
-	g.GET("/worknode", api.ListWorkNodes)
+	g.POST("/work_node", api.AddWorkNodes)
+	g.GET("/work_node", api.ListWorkNodes)
 }

@@ -20,8 +20,8 @@ func (a Apis) AddWorkflow(c *gin.Context) {
 	}
 	err = a.CreateFlow(data)
 	if err != nil {
-		log.Logger().Error("auth user error: " + err.Error())
-		response(c, http.StatusBadRequest, "server error", nil, false)
+		log.Logger().Error("add workflow error: " + err.Error())
+		response(c, http.StatusBadRequest, err.Error(), nil, false)
 		return
 	}
 	response(c, http.StatusOK, "success", nil, false)
@@ -32,8 +32,8 @@ func (a Apis) ListWorkflow(c *gin.Context) {
 
 	res, err := a.ListFlow()
 	if err != nil {
-		log.Logger().Error("auth user error: " + err.Error())
-		response(c, http.StatusBadRequest, "server error", nil, false)
+		log.Logger().Error("list workflow error: " + err.Error())
+		response(c, http.StatusBadRequest, err.Error(), nil, false)
 		return
 	}
 	response(c, http.StatusOK, "success", res, false)
@@ -50,8 +50,8 @@ func (a Apis) UpdateWorkflow(c *gin.Context) {
 	}
 	err = a.UpdateFlow(data)
 	if err != nil {
-		log.Logger().Error("auth user error: " + err.Error())
-		response(c, http.StatusBadRequest, "server error", nil, false)
+		log.Logger().Error("update workflow error: " + err.Error())
+		response(c, http.StatusBadRequest, err.Error(), nil, false)
 		return
 	}
 	response(c, http.StatusOK, "success", nil, false)
@@ -68,8 +68,8 @@ func (a Apis) DelWorkflow(c *gin.Context) {
 	}
 	err = a.DelFlow(data)
 	if err != nil {
-		log.Logger().Error("auth user error: " + err.Error())
-		response(c, http.StatusBadRequest, "server error", nil, false)
+		log.Logger().Error("del workflow error: " + err.Error())
+		response(c, http.StatusBadRequest, err.Error(), nil, false)
 		return
 	}
 	response(c, http.StatusOK, "success", nil, false)
@@ -86,8 +86,8 @@ func (a Apis) AddWorkNodes(c *gin.Context) {
 	}
 	err = a.CreateNodes(*data)
 	if err != nil {
-		log.Logger().Error("auth user error: " + err.Error())
-		response(c, http.StatusBadRequest, "server error", nil, false)
+		log.Logger().Warn("add work node error: " + err.Error())
+		response(c, http.StatusBadRequest, err.Error(), nil, false)
 		return
 	}
 	response(c, http.StatusOK, "success", nil, false)
@@ -104,8 +104,8 @@ func (a Apis) ListWorkNodes(c *gin.Context) {
 	}
 	res, err := a.ListNodes(flowId)
 	if err != nil {
-		log.Logger().Error("list node error: " + err.Error())
-		response(c, http.StatusBadRequest, "server error", nil, false)
+		log.Logger().Warn("list node error: " + err.Error())
+		response(c, http.StatusBadRequest, err.Error(), nil, false)
 		return
 	}
 	response(c, http.StatusOK, "success", res, false)
