@@ -1,12 +1,12 @@
 package repositories
 
 type RepoI interface {
-	GetUserRepo() UserRepoInterface
+	//GetUserRepo() UserRepoInterface
 	GetRoleRepo() RoleRepoI
 }
 
 type repo struct {
-	UserRepoInterface
+	//UserRepoInterface
 	RoleRepoI
 }
 
@@ -23,9 +23,9 @@ type repo struct {
 //	}
 //}
 
-func (r *repo) GetUserRepo() UserRepoInterface {
-	return r.UserRepoInterface
-}
+//func (r *repo) GetUserRepo() UserRepoInterface {
+//	return r.UserRepoInterface
+//}
 
 func (r *repo) GetRoleRepo() RoleRepoI {
 	return r.RoleRepoI

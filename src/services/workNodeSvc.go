@@ -7,21 +7,43 @@ import (
 	"gorm.io/gorm"
 )
 
+// 节点对象排序是要根据update time排序
+// create time 节点后续可能会调整顺序位置
 type workNodeSvc struct {
 	repo *repositories.WorkRepo
 	// skip name 跟 work node request的map
 	nameObjMap map[string]*models.WorkNodeRequest
 	// 节点名称不允许重复
-	nameSet    map[string]bool
-	workflowId int
+	nameSet     map[string]bool
+	workflowId  int
+	waitDelList map[int]bool
 }
 
-func NewNodeSvc(repo *repositories.WorkRepo) *workNodeSvc {
-	return &workNodeSvc{
-		repo:       repo,
-		nameObjMap: make(map[string]*models.WorkNodeRequest),
-		nameSet:    make(map[string]bool),
+func NewNodeSvc(repo *repositories.WorkRepo, getNodeFunc func() []models.WorkNode) *workNodeSvc {
+
+	list := getNodeFunc()
+	waitDelList := make(map[int]bool)
+	if list != nil {
+		for _, i := range list {
+			if i.ID != 0 {
+				waitDelList[i.ID] = false
+			}
+		}
 	}
+	return &workNodeSvc{
+		repo:        repo,
+		nameObjMap:  make(map[string]*models.WorkNodeRequest),
+		nameSet:     make(map[string]bool),
+		waitDelList: waitDelList,
+	}
+}
+
+func (wns workNodeSvc) CreateOrUpdate(tx *gorm.DB, wfs []*models.WorkNodeRequest) error {
+	err := wns.parseNodes(tx, 0, wfs)
+	if err == nil {
+		err = wns.deleteNodes()
+	}
+	return err
 }
 
 func (wns workNodeSvc) parseNodes(tx *gorm.DB, parentId int, wfs []*models.WorkNodeRequest) error {
@@ -38,8 +60,8 @@ func (wns workNodeSvc) parseNodes(tx *gorm.DB, parentId int, wfs []*models.WorkN
 		}
 		i.ParentID = parentId
 		i.LastID = lastId
-		// 添加当前节点
-		err = wns.repo.AddWorkNode(tx, &i.WorkNode)
+		// 添加/更新当前节点
+		err = wns.repo.SaveOrCreateWorkNode(tx, &i.WorkNode)
 		if err != nil {
 			return err
 		}
@@ -62,6 +84,7 @@ func (wns workNodeSvc) parseNodes(tx *gorm.DB, parentId int, wfs []*models.WorkN
 				return err
 			}
 		}
+		delete(wns.waitDelList, i.ID)
 	}
 	return nil
 }
@@ -107,6 +130,15 @@ func (wns *workNodeSvc) checkWorkNode(wf *models.WorkNodeRequest) error {
 		}
 	}
 	return nil
+}
+
+// 清除多余的node 节点
+func (wns workNodeSvc) deleteNodes() error {
+	var toD []int
+	for i := range wns.waitDelList {
+		toD = append(toD, i)
+	}
+	return wns.repo.DelWorkNode(toD)
 }
 
 func buildNodeTree(nodes []models.WorkNode) []*models.WorkNodeRequest {
